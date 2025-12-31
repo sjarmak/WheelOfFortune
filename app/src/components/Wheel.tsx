@@ -21,33 +21,22 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
     
     onSpinStart();
 
-    // Determine result index deterministically or randomly (for visual sync, we need the result *now*)
-    // In a real seeded app, the engine tells us what the result IS, then we animate TO it.
-    // For simplicity here, we'll pick a random wedge locally using Math.random (or seeded if provided) 
-    // BUT since the engine needs to know, we should probably let the parent pass the target or handle it here.
-    
-    // Let's assume we pick here and report back.
     const randomIndex = Math.floor(Math.random() * WHEEL_CONFIG.length);
     const targetWedge = WHEEL_CONFIG[randomIndex];
     
-    // Calculate new rotation
-    // We want to spin at least 3 times (1080) + offset to target
-    // Target is at index `randomIndex`.
-    // If index 0 is at 0 degrees (top), then index i is at i * wedgeAngle.
-    // To land on index i under the pointer (assume pointer at top 0deg), we need to rotate NEGATIVE or specific amount.
-    // Actually, usually 0 is at 3 o'clock or 12 o'clock in CSS. Let's assume 0 is 12 o'clock.
-    // To bring wedge i to 12 o'clock, we rotate by - (i * wedgeAngle).
-    // Add extra spins.
-    
     const extraSpins = 5;
     const baseRotation = 360 * extraSpins;
-    const targetRotation = -(randomIndex * wedgeAngle);
-    // Add randomness within the wedge to not always hit center
+    
+    // Correctly calculate the angle to the middle of the target wedge
+    const targetAngle = (randomIndex * wedgeAngle) + (wedgeAngle / 2);
+    const targetRotation = -targetAngle;
+    
     const jitter = (Math.random() - 0.5) * (wedgeAngle * 0.8);
     
-    const newTotalRotation = rotation + baseRotation + targetRotation + jitter; // Simplified additive rotation
+    // Use a non-additive rotation to prevent compounding errors
+    const newTotalRotation = baseRotation + targetRotation + jitter;
     
-    setRotation(newTotalRotation); // This triggers CSS transition
+    setRotation(newTotalRotation);
 
     setTimeout(() => {
       onSpinComplete(targetWedge);
@@ -67,27 +56,12 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
         onClick={spin}
       >
         <svg viewBox="0 0 100 100" className="w-full h-full">
-          <defs>
-            {WHEEL_CONFIG.map((wedge, i) => {
-              const midAngle = (i + 0.5) * wedgeAngle;
-              const textAngleRad = (midAngle - 90) * (Math.PI / 180);
-              
-              const startRadius = 15;
-              const endRadius = 48;
-
-              const x1 = 50 + startRadius * Math.cos(textAngleRad);
-              const y1 = 50 + startRadius * Math.sin(textAngleRad);
-              const x2 = 50 + endRadius * Math.cos(textAngleRad);
-              const y2 = 50 + endRadius * Math.sin(textAngleRad);
-
-              return <path key={`path-${wedge.id}`} id={`path-${wedge.id}`} d={`M ${x1} ${y1} L ${x2} ${y2}`} />;
-            })}
-          </defs>
-          
           <g>
             {WHEEL_CONFIG.map((wedge, i) => {
-              const startAngle = (i * wedgeAngle) * (Math.PI / 180);
-              const endAngle = ((i + 1) * wedgeAngle) * (Math.PI / 180);
+              // This offset aligns the drawing with the label and spin logic (0 deg = top)
+              const angleOffset = -90; 
+              const startAngle = (i * wedgeAngle + angleOffset) * (Math.PI / 180);
+              const endAngle = ((i + 1) * wedgeAngle + angleOffset) * (Math.PI / 180);
               const x1 = 50 + 50 * Math.cos(startAngle);
               const y1 = 50 + 50 * Math.sin(startAngle);
               const x2 = 50 + 50 * Math.cos(endAngle);
@@ -97,7 +71,7 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
                 <path
                   key={wedge.id}
                   d={`M50,50 L${x1},${y1} A50,50 0 0,1 ${x2},${y2} Z`}
-                  fill={wedge.type === 'BANKRUPT' ? '#000000' : wedge.color}
+                  fill={wedge.color}
                   stroke="#333"
                   strokeWidth="0.2"
                 />
@@ -116,27 +90,25 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
               const fillColor = wedge.type === 'BANKRUPT' ? '#fff' : '#000';
 
               if (words.length > 1) {
-                // Manually position two words - further out
-                const r1 = 28; 
-                const r2 = 40; 
+                const r1 = 24;
+                const r2 = 37;
                 const x1 = 50 + r1 * Math.cos(midAngleRad);
                 const y1 = 50 + r1 * Math.sin(midAngleRad);
                 const x2 = 50 + r2 * Math.cos(midAngleRad);
                 const y2 = 50 + r2 * Math.sin(midAngleRad);
                 return (
                   <g key={`label-${wedge.id}`}>
-                    <text x={x1} y={y1} transform={`rotate(${midAngleDeg + 90}, ${x1}, ${y1})`} textAnchor="middle" alignmentBaseline="middle" fontSize="4.5" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
+                    <text x={x1} y={y1} transform={`rotate(${midAngleDeg + 90}, ${x1}, ${y1})`} textAnchor="middle" alignmentBaseline="middle" fontSize="5.5" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
                       {words[0]}
                     </text>
-                     <text x={x2} y={y2} transform={`rotate(${midAngleDeg + 90}, ${x2}, ${y2})`} textAnchor="middle" alignmentBaseline="middle" fontSize="4.5" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
+                     <text x={x2} y={y2} transform={`rotate(${midAngleDeg + 90}, ${x2}, ${y2})`} textAnchor="middle" alignmentBaseline="middle" fontSize="5.5" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
                       {words[1]}
                     </text>
                   </g>
                 )
               }
               
-              // Position single-word labels - further out
-              const r = 35;
+              const r = 30;
               const x = 50 + r * Math.cos(midAngleRad);
               const y = 50 + r * Math.sin(midAngleRad);
               
@@ -148,7 +120,7 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
                   transform={`rotate(${midAngleDeg + 90}, ${x}, ${y})`}
                   textAnchor="middle" 
                   alignmentBaseline="middle"
-                  fontSize={wedge.type === 'CASH' ? '7' : '4.5'} 
+                  fontSize={wedge.type === 'CASH' ? '7' : '5.5'} 
                   fontWeight="bold" 
                   fill={fillColor}
                   style={{ pointerEvents: 'none' }}
