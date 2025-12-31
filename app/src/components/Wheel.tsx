@@ -62,32 +62,18 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
       {/* Wheel Container */}
       <div 
         ref={wheelRef}
-        className="w-full h-full rounded-full border-4 border-white shadow-xl overflow-hidden relative transition-transform duration-[4000ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
+        className="w-full h-full rounded-full border-8 border-yellow-600 shadow-2xl overflow-hidden relative transition-transform duration-[4000ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
         style={{ transform: `rotate(${rotation}deg)` }}
         onClick={spin}
       >
-        {WHEEL_CONFIG.map((wedge, i) => (
-          <div
-            key={wedge.id}
-            className="absolute top-0 left-1/2 w-full h-full origin-bottom-left"
-            style={{
-              transform: `rotate(${i * wedgeAngle}deg) skewY(-${90 - wedgeAngle}deg)`,
-              transformOrigin: '50% 50%'
-            }}
-          >
-             {/* Use a proper conic gradient or SVG for better wedges, but div hacking: */}
-             {/* This is hard with pure divs. SVG is better. Switching to SVG wheel. */}
-          </div>
-        ))}
-        {/* SVG Overlay for drawing wedges properly */}
-        <svg viewBox="0 0 100 100" className="absolute top-0 left-0 w-full h-full overflow-hidden">
+        <svg viewBox="0 0 100 100" className="w-full h-full">
           <defs>
             {WHEEL_CONFIG.map((wedge, i) => {
               const midAngle = (i + 0.5) * wedgeAngle;
               const textAngleRad = (midAngle - 90) * (Math.PI / 180);
               
-              const startRadius = 10;
-              const endRadius = 45;
+              const startRadius = 12;
+              const endRadius = 48;
 
               const x1 = 50 + startRadius * Math.cos(textAngleRad);
               const y1 = 50 + startRadius * Math.sin(textAngleRad);
@@ -98,32 +84,39 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
             })}
           </defs>
           
-          {WHEEL_CONFIG.map((wedge, i) => {
-            const startAngle = (i * wedgeAngle) * (Math.PI / 180);
-            const endAngle = ((i + 1) * wedgeAngle) * (Math.PI / 180);
-            const x1 = 50 + 50 * Math.cos(startAngle);
-            const y1 = 50 + 50 * Math.sin(startAngle);
-            const x2 = 50 + 50 * Math.cos(endAngle);
-            const y2 = 50 + 50 * Math.sin(endAngle);
-            
-            return (
-              <path
-                key={wedge.id}
-                d={`M50,50 L${x1},${y1} A50,50 0 0,1 ${x2},${y2} Z`}
-                fill={wedge.color}
-                stroke="#333"
-                strokeWidth="0.5"
-              />
-            );
-          })}
+          <g>
+            {WHEEL_CONFIG.map((wedge, i) => {
+              const startAngle = (i * wedgeAngle) * (Math.PI / 180);
+              const endAngle = ((i + 1) * wedgeAngle) * (Math.PI / 180);
+              const x1 = 50 + 50 * Math.cos(startAngle);
+              const y1 = 50 + 50 * Math.sin(startAngle);
+              const x2 = 50 + 50 * Math.cos(endAngle);
+              const y2 = 50 + 50 * Math.sin(endAngle);
+              
+              return (
+                <path
+                  key={wedge.id}
+                  d={`M50,50 L${x1},${y1} A50,50 0 0,1 ${x2},${y2} Z`}
+                  fill={wedge.color}
+                  stroke="#333"
+                  strokeWidth="0.2"
+                />
+              );
+            })}
+          </g>
           
-          {WHEEL_CONFIG.map((wedge) => (
-            <text key={`label-${wedge.id}`} textAnchor="middle" className="text-[7px] font-bold" fill={wedge.type === 'CASH' ? '#000' : '#fff'} style={{ pointerEvents: 'none' }}>
-              <textPath href={`#path-${wedge.id}`} startOffset="50%">
-                {wedge.label}
-              </textPath>
-            </text>
-          ))}
+          <circle cx="50" cy="50" r="50" fill="transparent" stroke="rgba(0,0,0,0.2)" strokeWidth="2" />
+          <circle cx="50" cy="50" r="10" fill="#888" stroke="#555" strokeWidth="1" />
+
+          <g>
+            {WHEEL_CONFIG.map((wedge) => (
+              <text key={`label-${wedge.id}`} textAnchor="middle" fontSize="6" fontWeight="bold" fill={wedge.type === 'CASH' ? '#000' : '#fff'} style={{ pointerEvents: 'none' }}>
+                <textPath href={`#path-${wedge.id}`} startOffset="50%">
+                  {wedge.label}
+                </textPath>
+              </text>
+            ))}
+          </g>
         </svg>
       </div>
       
