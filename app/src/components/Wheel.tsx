@@ -110,7 +110,7 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
 
           <g>
             {WHEEL_CONFIG.map((wedge) => (
-              <text key={`label-${wedge.id}`} textAnchor="middle" fontSize="6" fontWeight="bold" fill={wedge.type === 'CASH' ? '#000' : '#fff'} style={{ pointerEvents: 'none' }}>
+              <text key={`label-${wedge.id}`} textAnchor="middle" fontSize="6" fontWeight="bold" fill={wedge.type === 'BANKRUPT' ? '#fff' : '#000'} style={{ pointerEvents: 'none' }}>
                 <textPath href={`#path-${wedge.id}`} startOffset="50%">
                   {wedge.label}
                 </textPath>
