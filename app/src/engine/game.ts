@@ -7,7 +7,7 @@ export const INITIAL_STATE: GameState = {
   revealedPositions: [],
   spinResult: null,
   turnState: 'IDLE',
-  player: { roundScore: 0, totalScore: 0, freePlay: false },
+  player: { currentRoundScore: 0, totalScore: 0, freePlay: false },
   tossUpRevealOrder: [],
   tossUpIndex: 0,
   bonusTimer: 10,
@@ -24,6 +24,8 @@ export type GameAction =
   | { type: 'GUESS_LETTER'; letter: string; cost: number }
   | { type: 'SOLVE_ATTEMPT'; phrase: string }
   | { type: 'TOSS_UP_TICK' }
+  | { type: 'ADD_TO_ROUND_SCORE'; points: number }
+  | { type: 'CLEAR_ROUND_SCORE' }
   | { type: 'RESET_GAME' };
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
@@ -60,7 +62,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         turnState: puzzle.round_type === 'TOSSUP' ? 'IDLE' : 'IDLE',
         tossUpRevealOrder: shuffledReveal,
         tossUpIndex: 0,
-        player: { ...state.player, roundScore: 0, freePlay: false },
+        player: { ...state.player, currentRoundScore: 0, freePlay: false },
         roundCount: state.roundCount + 1
       };
     }
@@ -74,7 +76,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         return {
           ...state,
           spinResult: 'BANKRUPT',
-          player: { ...state.player, roundScore: 0 },
+          player: { ...state.player, currentRoundScore: 0 },
           turnState: 'IDLE' // End turn effectively, logic handled by UI to show toast then allow next action
         };
       }
@@ -101,7 +103,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const isVowel = VOWELS.includes(upper);
       
       // Deduct cost (buying vowel)
-      let newScore = state.player.roundScore - cost;
+      let newScore = state.player.currentRoundScore - cost;
       
       // Logic for occurrences
       let count = 0;
@@ -126,7 +128,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         guessedLetters: [...state.guessedLetters, upper],
         revealedPositions: newRevealed,
-        player: { ...state.player, roundScore: newScore },
+        player: { ...state.player, currentRoundScore: newScore },
         turnState: 'IDLE', // Back to idle to spin/solve/buy again
         spinResult: null // Reset spin value
       };
@@ -145,14 +147,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SOLVE_ATTEMPT': {
       const correct = action.phrase.toUpperCase() === state.currentPuzzle?.phrase.toUpperCase();
       if (correct) {
-        const winScore = state.player.roundScore < 1000 ? 1000 : state.player.roundScore; // Min $1000
+        const winScore = state.player.currentRoundScore < 1000 ? 1000 : state.player.currentRoundScore; // Min $1000
         return {
           ...state,
           turnState: 'ROUND_OVER',
           revealedPositions: Array.from({ length: state.currentPuzzle!.phrase.length }, (_, i) => i), // Reveal all
           player: {
              ...state.player,
-             roundScore: winScore,
+             currentRoundScore: winScore,
              totalScore: state.player.totalScore + winScore
           }
         };
@@ -160,6 +162,21 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return state; // Wrong solve, logic handled by UI (lose turn)
     }
     
+    case 'ADD_TO_ROUND_SCORE': {
+      const { points } = action;
+      return {
+        ...state,
+        player: { ...state.player, currentRoundScore: state.player.currentRoundScore + points }
+      };
+    }
+
+    case 'CLEAR_ROUND_SCORE': {
+      return {
+        ...state,
+        player: { ...state.player, currentRoundScore: 0 }
+      };
+    }
+
     case 'RESET_GAME':
       return { ...INITIAL_STATE, seed: Date.now() };
 

@@ -19,7 +19,7 @@ describe('Game Engine', () => {
 
     expect(newState.currentPuzzle).toBe(TEST_PUZZLE);
     expect(newState.turnState).toBe('IDLE');
-    expect(newState.player.roundScore).toBe(0);
+    expect(newState.player.currentRoundScore).toBe(0);
   });
 
   it('handles spin result', () => {
@@ -47,20 +47,20 @@ describe('Game Engine', () => {
     state = gameReducer(state, { type: 'GUESS_LETTER', letter: 'T', cost: 0 });
 
     expect(state.guessedLetters).toContain('T');
-    expect(state.player.roundScore).toBe(2000); // 1000 * 2
+    expect(state.player.currentRoundScore).toBe(2000); // 1000 * 2
     expect(state.turnState).toBe('IDLE');
   });
 
   it('handles bankrupt', () => {
     let state = gameReducer(INITIAL_STATE, { type: 'START_ROUND', puzzle: TEST_PUZZLE });
-    state = { ...state, player: { ...state.player, roundScore: 5000 } };
+    state = { ...state, player: { ...state.player, currentRoundScore: 5000 } };
 
     state = gameReducer(state, { 
       type: 'SPIN_RESULT', 
       wedge: { id: 'x', type: 'BANKRUPT', value: 0, label: 'BANKRUPT', color: 'black', weight: 1 } 
     });
 
-    expect(state.player.roundScore).toBe(0);
+    expect(state.player.currentRoundScore).toBe(0);
     // expect(state.turnState).toBe('IDLE'); // Logic in reducer sets it to IDLE
   });
 });

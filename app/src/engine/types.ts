@@ -8,7 +8,7 @@ export interface Puzzle {
 }
 
 export type PlayerState = {
-  roundScore: number;
+  currentRoundScore: number;
   totalScore: number;
   freePlay: boolean;
 };

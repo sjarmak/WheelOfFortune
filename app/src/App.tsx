@@ -89,7 +89,7 @@ function App() {
     const isVowel = VOWELS.includes(letter);
     const cost = isVowel ? vowelCost : 0; 
 
-    if (isVowel && state.player.roundScore < cost && !state.player.freePlay) {
+    if (isVowel && state.player.currentRoundScore < cost && !state.player.freePlay) {
       showToast('Not enough money to buy vowel!', 'error');
       return;
     }
@@ -156,7 +156,7 @@ function App() {
         </h1>
         <div className="flex gap-2 sm:gap-4 items-center">
           <div className="flex flex-col items-end text-sm font-mono">
-             <span className="text-green-400">${state.player.roundScore}</span>
+             <span className="text-green-400">${state.player.currentRoundScore}</span>
              <span className="text-yellow-400 text-xs">${state.player.totalScore}</span>
           </div>
           <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-white/10 rounded-full">
