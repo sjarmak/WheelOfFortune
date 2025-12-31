@@ -166,13 +166,15 @@ function App() {
       </header>
 
       {/* Main Game Area */}
-      <main className="flex-1 flex flex-col items-center justify-center pt-2 sm:pt-4 overflow-hidden relative min-h-0">
+      <main className="flex-1 flex flex-col items-center justify-between p-2 sm:p-4 overflow-hidden relative min-h-0">
         
-        <Board 
-          phrase={state.currentPuzzle.phrase} 
-          revealedPositions={state.revealedPositions}
-          category={state.currentPuzzle.category}
-        />
+        <div className="w-full max-w-4xl flex-shrink-0">
+          <Board 
+            phrase={state.currentPuzzle.phrase} 
+            revealedPositions={state.revealedPositions}
+            category={state.currentPuzzle.category}
+          />
+        </div>
 
         {message && (
           <div className="fixed top-20 z-50 animate-bounce bg-white text-black px-6 py-2 rounded-full font-bold shadow-xl border-2 border-yellow-400">
@@ -180,59 +182,63 @@ function App() {
           </div>
         )}
 
-        <div className="w-full flex-1 flex flex-col items-center justify-end pb-2 sm:pb-4 mt-2 min-h-0">
+        <div className="w-full flex-1 flex flex-col items-center justify-center min-h-0">
           
           {state.turnState === 'ROUND_OVER' ? (
              <button 
                onClick={nextRound}
-               className="mb-8 px-8 py-4 bg-green-600 rounded-xl font-bold text-2xl shadow-lg hover:bg-green-500 animate-pulse"
+               className="px-8 py-4 bg-green-600 rounded-xl font-bold text-2xl shadow-lg hover:bg-green-500 animate-pulse"
              >
                NEXT PUZZLE
              </button>
           ) : (
             <>
-              {(state.turnState === 'IDLE' || state.turnState === 'SPINNING') && !hideKeyboard && (
-                 <Wheel 
-                   onSpinStart={handleSpinStart}
-                   onSpinComplete={handleSpinComplete}
-                   isSpinning={state.turnState === 'SPINNING'}
-                   seed={state.seed}
-                 />
+              {(state.turnState === 'IDLE' || state.turnState === 'SPINNING') && (
+                 <div className="max-h-[40vh] aspect-square flex items-center justify-center overflow-hidden">
+                   <Wheel 
+                     onSpinStart={handleSpinStart}
+                     onSpinComplete={handleSpinComplete}
+                     isSpinning={state.turnState === 'SPINNING'}
+                     seed={state.seed}
+                   />
+                 </div>
               )}
 
               {state.turnState === 'IDLE' && (
-                 <div className="flex gap-4 my-2 sm:my-4">
+                 <div className="flex gap-4 my-2">
                    <button 
                      onClick={() => setShowSolveModal(true)}
-                     className="px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 rounded-lg font-bold shadow-md hover:bg-blue-500"
+                     className="px-4 py-2 bg-blue-600 rounded-lg font-bold shadow-md hover:bg-blue-500"
                    >
                      SOLVE
                    </button>
                    <button 
                      onClick={() => showToast(`Vowels cost $${vowelCost}`, 'info')}
                      disabled={!vowelsLeft}
-                     className="px-4 py-2 sm:px-6 sm:py-3 bg-purple-600 rounded-lg font-bold shadow-md hover:bg-purple-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
+                     className="px-4 py-2 bg-purple-600 rounded-lg font-bold shadow-md hover:bg-purple-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
                    >
                      {vowelsLeft ? `BUY VOWEL ($${vowelCost})` : 'NO MORE VOWELS'}
                    </button>
                  </div>
               )}
 
-              <div className="h-6 mb-1 font-bold text-yellow-300 text-base sm:text-lg px-4 text-center">
+              <div className="h-6 mb-1 font-bold text-yellow-300 text-sm sm:text-base px-4 text-center">
                 {state.turnState === 'SPINNING' && "SPINNING..."}
                 {state.turnState === 'GUESSING_CONSONANT' && `SPUN $${state.spinResult}! GUESS A CONSONANT`}
                 {state.turnState === 'IDLE' && "SPIN, SOLVE, OR BUY VOWEL"}
               </div>
               
-              <div className={clsx("w-full transition-opacity duration-300", hideKeyboard ? 'opacity-0 pointer-events-none h-0' : 'opacity-100')}>
-                <Keyboard 
-                  guessedLetters={state.guessedLetters}
-                  onGuess={handleGuess}
-                  disabled={state.turnState === 'SPINNING' || state.turnState === 'ROUND_OVER'}
-                  consonantsOnly={state.turnState === 'GUESSING_CONSONANT'}
-                  vowelsOnly={false} 
-                />
-              </div>
+              {!hideKeyboard && (
+                <div className="w-full flex-shrink overflow-hidden max-h-[30vh]">
+                  <Keyboard 
+                    guessedLetters={state.guessedLetters}
+                    onGuess={handleGuess}
+                    disabled={state.turnState === 'SPINNING' || state.turnState === 'ROUND_OVER'}
+                    consonantsOnly={state.turnState === 'GUESSING_CONSONANT'}
+                    vowelsOnly={false} 
+                  />
+                </div>
+              )}
             </>
           )}
         </div>
