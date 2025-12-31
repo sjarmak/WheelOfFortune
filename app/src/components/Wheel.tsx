@@ -80,11 +80,10 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
           </div>
         ))}
         {/* SVG Overlay for drawing wedges properly */}
-        <svg viewBox="0 0 100 100" className="absolute top-0 left-0 w-full h-full transform -rotate-90">
+        <svg viewBox="0 0 100 100" className="absolute top-0 left-0 w-full h-full">
           {WHEEL_CONFIG.map((wedge, i) => {
-            // Calculate SVG path for wedge
-            const startAngle = (i * wedgeAngle) * Math.PI / 180;
-            const endAngle = ((i + 1) * wedgeAngle) * Math.PI / 180;
+            const startAngle = (i * wedgeAngle) * (Math.PI / 180);
+            const endAngle = ((i + 1) * wedgeAngle) * (Math.PI / 180);
             const x1 = 50 + 50 * Math.cos(startAngle);
             const y1 = 50 + 50 * Math.sin(startAngle);
             const x2 = 50 + 50 * Math.cos(endAngle);
@@ -101,22 +100,29 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
             );
           })}
         </svg>
-        
-        {/* Labels - harder to place in SVG efficiently without calcs, doing simple overlay */}
-        {WHEEL_CONFIG.map((wedge, i) => (
-           <div
-             key={`label-${i}`}
-             className="absolute w-full text-center text-[10px] font-bold text-black"
-             style={{
-               top: '50%',
-               left: '50%',
-               transform: `translate(-50%, -50%) rotate(${i * wedgeAngle + wedgeAngle/2}deg) translate(35%) rotate(90deg)`,
-               width: '40px'
-             }}
-           >
-             {wedge.label}
-           </div>
-        ))}
+        <svg viewBox="0 0 100 100" className="absolute top-0 left-0 w-full h-full overflow-visible">
+          {WHEEL_CONFIG.map((wedge, i) => {
+            const midAngle = (i + 0.5) * wedgeAngle;
+            const textAngle = midAngle - 90;
+            const radius = 35;
+            const x = 50 + radius * Math.cos(textAngle * Math.PI / 180);
+            const y = 50 + radius * Math.sin(textAngle * Math.PI / 180);
+            return (
+              <text
+                key={`label-${i}`}
+                x={x}
+                y={y}
+                dy="0.35em"
+                transform={`rotate(${midAngle}, ${x}, ${y})`}
+                textAnchor="middle"
+                className="text-[6px] font-bold fill-black"
+                style={{ pointerEvents: 'none' }}
+              >
+                {wedge.label}
+              </text>
+            )
+          })}
+        </svg>
       </div>
       
       {/* Center Cap */}

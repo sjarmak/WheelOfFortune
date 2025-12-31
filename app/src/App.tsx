@@ -1,17 +1,18 @@
-import React, { useReducer, useEffect, useState, useCallback } from 'react';
+import React, { useReducer, useEffect, useState, useMemo } from 'react';
 import { gameReducer, INITIAL_STATE } from './engine/game';
 import { Board } from './components/Board';
 import { Wheel } from './components/Wheel';
 import { Keyboard } from './components/Keyboard';
 import { DEFAULT_PUZZLES } from './engine/defaultPack';
 import { Puzzle, VOWELS, WheelWedge } from './engine/types';
-import { AlertCircle, Play, Settings as SettingsIcon, RotateCcw, Upload, X } from 'lucide-react';
+import { Settings as SettingsIcon, RotateCcw, Upload, X, Eye, EyeOff } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { clsx } from 'clsx';
 
 function App() {
   const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE, (initial) => {
     const saved = localStorage.getItem('wof_state');
-    return saved ? JSON.parse(saved) : initial;
+    return saved ? { ...initial, ...JSON.parse(saved) } : initial;
   });
 
   const [activePack, setActivePack] = useState<Puzzle[]>(DEFAULT_PUZZLES);
@@ -23,18 +24,45 @@ function App() {
   // Settings State
   const [vowelCost, setVowelCost] = useState(250);
   const [customSeed, setCustomSeed] = useState<string>('');
+  const [hideKeyboard, setHideKeyboard] = useState(false);
 
   // Persistence
   useEffect(() => {
     localStorage.setItem('wof_state', JSON.stringify(state));
   }, [state]);
 
+  const nextRound = () => {
+    const seed = customSeed ? parseInt(customSeed) + state.roundCount : undefined;
+    const next = activePack[Math.floor(Math.random() * activePack.length)];
+    dispatch({ type: 'START_ROUND', puzzle: next, seed });
+  };
+  
   // Load puzzle if none
   useEffect(() => {
     if (!state.currentPuzzle) {
       nextRound();
     }
-  }, [state.currentPuzzle]); // Depend on currentPuzzle so if it becomes null we load new
+  }, [state.currentPuzzle, activePack]);
+
+  // Vowel Logic
+  const puzzleVowels = useMemo(() => {
+    if (!state.currentPuzzle) return [];
+    return [...new Set(state.currentPuzzle.phrase.match(/[AEIOU]/g) || [])];
+  }, [state.currentPuzzle]);
+
+  const vowelsLeft = useMemo(() => {
+    return puzzleVowels.some(v => !state.guessedLetters.includes(v));
+  }, [puzzleVowels, state.guessedLetters]);
+
+  useEffect(() => {
+    if (state.currentPuzzle && !vowelsLeft) {
+      const allVowelsGuessed = puzzleVowels.every(v => state.guessedLetters.includes(v));
+      if(allVowelsGuessed && puzzleVowels.length > 0) {
+        showToast('No more vowels!', 'info');
+      }
+    }
+  }, [vowelsLeft, state.currentPuzzle, puzzleVowels, state.guessedLetters]);
+
 
   // Toss-up tick
   useEffect(() => {
@@ -87,12 +115,6 @@ function App() {
     }
   }, [state.turnState]);
 
-  const nextRound = () => {
-    const seed = customSeed ? parseInt(customSeed) + state.roundCount : undefined;
-    const next = activePack[Math.floor(Math.random() * activePack.length)];
-    dispatch({ type: 'START_ROUND', puzzle: next, seed });
-  };
-
   const handleImportPack = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -109,8 +131,9 @@ function App() {
           }));
           setActivePack(newPuzzles);
           showToast(`Imported ${newPuzzles.length} puzzles`, 'success');
-          // Reset game to use new pack
-          dispatch({ type: 'RESET_GAME' });
+          setShowSettings(false);
+          // Use a timeout to allow the settings modal to close before resetting
+          setTimeout(() => dispatch({ type: 'RESET_GAME' }), 200);
         } else {
           showToast('Invalid pack format', 'error');
         }
@@ -124,25 +147,25 @@ function App() {
   if (!state.currentPuzzle) return <div className="h-screen flex items-center justify-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-game-bg flex flex-col text-white pb-safe">
+    <div className="h-screen bg-game-bg flex flex-col text-white pb-safe overflow-hidden">
       {/* Header */}
-      <header className="p-4 flex justify-between items-center bg-game-accent shadow-md z-10">
-        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+      <header className="p-2 sm:p-4 flex justify-between items-center bg-game-accent shadow-md z-10 flex-shrink-0">
+        <h1 className="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
           WHEEL PRACTICE
         </h1>
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-2 sm:gap-4 items-center">
           <div className="flex flex-col items-end text-sm font-mono">
              <span className="text-green-400">${state.player.roundScore}</span>
              <span className="text-yellow-400 text-xs">${state.player.totalScore}</span>
           </div>
           <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-white/10 rounded-full">
-            <SettingsIcon size={24} />
+            <SettingsIcon size={20} />
           </button>
         </div>
       </header>
 
       {/* Main Game Area */}
-      <main className="flex-1 flex flex-col items-center justify-start pt-4 overflow-y-auto overflow-x-hidden relative">
+      <main className="flex-1 flex flex-col items-center justify-center pt-2 sm:pt-4 overflow-hidden relative min-h-0">
         
         <Board 
           phrase={state.currentPuzzle.phrase} 
@@ -156,7 +179,7 @@ function App() {
           </div>
         )}
 
-        <div className="w-full flex-1 flex flex-col items-center justify-end pb-4 mt-4">
+        <div className="w-full flex-1 flex flex-col items-center justify-end pb-2 sm:pb-4 mt-2 min-h-0">
           
           {state.turnState === 'ROUND_OVER' ? (
              <button 
@@ -167,7 +190,7 @@ function App() {
              </button>
           ) : (
             <>
-              {(state.turnState === 'IDLE' || state.turnState === 'SPINNING') && (
+              {(state.turnState === 'IDLE' || state.turnState === 'SPINNING') && !hideKeyboard && (
                  <Wheel 
                    onSpinStart={handleSpinStart}
                    onSpinComplete={handleSpinComplete}
@@ -177,38 +200,38 @@ function App() {
               )}
 
               {state.turnState === 'IDLE' && (
-                 <div className="flex gap-4 mb-4">
+                 <div className="flex gap-4 my-2 sm:my-4">
                    <button 
                      onClick={() => setShowSolveModal(true)}
-                     className="px-6 py-3 bg-blue-600 rounded-lg font-bold shadow-md hover:bg-blue-500"
+                     className="px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 rounded-lg font-bold shadow-md hover:bg-blue-500"
                    >
                      SOLVE
                    </button>
                    <button 
-                     onClick={() => {
-                        // Assuming UI handles Vowel mode implicitly by just checking cost on guess
-                        showToast(`Vowels cost $${vowelCost}`, 'info');
-                     }}
-                     className="px-6 py-3 bg-purple-600 rounded-lg font-bold shadow-md hover:bg-purple-500"
+                     onClick={() => showToast(`Vowels cost $${vowelCost}`, 'info')}
+                     disabled={!vowelsLeft}
+                     className="px-4 py-2 sm:px-6 sm:py-3 bg-purple-600 rounded-lg font-bold shadow-md hover:bg-purple-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
                    >
-                     BUY VOWEL (${vowelCost})
+                     {vowelsLeft ? `BUY VOWEL ($${vowelCost})` : 'NO MORE VOWELS'}
                    </button>
                  </div>
               )}
 
-              <div className="mb-2 font-bold text-yellow-300 text-lg px-4 text-center">
+              <div className="h-6 mb-1 font-bold text-yellow-300 text-base sm:text-lg px-4 text-center">
                 {state.turnState === 'SPINNING' && "SPINNING..."}
                 {state.turnState === 'GUESSING_CONSONANT' && `SPUN $${state.spinResult}! GUESS A CONSONANT`}
                 {state.turnState === 'IDLE' && "SPIN, SOLVE, OR BUY VOWEL"}
               </div>
-
-              <Keyboard 
-                guessedLetters={state.guessedLetters}
-                onGuess={handleGuess}
-                disabled={state.turnState === 'SPINNING' || state.turnState === 'ROUND_OVER'}
-                consonantsOnly={state.turnState === 'GUESSING_CONSONANT'}
-                vowelsOnly={false} 
-              />
+              
+              <div className={clsx("w-full transition-opacity duration-300", hideKeyboard ? 'opacity-0 pointer-events-none h-0' : 'opacity-100')}>
+                <Keyboard 
+                  guessedLetters={state.guessedLetters}
+                  onGuess={handleGuess}
+                  disabled={state.turnState === 'SPINNING' || state.turnState === 'ROUND_OVER'}
+                  consonantsOnly={state.turnState === 'GUESSING_CONSONANT'}
+                  vowelsOnly={false} 
+                />
+              </div>
             </>
           )}
         </div>
@@ -264,6 +287,13 @@ function App() {
                     className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white"
                   />
                   <p className="text-xs text-slate-500 mt-1">Set a number for deterministic play.</p>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-slate-700 pt-4">
+                    <label htmlFor="hide-keyboard" className="text-sm text-slate-400">Hide Keyboard</label>
+                    <button onClick={() => setHideKeyboard(!hideKeyboard)} className="p-2">
+                      {hideKeyboard ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
                 </div>
 
                 <div className="border-t border-slate-700 pt-4">
