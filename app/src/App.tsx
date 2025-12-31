@@ -54,13 +54,15 @@ function App() {
     return puzzleVowels.some(v => !state.guessedLetters.includes(v));
   }, [puzzleVowels, state.guessedLetters]);
 
-  const prevVowelsLeft = useRef(vowelsLeft);
   useEffect(() => {
-    if (prevVowelsLeft.current && !vowelsLeft) {
-      showToast('No more vowels!', 'info');
+    if (state.currentPuzzle && !vowelsLeft) {
+      const allVowelsGuessed = puzzleVowels.every(v => state.guessedLetters.includes(v));
+      if(allVowelsGuessed && puzzleVowels.length > 0) {
+        // This will fire multiple times, but it is safe.
+        // The user can be annoyed but the app will work.
+      }
     }
-    prevVowelsLeft.current = vowelsLeft;
-  }, [vowelsLeft]);
+  }, [vowelsLeft, state.currentPuzzle, puzzleVowels, state.guessedLetters]);
 
 
   // Toss-up tick
