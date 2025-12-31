@@ -111,25 +111,31 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
           <g>
             {WHEEL_CONFIG.map((wedge, i) => {
               const midAngleDeg = (i + 0.5) * wedgeAngle;
+              const midAngleRad = (midAngleDeg - 90) * (Math.PI / 180);
               const words = wedge.label.split(' ');
               const fillColor = wedge.type === 'BANKRUPT' ? '#fff' : '#000';
 
               if (words.length > 1) {
-                const r1 = 23;
-                const r2 = 36;
+                // Manually position two words
+                const r1 = 24; // radius for first word
+                const r2 = 37; // radius for second word
+                const x1 = 50 + r1 * Math.cos(midAngleRad);
+                const y1 = 50 + r1 * Math.sin(midAngleRad);
+                const x2 = 50 + r2 * Math.cos(midAngleRad);
+                const y2 = 50 + r2 * Math.sin(midAngleRad);
                 return (
-                  <g key={`label-${wedge.id}`} transform={`rotate(${midAngleDeg}, 50, 50)`}>
-                    <text x="50" y={r1} textAnchor="middle" fontSize="6" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
+                  <g key={`label-${wedge.id}`}>
+                    <text x={x1} y={y1} transform={`rotate(${midAngleDeg + 90}, ${x1}, ${y1})`} textAnchor="middle" alignmentBaseline="middle" fontSize="5.5" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
                       {words[0]}
                     </text>
-                    <text x="50" y={r2} textAnchor="middle" fontSize="6" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
+                     <text x={x2} y={y2} transform={`rotate(${midAngleDeg + 90}, ${x2}, ${y2})`} textAnchor="middle" alignmentBaseline="middle" fontSize="5.5" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
                       {words[1]}
                     </text>
                   </g>
                 )
               }
               
-              const midAngleRad = (midAngleDeg - 90) * (Math.PI / 180);
+              // Position single-word labels
               const r = 30;
               const x = 50 + r * Math.cos(midAngleRad);
               const y = 50 + r * Math.sin(midAngleRad);
@@ -139,10 +145,10 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
                   key={`label-${wedge.id}`} 
                   x={x}
                   y={y}
-                  transform={`rotate(${midAngleDeg}, ${x}, ${y})`}
+                  transform={`rotate(${midAngleDeg + 90}, ${x}, ${y})`}
                   textAnchor="middle" 
                   alignmentBaseline="middle"
-                  fontSize={wedge.type === 'CASH' ? '8' : '6'} 
+                  fontSize={wedge.type === 'CASH' ? '7' : '5.5'} 
                   fontWeight="bold" 
                   fill={fillColor}
                   style={{ pointerEvents: 'none' }}
