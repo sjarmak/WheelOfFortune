@@ -1,6 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { WHEEL_CONFIG, WheelWedge } from '../engine/types';
-import clsx from 'clsx';
 
 interface WheelProps {
   onSpinStart: () => void;
@@ -9,7 +8,7 @@ interface WheelProps {
   seed: number; // Used to determine result deterministically from outside or we pick here
 }
 
-export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpinning, seed }) => {
+export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpinning }) => {
   const [rotation, setRotation] = useState(0);
   const wheelRef = useRef<HTMLDivElement>(null);
   
@@ -27,14 +26,16 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
     const extraSpins = 5;
     const baseRotation = 360 * extraSpins;
     
-    // Correctly calculate the angle to the middle of the target wedge
+    // Calculate the angle to the middle of the target wedge
+    // The SVG drawing starts wedges at -90° offset, so we account for that
     const targetAngle = (randomIndex * wedgeAngle) + (wedgeAngle / 2);
-    const targetRotation = -targetAngle;
+    const targetRotation = -targetAngle - 90;
     
     const jitter = (Math.random() - 0.5) * (wedgeAngle * 0.8);
     
-    // Use a non-additive rotation to prevent compounding errors
-    const newTotalRotation = baseRotation + targetRotation + jitter;
+    // Add to current rotation to make spins additive (prevents backwards spin on subsequent spins)
+    const spinAmount = baseRotation + targetRotation + jitter;
+    const newTotalRotation = rotation + spinAmount;
     
     setRotation(newTotalRotation);
 
@@ -44,7 +45,7 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
   };
 
   return (
-    <div className="relative w-64 h-64 sm:w-80 sm:h-80 mx-auto my-4">
+    <div className="relative mx-auto my-2 w-full max-w-xs sm:max-w-sm aspect-square">
       {/* Pointer */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[20px] border-t-white drop-shadow-md" />
 
@@ -56,9 +57,9 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
         onClick={spin}
       >
         <svg viewBox="0 0 100 100" className="w-full h-full">
+          {/* Wedges */}
           <g>
             {WHEEL_CONFIG.map((wedge, i) => {
-              // This offset aligns the drawing with the label and spin logic (0 deg = top)
               const angleOffset = -90; 
               const startAngle = (i * wedgeAngle + angleOffset) * (Math.PI / 180);
               const endAngle = ((i + 1) * wedgeAngle + angleOffset) * (Math.PI / 180);
@@ -82,69 +83,53 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
           <circle cx="50" cy="50" r="50" fill="transparent" stroke="rgba(0,0,0,0.2)" strokeWidth="2" />
           <circle cx="50" cy="50" r="10" fill="#888" stroke="#555" strokeWidth="1" />
 
-          <g>
+          {/* Text paths for labels - OPTIMAL VISUAL CONFIGURATION */}
+          {/* This configuration provides the best visual balance:
+              - Radius 44→16: Text positioned in the middle-to-outer area of wedges
+              - 3° counterclockwise offset: Centers text within wedge boundaries
+              - lengthAdjust="spacingAndGlyphs": Allows text to stretch/compress to fit the path
+              - Font sizes (5.5 for CASH, 4.2 for text): Matches visual importance
+              All text is vertically centered and nicely distributed within each wedge. */}
+          <defs>
             {WHEEL_CONFIG.map((wedge, i) => {
-              const midAngleDeg = (i + 0.5) * wedgeAngle; // 0 at top, clockwise from 12 o'clock
-              const midAngleRad = (midAngleDeg - 90) * (Math.PI / 180); // for Math.cos/sin: 0 at right, counter-clockwise initially. -90 shifts 0 to top.
-              const words = wedge.label.split(' ');
-              const fillColor = wedge.type === 'BANKRUPT' ? '#fff' : '#000';
-
-              let textRotation = midAngleDeg; // Base rotation to align text baseline radially
-              const isBottomHalf = midAngleDeg > 90 && midAngleDeg < 270;
-
-              // If in the bottom half, flip text 180 degrees to keep it readable
-              if (isBottomHalf) {
-                textRotation += 180;
-              }
-
-              if (words.length > 1) {
-                // Adjust radii for better spacing and ensure reading order
-                const r1 = 22; // Radius for first word (closer to center)
-                const r2 = 34; // Radius for second word (further from center)
-
-                // Swap words and radii if in the bottom half for correct reading order
-                const displayWords = isBottomHalf ? [words[1], words[0]] : [words[0], words[1]];
-                const displayR1 = isBottomHalf ? r2 : r1;
-                const displayR2 = isBottomHalf ? r1 : r2;
-
-                const x1 = 50 + displayR1 * Math.cos(midAngleRad);
-                const y1 = 50 + displayR1 * Math.sin(midAngleRad);
-                const x2 = 50 + displayR2 * Math.cos(midAngleRad);
-                const y2 = 50 + displayR2 * Math.sin(midAngleRad);
-                
-                return (
-                  <g key={`label-${wedge.id}`}>
-                    <text x={x1} y={y1} transform={`rotate(${textRotation}, ${x1}, ${y1})`} textAnchor="middle" alignmentBaseline="middle" fontSize="4.5" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
-                      {displayWords[0]}
-                    </text>
-                     <text x={x2} y={y2} transform={`rotate(${textRotation}, ${x2}, ${y2})`} textAnchor="middle" alignmentBaseline="middle" fontSize="4.5" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
-                      {displayWords[1]}
-                    </text>
-                  </g>
-                )
-              }
-              
-              // Single-word labels
-              const r = 28; // Adjusted radius for single words
-              const x = 50 + r * Math.cos(midAngleRad);
-              const y = 50 + r * Math.sin(midAngleRad);
+              const midAngleDeg = i * wedgeAngle + wedgeAngle / 2 - 90 - 3; // Shift counterclockwise by 3 degrees
+              const midAngleRad = midAngleDeg * (Math.PI / 180);
+              // Path from radius 44 to radius 16 (optimal outward positioning)
+              const x1 = 50 + 44 * Math.cos(midAngleRad);
+              const y1 = 50 + 44 * Math.sin(midAngleRad);
+              const x2 = 50 + 16 * Math.cos(midAngleRad);
+              const y2 = 50 + 16 * Math.sin(midAngleRad);
               
               return (
-                 <text 
-                  key={`label-${wedge.id}`} 
-                  x={x}
-                  y={y}
-                  transform={`rotate(${textRotation}, ${x}, ${y})`}
-                  textAnchor="middle" 
-                  alignmentBaseline="middle"
-                  fontSize={wedge.type === 'CASH' ? '6' : '5'} 
-                  fontWeight="bold" 
+                <path
+                  key={`path-${wedge.id}`}
+                  id={`path-${wedge.id}`}
+                  d={`M${x1},${y1} L${x2},${y2}`}
+                  fill="none"
+                />
+              );
+            })}
+          </defs>
+
+          {/* Labels along paths */}
+          <g>
+            {WHEEL_CONFIG.map((wedge) => {
+              const fillColor = wedge.type === 'BANKRUPT' ? '#fff' : '#000';
+              
+              return (
+                <text
+                  key={`label-${wedge.id}`}
+                  fontSize={wedge.type === 'CASH' ? '5.5' : '4.2'}
+                  fontWeight="bold"
                   fill={fillColor}
                   style={{ pointerEvents: 'none' }}
+                  lengthAdjust="spacingAndGlyphs"
                 >
-                  {wedge.label}
+                  <textPath href={`#path-${wedge.id}`} startOffset="50%" textAnchor="middle" lengthAdjust="spacingAndGlyphs">
+                    {wedge.label}
+                  </textPath>
                 </text>
-              )
+              );
             })}
           </g>
         </svg>

@@ -50,11 +50,24 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
   let globalIdx = 0;
   
   return (
-    <div className="flex flex-col items-center justify-center p-4 bg-game-board rounded-xl border-4 border-yellow-500 shadow-2xl w-full max-w-4xl mx-auto min-h-[200px]">
-      <div className="flex flex-wrap justify-center content-center gap-y-2 w-full">
-        {phrase.split('').map((char, i) => renderLetter(char, i, i))}
+    <div className="flex flex-col items-center justify-center p-2 sm:p-4 bg-game-board rounded-xl border-4 border-yellow-500 shadow-2xl w-full max-w-4xl mx-auto min-h-[200px]">
+      <div className="flex flex-wrap justify-center gap-x-1 gap-y-1 sm:gap-x-3 sm:gap-y-2 w-full">
+        {words.reduce((acc, word, wordIdx) => {
+          // Calculate the starting position of this word in the original phrase
+          const wordStartIndex = phrase.split(' ').slice(0, wordIdx).reduce((sum, w) => sum + w.length + 1, 0);
+          
+          acc.push(
+            <div key={wordIdx} className="flex gap-x-0">
+              {word.split('').map((char, charIdx) => {
+                const globalIndex = wordStartIndex + charIdx;
+                return renderLetter(char, charIdx, globalIndex);
+              })}
+            </div>
+          );
+          return acc;
+        }, [] as React.ReactNode[])}
       </div>
-      <div className="mt-6 bg-blue-900 px-6 py-2 rounded-full border-2 border-white text-white font-bold tracking-widest uppercase">
+      <div className="mt-4 sm:mt-6 bg-blue-900 px-4 sm:px-6 py-1 sm:py-2 rounded-full border-2 border-white text-white font-bold text-xs sm:text-sm tracking-widest uppercase">
         {category.replace(/_/g, ' ')}
       </div>
     </div>

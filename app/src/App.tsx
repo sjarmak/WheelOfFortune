@@ -166,7 +166,7 @@ function App() {
       </header>
 
       {/* Main Game Area */}
-      <main className="flex-1 flex flex-col items-center justify-between p-2 sm:p-4 overflow-hidden relative min-h-0">
+      <main className="flex-1 flex flex-col items-center justify-start p-2 sm:p-4 overflow-y-auto relative w-full">
         
         <div className="w-full max-w-4xl flex-shrink-0">
           <Board 
@@ -229,7 +229,7 @@ function App() {
               </div>
               
               {!hideKeyboard && (
-                <div className="w-full flex-shrink overflow-hidden max-h-[30vh]">
+                <div className="w-full flex-shrink-0 overflow-y-auto pb-2">
                   <Keyboard 
                     guessedLetters={state.guessedLetters}
                     onGuess={handleGuess}
