@@ -84,31 +84,48 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
 
           <g>
             {WHEEL_CONFIG.map((wedge, i) => {
-              const midAngleDeg = (i + 0.5) * wedgeAngle;
-              const midAngleRad = (midAngleDeg - 90) * (Math.PI / 180);
+              const midAngleDeg = (i + 0.5) * wedgeAngle; // 0 at top, clockwise from 12 o'clock
+              const midAngleRad = (midAngleDeg - 90) * (Math.PI / 180); // for Math.cos/sin: 0 at right, counter-clockwise initially. -90 shifts 0 to top.
               const words = wedge.label.split(' ');
               const fillColor = wedge.type === 'BANKRUPT' ? '#fff' : '#000';
 
+              let textRotation = midAngleDeg; // Base rotation to align text baseline radially
+              const isBottomHalf = midAngleDeg > 90 && midAngleDeg < 270;
+
+              // If in the bottom half, flip text 180 degrees to keep it readable
+              if (isBottomHalf) {
+                textRotation += 180;
+              }
+
               if (words.length > 1) {
-                const r1 = 24;
-                const r2 = 37;
-                const x1 = 50 + r1 * Math.cos(midAngleRad);
-                const y1 = 50 + r1 * Math.sin(midAngleRad);
-                const x2 = 50 + r2 * Math.cos(midAngleRad);
-                const y2 = 50 + r2 * Math.sin(midAngleRad);
+                // Adjust radii for better spacing and ensure reading order
+                const r1 = 22; // Radius for first word (closer to center)
+                const r2 = 34; // Radius for second word (further from center)
+
+                // Swap words and radii if in the bottom half for correct reading order
+                const displayWords = isBottomHalf ? [words[1], words[0]] : [words[0], words[1]];
+                const displayR1 = isBottomHalf ? r2 : r1;
+                const displayR2 = isBottomHalf ? r1 : r2;
+
+                const x1 = 50 + displayR1 * Math.cos(midAngleRad);
+                const y1 = 50 + displayR1 * Math.sin(midAngleRad);
+                const x2 = 50 + displayR2 * Math.cos(midAngleRad);
+                const y2 = 50 + displayR2 * Math.sin(midAngleRad);
+                
                 return (
                   <g key={`label-${wedge.id}`}>
-                    <text x={x1} y={y1} transform={`rotate(${midAngleDeg + 90}, ${x1}, ${y1})`} textAnchor="middle" alignmentBaseline="middle" fontSize="5.5" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
-                      {words[0]}
+                    <text x={x1} y={y1} transform={`rotate(${textRotation}, ${x1}, ${y1})`} textAnchor="middle" alignmentBaseline="middle" fontSize="4.5" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
+                      {displayWords[0]}
                     </text>
-                     <text x={x2} y={y2} transform={`rotate(${midAngleDeg + 90}, ${x2}, ${y2})`} textAnchor="middle" alignmentBaseline="middle" fontSize="5.5" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
-                      {words[1]}
+                     <text x={x2} y={y2} transform={`rotate(${textRotation}, ${x2}, ${y2})`} textAnchor="middle" alignmentBaseline="middle" fontSize="4.5" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
+                      {displayWords[1]}
                     </text>
                   </g>
                 )
               }
               
-              const r = 30;
+              // Single-word labels
+              const r = 28; // Adjusted radius for single words
               const x = 50 + r * Math.cos(midAngleRad);
               const y = 50 + r * Math.sin(midAngleRad);
               
@@ -117,10 +134,10 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
                   key={`label-${wedge.id}`} 
                   x={x}
                   y={y}
-                  transform={`rotate(${midAngleDeg + 90}, ${x}, ${y})`}
+                  transform={`rotate(${textRotation}, ${x}, ${y})`}
                   textAnchor="middle" 
                   alignmentBaseline="middle"
-                  fontSize={wedge.type === 'CASH' ? '7' : '5.5'} 
+                  fontSize={wedge.type === 'CASH' ? '6' : '5'} 
                   fontWeight="bold" 
                   fill={fillColor}
                   style={{ pointerEvents: 'none' }}
