@@ -109,13 +109,48 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
           <circle cx="50" cy="50" r="10" fill="#888" stroke="#555" strokeWidth="1" />
 
           <g>
-            {WHEEL_CONFIG.map((wedge) => (
-              <text key={`label-${wedge.id}`} textAnchor="middle" fontSize="5" fontWeight="bold" fill={wedge.type === 'BANKRUPT' ? '#fff' : '#000'} style={{ pointerEvents: 'none' }}>
-                <textPath href={`#path-${wedge.id}`} startOffset="50%">
+            {WHEEL_CONFIG.map((wedge, i) => {
+              const midAngleDeg = (i + 0.5) * wedgeAngle;
+              const words = wedge.label.split(' ');
+              const fillColor = wedge.type === 'BANKRUPT' ? '#fff' : '#000';
+
+              if (words.length > 1) {
+                const r1 = 23;
+                const r2 = 36;
+                return (
+                  <g key={`label-${wedge.id}`} transform={`rotate(${midAngleDeg}, 50, 50)`}>
+                    <text x="50" y={r1} textAnchor="middle" fontSize="6" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
+                      {words[0]}
+                    </text>
+                    <text x="50" y={r2} textAnchor="middle" fontSize="6" fontWeight="bold" fill={fillColor} style={{ pointerEvents: 'none' }}>
+                      {words[1]}
+                    </text>
+                  </g>
+                )
+              }
+              
+              const midAngleRad = (midAngleDeg - 90) * (Math.PI / 180);
+              const r = 30;
+              const x = 50 + r * Math.cos(midAngleRad);
+              const y = 50 + r * Math.sin(midAngleRad);
+              
+              return (
+                 <text 
+                  key={`label-${wedge.id}`} 
+                  x={x}
+                  y={y}
+                  transform={`rotate(${midAngleDeg}, ${x}, ${y})`}
+                  textAnchor="middle" 
+                  alignmentBaseline="middle"
+                  fontSize={wedge.type === 'CASH' ? '8' : '6'} 
+                  fontWeight="bold" 
+                  fill={fillColor}
+                  style={{ pointerEvents: 'none' }}
+                >
                   {wedge.label}
-                </textPath>
-              </text>
-            ))}
+                </text>
+              )
+            })}
           </g>
         </svg>
       </div>
