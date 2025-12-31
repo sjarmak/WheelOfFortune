@@ -1,0 +1,2232 @@
+{
+  "pack_id": "original",
+  "name": "Original Practice Pack",
+  "license_note": "User-imported/generated pack",
+  "created_at": "2025-12-31T18:59:44.038Z",
+  "stats": {
+    "count": 54,
+    "categories": {
+      "PHRASE": 17,
+      "THING": 7,
+      "PLACE": 7,
+      "FOOD_AND_DRINK": 5,
+      "TITLE": 4,
+      "EVENT": 4,
+      "PERSON": 5,
+      "WHAT_ARE_YOU_DOING": 5
+    },
+    "round_types": {
+      "MAIN": 54
+    }
+  },
+  "puzzles": [
+    {
+      "id": "e8bb748fac2820464bf30f061d904253a86c98df",
+      "phrase": "PRACTICE MAKES PERFECT",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "PRACTICE MAKES PERFECT",
+        "letters": [
+          "P",
+          "R",
+          "A",
+          "C",
+          "T",
+          "I",
+          "C",
+          "E",
+          "M",
+          "A",
+          "K",
+          "E",
+          "S",
+          "P",
+          "E",
+          "R",
+          "F",
+          "E",
+          "C",
+          "T"
+        ],
+        "word_count": 3,
+        "char_count": 22,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.35
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "b811174fb9c47a379897692fc9768b5716f4e3f1",
+      "phrase": "A PENNY FOR YOUR THOUGHTS",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "A PENNY FOR YOUR THOUGHTS",
+        "letters": [
+          "A",
+          "P",
+          "E",
+          "N",
+          "N",
+          "Y",
+          "F",
+          "O",
+          "R",
+          "Y",
+          "O",
+          "U",
+          "R",
+          "T",
+          "H",
+          "O",
+          "U",
+          "G",
+          "H",
+          "T",
+          "S"
+        ],
+        "word_count": 5,
+        "char_count": 25,
+        "unique_letter_count": 13,
+        "vowel_ratio": 0.3333333333333333
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "c577c032340dc1791bfbd7309991e743fd0f0706",
+      "phrase": "ACTIONS SPEAK LOUDER THAN WORDS",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "ACTIONS SPEAK LOUDER THAN WORDS",
+        "letters": [
+          "A",
+          "C",
+          "T",
+          "I",
+          "O",
+          "N",
+          "S",
+          "S",
+          "P",
+          "E",
+          "A",
+          "K",
+          "L",
+          "O",
+          "U",
+          "D",
+          "E",
+          "R",
+          "T",
+          "H",
+          "A",
+          "N",
+          "W",
+          "O",
+          "R",
+          "D",
+          "S"
+        ],
+        "word_count": 5,
+        "char_count": 31,
+        "unique_letter_count": 16,
+        "vowel_ratio": 0.37037037037037035
+      },
+      "difficulty": {
+        "score": 0.5,
+        "reasons": [
+          "long_phrase"
+        ]
+      }
+    },
+    {
+      "id": "f6c06448f65b2d784a8f16316e83a40811b3192e",
+      "phrase": "BETTER LATE THAN NEVER",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "BETTER LATE THAN NEVER",
+        "letters": [
+          "B",
+          "E",
+          "T",
+          "T",
+          "E",
+          "R",
+          "L",
+          "A",
+          "T",
+          "E",
+          "T",
+          "H",
+          "A",
+          "N",
+          "N",
+          "E",
+          "V",
+          "E",
+          "R"
+        ],
+        "word_count": 4,
+        "char_count": 22,
+        "unique_letter_count": 9,
+        "vowel_ratio": 0.3684210526315789
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "ac4f0013ff4af190faef4c6450dc394af373463a",
+      "phrase": "BREAK A LEG",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "BREAK A LEG",
+        "letters": [
+          "B",
+          "R",
+          "E",
+          "A",
+          "K",
+          "A",
+          "L",
+          "E",
+          "G"
+        ],
+        "word_count": 3,
+        "char_count": 11,
+        "unique_letter_count": 7,
+        "vowel_ratio": 0.4444444444444444
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "403abdccf876641b7cc845bfcaba56b9d79cf5a1",
+      "phrase": "CUT TO THE CHASE",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "CUT TO THE CHASE",
+        "letters": [
+          "C",
+          "U",
+          "T",
+          "T",
+          "O",
+          "T",
+          "H",
+          "E",
+          "C",
+          "H",
+          "A",
+          "S",
+          "E"
+        ],
+        "word_count": 4,
+        "char_count": 16,
+        "unique_letter_count": 8,
+        "vowel_ratio": 0.38461538461538464
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "fe72c8ef3692c8c0fe4efd31f5d44f17aec24507",
+      "phrase": "HIT THE NAIL ON THE HEAD",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "HIT THE NAIL ON THE HEAD",
+        "letters": [
+          "H",
+          "I",
+          "T",
+          "T",
+          "H",
+          "E",
+          "N",
+          "A",
+          "I",
+          "L",
+          "O",
+          "N",
+          "T",
+          "H",
+          "E",
+          "H",
+          "E",
+          "A",
+          "D"
+        ],
+        "word_count": 6,
+        "char_count": 24,
+        "unique_letter_count": 9,
+        "vowel_ratio": 0.42105263157894735
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "3ed0ae4a0382da1240c868d76530a7a7682658ec",
+      "phrase": "LET THE CAT OUT OF THE BAG",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "LET THE CAT OUT OF THE BAG",
+        "letters": [
+          "L",
+          "E",
+          "T",
+          "T",
+          "H",
+          "E",
+          "C",
+          "A",
+          "T",
+          "O",
+          "U",
+          "T",
+          "O",
+          "F",
+          "T",
+          "H",
+          "E",
+          "B",
+          "A",
+          "G"
+        ],
+        "word_count": 7,
+        "char_count": 26,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.4
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "1342dd7c505ce7e13f15e69b226e2f910760d861",
+      "phrase": "ONCE IN A BLUE MOON",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "ONCE IN A BLUE MOON",
+        "letters": [
+          "O",
+          "N",
+          "C",
+          "E",
+          "I",
+          "N",
+          "A",
+          "B",
+          "L",
+          "U",
+          "E",
+          "M",
+          "O",
+          "O",
+          "N"
+        ],
+        "word_count": 5,
+        "char_count": 19,
+        "unique_letter_count": 10,
+        "vowel_ratio": 0.5333333333333333
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "ad0a548032378a8fc411bdc06efe300f61ccb96b",
+      "phrase": "PIECE OF CAKE",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "PIECE OF CAKE",
+        "letters": [
+          "P",
+          "I",
+          "E",
+          "C",
+          "E",
+          "O",
+          "F",
+          "C",
+          "A",
+          "K",
+          "E"
+        ],
+        "word_count": 3,
+        "char_count": 13,
+        "unique_letter_count": 8,
+        "vowel_ratio": 0.5454545454545454
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "a3925ca1339e174c638116fc87585a604d36ab25",
+      "phrase": "PULLING YOUR LEG",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "PULLING YOUR LEG",
+        "letters": [
+          "P",
+          "U",
+          "L",
+          "L",
+          "I",
+          "N",
+          "G",
+          "Y",
+          "O",
+          "U",
+          "R",
+          "L",
+          "E",
+          "G"
+        ],
+        "word_count": 3,
+        "char_count": 16,
+        "unique_letter_count": 10,
+        "vowel_ratio": 0.35714285714285715
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "50a9c15e279cbf0ce91a290ba6c036d5ea30ad67",
+      "phrase": "SPILL THE BEANS",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "SPILL THE BEANS",
+        "letters": [
+          "S",
+          "P",
+          "I",
+          "L",
+          "L",
+          "T",
+          "H",
+          "E",
+          "B",
+          "E",
+          "A",
+          "N",
+          "S"
+        ],
+        "word_count": 3,
+        "char_count": 15,
+        "unique_letter_count": 10,
+        "vowel_ratio": 0.3076923076923077
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "58a420e35599724a8a77d73e20f5c79a08cf2c72",
+      "phrase": "TAKE IT WITH A GRAIN OF SALT",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "TAKE IT WITH A GRAIN OF SALT",
+        "letters": [
+          "T",
+          "A",
+          "K",
+          "E",
+          "I",
+          "T",
+          "W",
+          "I",
+          "T",
+          "H",
+          "A",
+          "G",
+          "R",
+          "A",
+          "I",
+          "N",
+          "O",
+          "F",
+          "S",
+          "A",
+          "L",
+          "T"
+        ],
+        "word_count": 7,
+        "char_count": 28,
+        "unique_letter_count": 14,
+        "vowel_ratio": 0.4090909090909091
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "9505e2dc9c9c1364a4cca49a230eb00e96e807ac",
+      "phrase": "THE BALL IS IN YOUR COURT",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "THE BALL IS IN YOUR COURT",
+        "letters": [
+          "T",
+          "H",
+          "E",
+          "B",
+          "A",
+          "L",
+          "L",
+          "I",
+          "S",
+          "I",
+          "N",
+          "Y",
+          "O",
+          "U",
+          "R",
+          "C",
+          "O",
+          "U",
+          "R",
+          "T"
+        ],
+        "word_count": 6,
+        "char_count": 25,
+        "unique_letter_count": 14,
+        "vowel_ratio": 0.4
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "df70eaeea4597ac6b98e9ea3c71d1296651dd9dd",
+      "phrase": "THE BEST OF BOTH WORLDS",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "THE BEST OF BOTH WORLDS",
+        "letters": [
+          "T",
+          "H",
+          "E",
+          "B",
+          "E",
+          "S",
+          "T",
+          "O",
+          "F",
+          "B",
+          "O",
+          "T",
+          "H",
+          "W",
+          "O",
+          "R",
+          "L",
+          "D",
+          "S"
+        ],
+        "word_count": 5,
+        "char_count": 23,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.2631578947368421
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "105f1a8980f513d7ce246527f86aa75648ed3e00",
+      "phrase": "UNDER THE WEATHER",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "UNDER THE WEATHER",
+        "letters": [
+          "U",
+          "N",
+          "D",
+          "E",
+          "R",
+          "T",
+          "H",
+          "E",
+          "W",
+          "E",
+          "A",
+          "T",
+          "H",
+          "E",
+          "R"
+        ],
+        "word_count": 3,
+        "char_count": 17,
+        "unique_letter_count": 9,
+        "vowel_ratio": 0.4
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "05dea3a929f36238349cadc97224979fcf5b2c4e",
+      "phrase": "YOU CAN SAY THAT AGAIN",
+      "category": "PHRASE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "YOU CAN SAY THAT AGAIN",
+        "letters": [
+          "Y",
+          "O",
+          "U",
+          "C",
+          "A",
+          "N",
+          "S",
+          "A",
+          "Y",
+          "T",
+          "H",
+          "A",
+          "T",
+          "A",
+          "G",
+          "A",
+          "I",
+          "N"
+        ],
+        "word_count": 5,
+        "char_count": 22,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.4444444444444444
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "f967062076afd4bfe0842d0ffdfb70dcfa7235f9",
+      "phrase": "ARTIFICIAL INTELLIGENCE",
+      "category": "THING",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "ARTIFICIAL INTELLIGENCE",
+        "letters": [
+          "A",
+          "R",
+          "T",
+          "I",
+          "F",
+          "I",
+          "C",
+          "I",
+          "A",
+          "L",
+          "I",
+          "N",
+          "T",
+          "E",
+          "L",
+          "L",
+          "I",
+          "G",
+          "E",
+          "N",
+          "C",
+          "E"
+        ],
+        "word_count": 2,
+        "char_count": 23,
+        "unique_letter_count": 10,
+        "vowel_ratio": 0.45454545454545453
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "7fcfa9ed5bac3a348a34c369167271029be05d7e",
+      "phrase": "MACHINE LEARNING MODEL",
+      "category": "THING",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "MACHINE LEARNING MODEL",
+        "letters": [
+          "M",
+          "A",
+          "C",
+          "H",
+          "I",
+          "N",
+          "E",
+          "L",
+          "E",
+          "A",
+          "R",
+          "N",
+          "I",
+          "N",
+          "G",
+          "M",
+          "O",
+          "D",
+          "E",
+          "L"
+        ],
+        "word_count": 3,
+        "char_count": 22,
+        "unique_letter_count": 12,
+        "vowel_ratio": 0.4
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "3f339a86a181b9516a7e48e53abc1f1542e4081b",
+      "phrase": "LARGE LANGUAGE MODEL",
+      "category": "THING",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "LARGE LANGUAGE MODEL",
+        "letters": [
+          "L",
+          "A",
+          "R",
+          "G",
+          "E",
+          "L",
+          "A",
+          "N",
+          "G",
+          "U",
+          "A",
+          "G",
+          "E",
+          "M",
+          "O",
+          "D",
+          "E",
+          "L"
+        ],
+        "word_count": 3,
+        "char_count": 20,
+        "unique_letter_count": 10,
+        "vowel_ratio": 0.4444444444444444
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "548557805364ab2ff3b0948c3ca8558504eff204",
+      "phrase": "NEURAL NETWORK",
+      "category": "THING",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "NEURAL NETWORK",
+        "letters": [
+          "N",
+          "E",
+          "U",
+          "R",
+          "A",
+          "L",
+          "N",
+          "E",
+          "T",
+          "W",
+          "O",
+          "R",
+          "K"
+        ],
+        "word_count": 2,
+        "char_count": 14,
+        "unique_letter_count": 10,
+        "vowel_ratio": 0.38461538461538464
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "d3d21e3a81ebfc4fe96c7e30cf099e164655ed6a",
+      "phrase": "DATA PIPELINE",
+      "category": "THING",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "DATA PIPELINE",
+        "letters": [
+          "D",
+          "A",
+          "T",
+          "A",
+          "P",
+          "I",
+          "P",
+          "E",
+          "L",
+          "I",
+          "N",
+          "E"
+        ],
+        "word_count": 2,
+        "char_count": 13,
+        "unique_letter_count": 8,
+        "vowel_ratio": 0.5
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "e4b79a93ec8eebffb1ab8b983ad71e94b69a0cf2",
+      "phrase": "SOFTWARE ENGINEERING",
+      "category": "THING",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "SOFTWARE ENGINEERING",
+        "letters": [
+          "S",
+          "O",
+          "F",
+          "T",
+          "W",
+          "A",
+          "R",
+          "E",
+          "E",
+          "N",
+          "G",
+          "I",
+          "N",
+          "E",
+          "E",
+          "R",
+          "I",
+          "N",
+          "G"
+        ],
+        "word_count": 2,
+        "char_count": 20,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.42105263157894735
+      },
+      "difficulty": {
+        "score": 0.25,
+        "reasons": [
+          "ends_in_ing"
+        ]
+      }
+    },
+    {
+      "id": "578f4930c7e4b32edad5e2468975e8f723bbde49",
+      "phrase": "VIRTUAL REALITY HEADSET",
+      "category": "THING",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "VIRTUAL REALITY HEADSET",
+        "letters": [
+          "V",
+          "I",
+          "R",
+          "T",
+          "U",
+          "A",
+          "L",
+          "R",
+          "E",
+          "A",
+          "L",
+          "I",
+          "T",
+          "Y",
+          "H",
+          "E",
+          "A",
+          "D",
+          "S",
+          "E",
+          "T"
+        ],
+        "word_count": 3,
+        "char_count": 23,
+        "unique_letter_count": 12,
+        "vowel_ratio": 0.42857142857142855
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "d55a802ad06edc613542c36b14456bab5dda2b0b",
+      "phrase": "SILICON VALLEY",
+      "category": "PLACE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "SILICON VALLEY",
+        "letters": [
+          "S",
+          "I",
+          "L",
+          "I",
+          "C",
+          "O",
+          "N",
+          "V",
+          "A",
+          "L",
+          "L",
+          "E",
+          "Y"
+        ],
+        "word_count": 2,
+        "char_count": 14,
+        "unique_letter_count": 10,
+        "vowel_ratio": 0.38461538461538464
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "2bc411c8ac22f6ea146a46fa60d29bac253fdcd2",
+      "phrase": "SAN FRANCISCO BAY AREA",
+      "category": "PLACE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "SAN FRANCISCO BAY AREA",
+        "letters": [
+          "S",
+          "A",
+          "N",
+          "F",
+          "R",
+          "A",
+          "N",
+          "C",
+          "I",
+          "S",
+          "C",
+          "O",
+          "B",
+          "A",
+          "Y",
+          "A",
+          "R",
+          "E",
+          "A"
+        ],
+        "word_count": 4,
+        "char_count": 22,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.42105263157894735
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "7a5e9b276675ec978f8a2081d90c1479f9e2e1b3",
+      "phrase": "NEW YORK CITY",
+      "category": "PLACE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "NEW YORK CITY",
+        "letters": [
+          "N",
+          "E",
+          "W",
+          "Y",
+          "O",
+          "R",
+          "K",
+          "C",
+          "I",
+          "T",
+          "Y"
+        ],
+        "word_count": 3,
+        "char_count": 13,
+        "unique_letter_count": 10,
+        "vowel_ratio": 0.2727272727272727
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "7bf47a9b2160e6b576050fc5266f6f26e715b038",
+      "phrase": "THE GRAND CANYON",
+      "category": "PLACE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "THE GRAND CANYON",
+        "letters": [
+          "T",
+          "H",
+          "E",
+          "G",
+          "R",
+          "A",
+          "N",
+          "D",
+          "C",
+          "A",
+          "N",
+          "Y",
+          "O",
+          "N"
+        ],
+        "word_count": 3,
+        "char_count": 16,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.2857142857142857
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "df27349af39dd3163463e67a907de33ecfc286d3",
+      "phrase": "THE GREAT WALL OF CHINA",
+      "category": "PLACE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "THE GREAT WALL OF CHINA",
+        "letters": [
+          "T",
+          "H",
+          "E",
+          "G",
+          "R",
+          "E",
+          "A",
+          "T",
+          "W",
+          "A",
+          "L",
+          "L",
+          "O",
+          "F",
+          "C",
+          "H",
+          "I",
+          "N",
+          "A"
+        ],
+        "word_count": 5,
+        "char_count": 23,
+        "unique_letter_count": 13,
+        "vowel_ratio": 0.3684210526315789
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "353bedb149823cff42a77bbb84b69f425db2e7b2",
+      "phrase": "THE EIFFEL TOWER",
+      "category": "PLACE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "THE EIFFEL TOWER",
+        "letters": [
+          "T",
+          "H",
+          "E",
+          "E",
+          "I",
+          "F",
+          "F",
+          "E",
+          "L",
+          "T",
+          "O",
+          "W",
+          "E",
+          "R"
+        ],
+        "word_count": 3,
+        "char_count": 16,
+        "unique_letter_count": 9,
+        "vowel_ratio": 0.42857142857142855
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "744f8ac235beb74ce69350daa0ac3601984ee804",
+      "phrase": "THE TAJ MAHAL",
+      "category": "PLACE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "THE TAJ MAHAL",
+        "letters": [
+          "T",
+          "H",
+          "E",
+          "T",
+          "A",
+          "J",
+          "M",
+          "A",
+          "H",
+          "A",
+          "L"
+        ],
+        "word_count": 3,
+        "char_count": 13,
+        "unique_letter_count": 7,
+        "vowel_ratio": 0.36363636363636365
+      },
+      "difficulty": {
+        "score": 0.45,
+        "reasons": [
+          "rare_letters_count:1"
+        ]
+      }
+    },
+    {
+      "id": "c74757556304287bb2a80f06ba49a5ac4fcd490d",
+      "phrase": "PIZZA WITH PEPPERONI",
+      "category": "FOOD_AND_DRINK",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "PIZZA WITH PEPPERONI",
+        "letters": [
+          "P",
+          "I",
+          "Z",
+          "Z",
+          "A",
+          "W",
+          "I",
+          "T",
+          "H",
+          "P",
+          "E",
+          "P",
+          "P",
+          "E",
+          "R",
+          "O",
+          "N",
+          "I"
+        ],
+        "word_count": 3,
+        "char_count": 20,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.3888888888888889
+      },
+      "difficulty": {
+        "score": 0.6,
+        "reasons": [
+          "rare_letters_count:2"
+        ]
+      }
+    },
+    {
+      "id": "1ebcdd33902002a8fdc62ac7624030cab7dc74cc",
+      "phrase": "CHOCOLATE CHIP COOKIES",
+      "category": "FOOD_AND_DRINK",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "CHOCOLATE CHIP COOKIES",
+        "letters": [
+          "C",
+          "H",
+          "O",
+          "C",
+          "O",
+          "L",
+          "A",
+          "T",
+          "E",
+          "C",
+          "H",
+          "I",
+          "P",
+          "C",
+          "O",
+          "O",
+          "K",
+          "I",
+          "E",
+          "S"
+        ],
+        "word_count": 3,
+        "char_count": 22,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.45
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "bba352450890662c04a325fcd8a02dfaaca69af8",
+      "phrase": "ICED COFFEE WITH MILK",
+      "category": "FOOD_AND_DRINK",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "ICED COFFEE WITH MILK",
+        "letters": [
+          "I",
+          "C",
+          "E",
+          "D",
+          "C",
+          "O",
+          "F",
+          "F",
+          "E",
+          "E",
+          "W",
+          "I",
+          "T",
+          "H",
+          "M",
+          "I",
+          "L",
+          "K"
+        ],
+        "word_count": 4,
+        "char_count": 21,
+        "unique_letter_count": 12,
+        "vowel_ratio": 0.3888888888888889
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "69e072a009e0c40e92605ca39e235dbb13875a9b",
+      "phrase": "SPAGHETTI AND MEATBALLS",
+      "category": "FOOD_AND_DRINK",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "SPAGHETTI AND MEATBALLS",
+        "letters": [
+          "S",
+          "P",
+          "A",
+          "G",
+          "H",
+          "E",
+          "T",
+          "T",
+          "I",
+          "A",
+          "N",
+          "D",
+          "M",
+          "E",
+          "A",
+          "T",
+          "B",
+          "A",
+          "L",
+          "L",
+          "S"
+        ],
+        "word_count": 3,
+        "char_count": 23,
+        "unique_letter_count": 13,
+        "vowel_ratio": 0.3333333333333333
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "e26554b6a801fdbef71532fedebdbedfc122c257",
+      "phrase": "BURGER AND FRIES",
+      "category": "FOOD_AND_DRINK",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "BURGER AND FRIES",
+        "letters": [
+          "B",
+          "U",
+          "R",
+          "G",
+          "E",
+          "R",
+          "A",
+          "N",
+          "D",
+          "F",
+          "R",
+          "I",
+          "E",
+          "S"
+        ],
+        "word_count": 3,
+        "char_count": 16,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.35714285714285715
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "c8485419c6a690e72d37f622395df1b330d9dcb3",
+      "phrase": "WHEEL OF FORTUNE",
+      "category": "TITLE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "WHEEL OF FORTUNE",
+        "letters": [
+          "W",
+          "H",
+          "E",
+          "E",
+          "L",
+          "O",
+          "F",
+          "F",
+          "O",
+          "R",
+          "T",
+          "U",
+          "N",
+          "E"
+        ],
+        "word_count": 3,
+        "char_count": 16,
+        "unique_letter_count": 10,
+        "vowel_ratio": 0.42857142857142855
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "7d89db36d645c201e5f253ae5d6fd9933436f2b0",
+      "phrase": "JEOPARDY",
+      "category": "TITLE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "JEOPARDY",
+        "letters": [
+          "J",
+          "E",
+          "O",
+          "P",
+          "A",
+          "R",
+          "D",
+          "Y"
+        ],
+        "word_count": 1,
+        "char_count": 8,
+        "unique_letter_count": 8,
+        "vowel_ratio": 0.375
+      },
+      "difficulty": {
+        "score": 0.55,
+        "reasons": [
+          "rare_letters_count:1",
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "5b64106d9c1856c841b0268258a37132812af802",
+      "phrase": "THE PRICE IS RIGHT",
+      "category": "TITLE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "THE PRICE IS RIGHT",
+        "letters": [
+          "T",
+          "H",
+          "E",
+          "P",
+          "R",
+          "I",
+          "C",
+          "E",
+          "I",
+          "S",
+          "R",
+          "I",
+          "G",
+          "H",
+          "T"
+        ],
+        "word_count": 4,
+        "char_count": 18,
+        "unique_letter_count": 9,
+        "vowel_ratio": 0.3333333333333333
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "c063ec15c417c733eeaaf9ef52b3e0470904741a",
+      "phrase": "WHO WANTS TO BE A MILLIONAIRE",
+      "category": "TITLE",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "WHO WANTS TO BE A MILLIONAIRE",
+        "letters": [
+          "W",
+          "H",
+          "O",
+          "W",
+          "A",
+          "N",
+          "T",
+          "S",
+          "T",
+          "O",
+          "B",
+          "E",
+          "A",
+          "M",
+          "I",
+          "L",
+          "L",
+          "I",
+          "O",
+          "N",
+          "A",
+          "I",
+          "R",
+          "E"
+        ],
+        "word_count": 6,
+        "char_count": 29,
+        "unique_letter_count": 13,
+        "vowel_ratio": 0.4583333333333333
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "4f04bb28cddda1d77c7174cc4dd7f6dc54240ca8",
+      "phrase": "NEW YEARS EVE PARTY",
+      "category": "EVENT",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "NEW YEARS EVE PARTY",
+        "letters": [
+          "N",
+          "E",
+          "W",
+          "Y",
+          "E",
+          "A",
+          "R",
+          "S",
+          "E",
+          "V",
+          "E",
+          "P",
+          "A",
+          "R",
+          "T",
+          "Y"
+        ],
+        "word_count": 4,
+        "char_count": 19,
+        "unique_letter_count": 10,
+        "vowel_ratio": 0.375
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "c7fe1d6e038862fd746ecc15049e8df31ba10935",
+      "phrase": "SUPER BOWL SUNDAY",
+      "category": "EVENT",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "SUPER BOWL SUNDAY",
+        "letters": [
+          "S",
+          "U",
+          "P",
+          "E",
+          "R",
+          "B",
+          "O",
+          "W",
+          "L",
+          "S",
+          "U",
+          "N",
+          "D",
+          "A",
+          "Y"
+        ],
+        "word_count": 3,
+        "char_count": 17,
+        "unique_letter_count": 13,
+        "vowel_ratio": 0.3333333333333333
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "f72f082271423a77405eda12f70554c7ba54c498",
+      "phrase": "SUMMER OLYMPICS",
+      "category": "EVENT",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "SUMMER OLYMPICS",
+        "letters": [
+          "S",
+          "U",
+          "M",
+          "M",
+          "E",
+          "R",
+          "O",
+          "L",
+          "Y",
+          "M",
+          "P",
+          "I",
+          "C",
+          "S"
+        ],
+        "word_count": 2,
+        "char_count": 15,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.2857142857142857
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "fbc1cd67bda4d28fd7fa21e502073dd542d21d72",
+      "phrase": "WORLD CUP FINAL",
+      "category": "EVENT",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "WORLD CUP FINAL",
+        "letters": [
+          "W",
+          "O",
+          "R",
+          "L",
+          "D",
+          "C",
+          "U",
+          "P",
+          "F",
+          "I",
+          "N",
+          "A",
+          "L"
+        ],
+        "word_count": 3,
+        "char_count": 15,
+        "unique_letter_count": 12,
+        "vowel_ratio": 0.3076923076923077
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "baa6e92057644ec39ca21cad495f1af622015aae",
+      "phrase": "ELON MUSK",
+      "category": "PERSON",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "ELON MUSK",
+        "letters": [
+          "E",
+          "L",
+          "O",
+          "N",
+          "M",
+          "U",
+          "S",
+          "K"
+        ],
+        "word_count": 2,
+        "char_count": 9,
+        "unique_letter_count": 8,
+        "vowel_ratio": 0.375
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "b2f8d17ab9d9d2b7dfd6e30b893f25597a66d7ef",
+      "phrase": "BILL GATES",
+      "category": "PERSON",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "BILL GATES",
+        "letters": [
+          "B",
+          "I",
+          "L",
+          "L",
+          "G",
+          "A",
+          "T",
+          "E",
+          "S"
+        ],
+        "word_count": 2,
+        "char_count": 10,
+        "unique_letter_count": 8,
+        "vowel_ratio": 0.3333333333333333
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "47c89dd89f8ae869c936d0ae81536b12f5be2296",
+      "phrase": "STEVE JOBS",
+      "category": "PERSON",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "STEVE JOBS",
+        "letters": [
+          "S",
+          "T",
+          "E",
+          "V",
+          "E",
+          "J",
+          "O",
+          "B",
+          "S"
+        ],
+        "word_count": 2,
+        "char_count": 10,
+        "unique_letter_count": 7,
+        "vowel_ratio": 0.3333333333333333
+      },
+      "difficulty": {
+        "score": 0.55,
+        "reasons": [
+          "rare_letters_count:1",
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "e48ed932d7d65f15160d799c2448e2e8afee6a6c",
+      "phrase": "ALAN TURING",
+      "category": "PERSON",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "ALAN TURING",
+        "letters": [
+          "A",
+          "L",
+          "A",
+          "N",
+          "T",
+          "U",
+          "R",
+          "I",
+          "N",
+          "G"
+        ],
+        "word_count": 2,
+        "char_count": 11,
+        "unique_letter_count": 8,
+        "vowel_ratio": 0.4
+      },
+      "difficulty": {
+        "score": 0.35,
+        "reasons": [
+          "ends_in_ing",
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "0b84f796fd22cfb0ad49aa72d316da7b574ab38b",
+      "phrase": "ADA LOVELACE",
+      "category": "PERSON",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "ADA LOVELACE",
+        "letters": [
+          "A",
+          "D",
+          "A",
+          "L",
+          "O",
+          "V",
+          "E",
+          "L",
+          "A",
+          "C",
+          "E"
+        ],
+        "word_count": 2,
+        "char_count": 12,
+        "unique_letter_count": 7,
+        "vowel_ratio": 0.5454545454545454
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "456d684a23b053e0ca99dbce01dee2014c7fec9f",
+      "phrase": "WRITING CODE",
+      "category": "WHAT_ARE_YOU_DOING",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "WRITING CODE",
+        "letters": [
+          "W",
+          "R",
+          "I",
+          "T",
+          "I",
+          "N",
+          "G",
+          "C",
+          "O",
+          "D",
+          "E"
+        ],
+        "word_count": 2,
+        "char_count": 12,
+        "unique_letter_count": 10,
+        "vowel_ratio": 0.36363636363636365
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "d714456d35c3d00e342923bc9468a810734a62f9",
+      "phrase": "DEBUGGING A PROGRAM",
+      "category": "WHAT_ARE_YOU_DOING",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "DEBUGGING A PROGRAM",
+        "letters": [
+          "D",
+          "E",
+          "B",
+          "U",
+          "G",
+          "G",
+          "I",
+          "N",
+          "G",
+          "A",
+          "P",
+          "R",
+          "O",
+          "G",
+          "R",
+          "A",
+          "M"
+        ],
+        "word_count": 3,
+        "char_count": 19,
+        "unique_letter_count": 12,
+        "vowel_ratio": 0.35294117647058826
+      },
+      "difficulty": {
+        "score": 0.4,
+        "reasons": [
+          "high_unique_letters"
+        ]
+      }
+    },
+    {
+      "id": "09b3acda4846f7370ece14d59644a1b989bf7745",
+      "phrase": "DEPLOYING TO PRODUCTION",
+      "category": "WHAT_ARE_YOU_DOING",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "DEPLOYING TO PRODUCTION",
+        "letters": [
+          "D",
+          "E",
+          "P",
+          "L",
+          "O",
+          "Y",
+          "I",
+          "N",
+          "G",
+          "T",
+          "O",
+          "P",
+          "R",
+          "O",
+          "D",
+          "U",
+          "C",
+          "T",
+          "I",
+          "O",
+          "N"
+        ],
+        "word_count": 3,
+        "char_count": 23,
+        "unique_letter_count": 13,
+        "vowel_ratio": 0.38095238095238093
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "47d82f288c32d5b638ea7855bfb1f2fd398fd213",
+      "phrase": "LEARNING NEW THINGS",
+      "category": "WHAT_ARE_YOU_DOING",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "LEARNING NEW THINGS",
+        "letters": [
+          "L",
+          "E",
+          "A",
+          "R",
+          "N",
+          "I",
+          "N",
+          "G",
+          "N",
+          "E",
+          "W",
+          "T",
+          "H",
+          "I",
+          "N",
+          "G",
+          "S"
+        ],
+        "word_count": 3,
+        "char_count": 19,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.29411764705882354
+      },
+      "difficulty": {
+        "score": 0.3,
+        "reasons": []
+      }
+    },
+    {
+      "id": "033a7e83191f2c2d5e0ddf0cf79a255b2289ae88",
+      "phrase": "SOLVING PUZZLES",
+      "category": "WHAT_ARE_YOU_DOING",
+      "round_type": "MAIN",
+      "source": {
+        "type": "text_file",
+        "name": "imported_text",
+        "path": "../data/raw/original_puzzles.txt"
+      },
+      "normalized": {
+        "phrase": "SOLVING PUZZLES",
+        "letters": [
+          "S",
+          "O",
+          "L",
+          "V",
+          "I",
+          "N",
+          "G",
+          "P",
+          "U",
+          "Z",
+          "Z",
+          "L",
+          "E",
+          "S"
+        ],
+        "word_count": 2,
+        "char_count": 15,
+        "unique_letter_count": 11,
+        "vowel_ratio": 0.2857142857142857
+      },
+      "difficulty": {
+        "score": 0.7,
+        "reasons": [
+          "rare_letters_count:2",
+          "high_unique_letters"
+        ]
+      }
+    }
+  ]
+}

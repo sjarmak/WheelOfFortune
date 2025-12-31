@@ -1,0 +1,16 @@
+{
+  "count": 54,
+  "categories": {
+    "PHRASE": 17,
+    "THING": 7,
+    "PLACE": 7,
+    "FOOD_AND_DRINK": 5,
+    "TITLE": 4,
+    "EVENT": 4,
+    "PERSON": 5,
+    "WHAT_ARE_YOU_DOING": 5
+  },
+  "round_types": {
+    "MAIN": 54
+  }
+}
