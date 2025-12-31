@@ -72,7 +72,7 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
               const midAngle = (i + 0.5) * wedgeAngle;
               const textAngleRad = (midAngle - 90) * (Math.PI / 180);
               
-              const startRadius = 12;
+              const startRadius = 15;
               const endRadius = 48;
 
               const x1 = 50 + startRadius * Math.cos(textAngleRad);
@@ -110,7 +110,7 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
 
           <g>
             {WHEEL_CONFIG.map((wedge) => (
-              <text key={`label-${wedge.id}`} textAnchor="middle" fontSize="6" fontWeight="bold" fill={wedge.type === 'BANKRUPT' ? '#fff' : '#000'} style={{ pointerEvents: 'none' }}>
+              <text key={`label-${wedge.id}`} textAnchor="middle" fontSize="5" fontWeight="bold" fill={wedge.type === 'BANKRUPT' ? '#fff' : '#000'} style={{ pointerEvents: 'none' }}>
                 <textPath href={`#path-${wedge.id}`} startOffset="50%">
                   {wedge.label}
                 </textPath>

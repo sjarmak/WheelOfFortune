@@ -54,14 +54,13 @@ function App() {
     return puzzleVowels.some(v => !state.guessedLetters.includes(v));
   }, [puzzleVowels, state.guessedLetters]);
 
+  const prevVowelsLeft = useRef(vowelsLeft);
   useEffect(() => {
-    if (state.currentPuzzle && !vowelsLeft) {
-      const allVowelsGuessed = puzzleVowels.every(v => state.guessedLetters.includes(v));
-      if(allVowelsGuessed && puzzleVowels.length > 0) {
-        showToast('No more vowels!', 'info');
-      }
+    if (prevVowelsLeft.current && !vowelsLeft) {
+      showToast('No more vowels!', 'info');
     }
-  }, [vowelsLeft, state.currentPuzzle, puzzleVowels, state.guessedLetters]);
+    prevVowelsLeft.current = vowelsLeft;
+  }, [vowelsLeft]);
 
 
   // Toss-up tick
