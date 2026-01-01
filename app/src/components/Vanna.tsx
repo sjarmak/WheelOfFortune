@@ -65,36 +65,40 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
 
   if (currentTile === null || !targetPosition) return null;
 
+  const startX = window.innerWidth - 80;
+  const startY = window.innerHeight - 120;
+
   return (
     <AnimatePresence>
       <motion.div
         key={`vanna-${currentTile}`}
         initial={{ 
-          x: targetPosition.x - window.innerWidth / 2,
-          y: targetPosition.y - window.innerHeight / 2,
+          x: startX,
+          y: startY,
           scale: 0.8,
-          opacity: 0
+          opacity: 1
         }}
         animate={{ 
-          x: targetPosition.x - window.innerWidth / 2,
-          y: targetPosition.y - window.innerHeight / 2,
+          x: targetPosition.x,
+          y: targetPosition.y,
           scale: 1,
           opacity: 1
         }}
         exit={{ 
-          scale: 0.5,
-          opacity: 0
+          x: startX,
+          y: startY,
+          scale: 0.8,
+          opacity: 0,
+          transition: { duration: 0.3 }
         }}
         transition={{ 
-          duration: 0.4,
+          duration: 0.6,
           type: "spring",
           stiffness: 300,
-          damping: 20
+          damping: 25
         }}
         className="fixed w-16 h-16 pointer-events-none z-40 flex items-center justify-center"
         style={{
-          left: '50%',
-          top: '50%',
           marginLeft: '-32px',
           marginTop: '-32px'
         }}
@@ -140,20 +144,21 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
               {/* Sparkles around hand */}
               {[...Array(6)].map((_, i) => {
                 const angle = (i / 6) * Math.PI * 2;
-                const x = Math.cos(angle) * 18;
-                const y = Math.sin(angle) * 18;
+                const distance = 40;
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
                 return (
                   <motion.div
                     key={`sparkle-${i}`}
                     initial={{ 
-                      x: 0, 
-                      y: 0,
+                      x: targetPosition.x, 
+                      y: targetPosition.y,
                       opacity: 1,
                       scale: 1
                     }}
                     animate={{ 
-                      x,
-                      y,
+                      x: targetPosition.x + x,
+                      y: targetPosition.y + y,
                       opacity: 0,
                       scale: 0
                     }}
@@ -162,7 +167,7 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
                       ease: "easeOut",
                       delay: i * 0.05
                     }}
-                    className="absolute top-1/2 left-1/2 w-1 h-1 bg-yellow-300 rounded-full shadow-md"
+                    className="fixed w-1 h-1 bg-yellow-300 rounded-full shadow-md pointer-events-none z-35"
                     style={{
                       marginLeft: '-2px',
                       marginTop: '-2px'
