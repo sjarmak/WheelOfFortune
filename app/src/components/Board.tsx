@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Vanna } from './Vanna';
 
 interface BoardProps {
   phrase: string;
@@ -10,6 +11,7 @@ interface BoardProps {
 
 export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, category, puzzleId }) => {
   const words = useMemo(() => phrase.split(' '), [phrase]);
+  const tileRefsArray = useRef<(HTMLDivElement | null)[]>([]);
 
   const renderLetter = (char: string, globalIndex: number) => {
     const isRevealed = revealedPositions.includes(globalIndex);
@@ -20,7 +22,8 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
 
     return (
       <div 
-        key={globalIndex} 
+        key={globalIndex}
+        ref={el => { tileRefsArray.current[globalIndex] = el; }}
         className="w-7 h-9 sm:w-11 sm:h-16 border border-gray-300 m-0.5 flex items-center justify-center text-lg sm:text-3xl font-bold shadow-md bg-white overflow-hidden"
       >
         {isPunctuation ? (
@@ -59,8 +62,9 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col items-center justify-center p-1.5 sm:p-3 bg-game-board rounded-lg sm:rounded-xl border-2 sm:border-4 border-yellow-500 shadow-2xl w-full max-w-5xl mx-auto"
+        className="flex flex-col items-center justify-center p-1.5 sm:p-3 bg-game-board rounded-lg sm:rounded-xl border-2 sm:border-4 border-yellow-500 shadow-2xl w-full max-w-5xl mx-auto relative"
         >
+        <Vanna revealedPositions={revealedPositions} tileRefs={tileRefsArray} />
         <div className="flex flex-wrap justify-center gap-x-1 gap-y-1 sm:gap-x-2 sm:gap-y-2 w-full">
           {words.reduce((acc, word, wordIdx) => {
              const wordStartIndex = phrase.split(' ').slice(0, wordIdx).reduce((sum, w) => sum + w.length + 1, 0);
