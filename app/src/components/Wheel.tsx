@@ -43,7 +43,7 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
     
     const wedgeCenterAngle = -90 + randomIndex * wedgeAngle + wedgeAngle / 2;
     const extraSpins = 5;
-    const spinAmount = 360 * extraSpins + wedgeCenterAngle - rotation;
+    const spinAmount = 360 * extraSpins - (wedgeCenterAngle + rotation);
     const newTotalRotation = rotation + spinAmount;
     
     console.log(`[WHEEL CALC] wedgeCenterAngle=${wedgeCenterAngle}°, currentRotation=${rotation}°, spinAmount=${spinAmount}°, newRotation=${newTotalRotation}°, newRotation%360=${newTotalRotation % 360}°`);
