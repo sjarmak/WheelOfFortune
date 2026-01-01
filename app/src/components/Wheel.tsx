@@ -27,9 +27,11 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
     const baseRotation = 360 * extraSpins;
     
     // Calculate the angle to the middle of the target wedge
-    // The SVG drawing starts wedges at -90° offset, so we account for that
-    const targetAngle = (randomIndex * wedgeAngle) + (wedgeAngle / 2);
-    const targetRotation = -targetAngle - 90;
+    // Wedges are drawn starting at -90° (top)
+    // Middle of wedge i is at: -90 + (i * wedgeAngle) + (wedgeAngle / 2)
+    // To land at pointer (0°), we need to rotate wheel so this angle reaches 0°
+    const middleAngle = -90 + (randomIndex * wedgeAngle) + (wedgeAngle / 2);
+    const targetRotation = -middleAngle;
     
     // Add to current rotation to make spins additive (prevents backwards spin on subsequent spins)
     const spinAmount = baseRotation + targetRotation;
