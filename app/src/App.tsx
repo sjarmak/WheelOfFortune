@@ -227,10 +227,10 @@ function App() {
                )}
 
                {(state.turnState === 'IDLE' || state.turnState === 'GUESSING_CONSONANT') && (
-                  <div className="flex gap-3 sm:gap-4">
+                  <div className="flex gap-2 sm:gap-3">
                     <button 
                       onClick={() => setShowSolveModal(true)}
-                      className="px-4 py-2 sm:px-5 sm:py-2.5 bg-blue-600 rounded-lg font-bold text-base sm:text-lg shadow-md hover:bg-blue-500"
+                      className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 rounded-lg font-bold text-sm sm:text-base shadow-md hover:bg-blue-500"
                     >
                       SOLVE
                     </button>
@@ -243,14 +243,14 @@ function App() {
                         dispatch({ type: 'BUY_VOWEL' });
                       }}
                       disabled={!vowelsLeft || (state.player.currentRoundScore < vowelCost && !state.player.freePlay)}
-                      className="px-4 py-2 sm:px-5 sm:py-2.5 bg-purple-600 rounded-lg font-bold text-base sm:text-lg shadow-md hover:bg-purple-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 sm:px-4 sm:py-2 bg-purple-600 rounded-lg font-bold text-sm sm:text-base shadow-md hover:bg-purple-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
                     >
                       {vowelsLeft && state.player.currentRoundScore >= vowelCost || state.player.freePlay ? `VOWEL $${vowelCost}` : vowelsLeft ? 'NEED $$$' : 'NO VOWELS'}
                     </button>
                   </div>
                )}
 
-               <div className="h-5 sm:h-6 font-bold text-yellow-300 text-sm sm:text-base px-2 text-center">
+               <div className="h-4 sm:h-5 font-bold text-yellow-300 text-xs sm:text-sm px-2 text-center">
                  {state.turnState === 'SPINNING' && "SPINNING..."}
                  {state.turnState === 'GUESSING_CONSONANT' && `SPUN $${state.spinResult}! GUESS A CONSONANT`}
                  {state.turnState === 'BUYING_VOWEL' && `PICK A VOWEL ($${vowelCost})`}
