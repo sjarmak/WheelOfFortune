@@ -214,7 +214,7 @@ function App() {
            ) : (
              <>
                {(state.turnState === 'IDLE' || state.turnState === 'SPINNING' || state.turnState === 'GUESSING_CONSONANT') && (
-                        <div className="flex items-center justify-center flex-shrink-0 w-32 h-32 sm:w-40 sm:h-40">
+                        <div className="flex items-center justify-center flex-shrink-0 w-40 h-40 sm:w-48 sm:h-48">
                           <Wheel 
                             key={state.currentPuzzle?.id}
                             onSpinStart={handleSpinStart}
