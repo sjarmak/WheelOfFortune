@@ -1,73 +1,197 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface VannaProps {
   revealedPositions: number[];
   tileRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
   puzzleId?: string;
+  isPuzzleSolved?: boolean;
+  onTileVisited?: (position: number) => void;
 }
 
-const VannaHand: React.FC<{ isAnimating: boolean }> = ({ isAnimating }) => (
-  <div className="relative w-full h-full" style={{ imageRendering: 'pixelated' }}>
-    {/* Sparkle burst - only when animating */}
-    {isAnimating && (
-      <motion.div
-        initial={{ scale: 0, opacity: 1 }}
-        animate={{ scale: 1.5, opacity: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400"
-        style={{ filter: 'blur(8px)' }}
-      />
-    )}
+interface WalkFrame {
+  leftLegOffset: number;
+  rightLegOffset: number;
+  leftArmOffset: number;
+  rightArmOffset: number;
+}
 
-    {/* 8-bit Pixelated Woman Character */}
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="relative w-14 h-16" style={{ imageRendering: 'pixelated' }}>
-        {/* Hair - blonde, wavy top */}
-        <div className="absolute top-0 left-0 w-full h-3">
-          <div className="flex gap-0.5 h-full">
-            <div className="w-1 h-full bg-yellow-400" />
-            <div className="w-1 h-full bg-yellow-400" />
-            <div className="w-1 h-full bg-yellow-400" />
-            <div className="w-1 h-full bg-yellow-400" />
-            <div className="w-1 h-full bg-yellow-400" />
-          </div>
-        </div>
+const WALK_FRAMES: WalkFrame[] = [
+  // Frame 1: Left leg forward, right arm forward
+  { leftLegOffset: -2, rightLegOffset: 1, leftArmOffset: -2, rightArmOffset: 1 },
+  // Frame 2: Both legs neutral
+  { leftLegOffset: 0, rightLegOffset: 0, leftArmOffset: 0, rightArmOffset: 0 },
+  // Frame 3: Right leg forward, left arm forward
+  { leftLegOffset: 1, rightLegOffset: -2, leftArmOffset: 1, rightArmOffset: -2 },
+  // Frame 4: Both legs neutral
+  { leftLegOffset: 0, rightLegOffset: 0, leftArmOffset: 0, rightArmOffset: 0 },
+];
 
-        {/* Face */}
-        <div className="absolute top-3 left-1 w-12 h-3">
-          <div className="w-full h-full bg-yellow-200 flex items-center justify-center gap-1 px-1">
-            {/* Left eye */}
-            <div className="w-1 h-1 bg-blue-600" />
-            {/* Right eye */}
-            <div className="w-1 h-1 bg-blue-600" />
-          </div>
-        </div>
+type FacingDirection = 'front' | 'left' | 'right';
 
-        {/* Dress - red with pattern */}
-        <div className="absolute top-6 left-0 w-full h-10">
-          {/* Dress body */}
-          <div className="w-full h-full bg-red-600">
-            {/* Dress pattern - white stripes */}
-            <div className="flex flex-col gap-1 p-1 h-full justify-between">
-              <div className="w-full h-1 bg-white opacity-40" />
-              <div className="w-full h-1 bg-white opacity-40" />
-              <div className="w-full h-1 bg-white opacity-40" />
+const VannaHand: React.FC<{ isAnimating: boolean; facing?: FacingDirection; isDancing?: boolean }> = ({ isAnimating, facing = 'front', isDancing = false }) => {
+  const [walkFrame, setWalkFrame] = React.useState(0);
+
+  // Cycle through walk frames while animating or dancing
+  React.useEffect(() => {
+    if (!isAnimating && !isDancing) {
+      setWalkFrame(0);
+      return;
+    }
+
+    const frameTime = isDancing ? 120 : 200; // Dance is faster
+    const interval = setInterval(() => {
+      setWalkFrame(prev => (prev + 1) % WALK_FRAMES.length);
+    }, frameTime);
+
+    return () => clearInterval(interval);
+  }, [isAnimating, isDancing]);
+
+  const frame = WALK_FRAMES[walkFrame];
+  const isSideView = facing === 'left' || facing === 'right';
+  const flipHorizontal = facing === 'left';
+
+  // Dance bounce effect
+  const danceTransform = isDancing ? `translateY(${Math.sin(walkFrame * Math.PI / 2) * 4}px)` : '';
+
+  return (
+    <div 
+      className="relative w-full h-full" 
+      style={{ 
+        imageRendering: 'pixelated',
+        transform: `${danceTransform} ${flipHorizontal ? 'scaleX(-1)' : ''}`,
+        transition: 'transform 0.15s ease-out'
+      }}
+    >
+      {/* Sparkle burst - only when animating */}
+      {isAnimating && (
+        <motion.div
+          initial={{ scale: 0, opacity: 1 }}
+          animate={{ scale: 1.5, opacity: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400"
+          style={{ filter: 'blur(8px)' }}
+        />
+      )}
+
+      {/* 8-bit Pixelated Woman Character */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        {isSideView ? (
+          /* SIDE VIEW SPRITE */
+          <div className="relative w-10 h-16" style={{ imageRendering: 'pixelated' }}>
+            {/* Hair - blonde, side view (ponytail effect) */}
+            <div className="absolute top-0 left-1 w-6 h-3 bg-yellow-400" />
+            <div className="absolute top-1 right-0 w-2 h-4 bg-yellow-400" /> {/* Hair flowing back */}
+
+            {/* Face - side profile */}
+            <div className="absolute top-3 left-1 w-5 h-3 bg-yellow-200">
+              {/* One eye visible */}
+              <div className="absolute top-1 left-3 w-1 h-1 bg-blue-600" />
+              {/* Nose hint */}
+              <div className="absolute top-1 left-0 w-1 h-1 bg-yellow-300" />
             </div>
+
+            {/* Dress - red, side view (narrower) */}
+            <div className="absolute top-6 left-1 w-6 h-10">
+              <div className="w-full h-full bg-red-600">
+                {/* Dress pattern */}
+                <div className="flex flex-col gap-1 p-0.5 h-full justify-between">
+                  <div className="w-full h-0.5 bg-white opacity-40" />
+                  <div className="w-full h-0.5 bg-white opacity-40" />
+                  <div className="w-full h-0.5 bg-white opacity-40" />
+                </div>
+              </div>
+
+              {/* One arm visible (front arm), swinging */}
+              <motion.div
+                animate={{ x: frame.leftArmOffset }}
+                transition={{ duration: 0.05 }}
+                className="absolute top-0 left-5 w-2 h-4 bg-yellow-200"
+              />
+            </div>
+
+            {/* Legs - side view, walking motion */}
+            <motion.div
+              animate={{ x: frame.leftLegOffset }}
+              transition={{ duration: 0.05 }}
+              className="absolute bottom-0 left-2 w-1.5 h-3 bg-yellow-200"
+            />
+            <motion.div
+              animate={{ x: frame.rightLegOffset }}
+              transition={{ duration: 0.05 }}
+              className="absolute bottom-0 left-4 w-1.5 h-3 bg-yellow-200"
+            />
+
+            {/* One shoe visible */}
+            <div className="absolute bottom-0 left-1.5 w-2 h-1 bg-gray-800" />
+            <div className="absolute bottom-0 left-3.5 w-2 h-1 bg-gray-800" />
           </div>
+        ) : (
+          /* FRONT VIEW SPRITE (original) */
+          <div className="relative w-14 h-16" style={{ imageRendering: 'pixelated' }}>
+            {/* Hair - blonde, wavy top */}
+            <div className="absolute top-0 left-0 w-full h-3">
+              <div className="flex gap-0.5 h-full">
+                <div className="w-1 h-full bg-yellow-400" />
+                <div className="w-1 h-full bg-yellow-400" />
+                <div className="w-1 h-full bg-yellow-400" />
+                <div className="w-1 h-full bg-yellow-400" />
+                <div className="w-1 h-full bg-yellow-400" />
+              </div>
+            </div>
 
-          {/* Arms - flesh colored */}
-          <div className="absolute top-0 -left-2 w-2 h-4 bg-yellow-200" />
-          <div className="absolute top-0 -right-2 w-2 h-4 bg-yellow-200" />
-        </div>
+            {/* Face */}
+            <div className="absolute top-3 left-1 w-12 h-3">
+              <div className="w-full h-full bg-yellow-200 flex items-center justify-center gap-1 px-1">
+                {/* Left eye */}
+                <div className="w-1 h-1 bg-blue-600" />
+                {/* Right eye */}
+                <div className="w-1 h-1 bg-blue-600" />
+              </div>
+            </div>
 
-        {/* Legs */}
-        <div className="absolute bottom-0 left-2 w-1.5 h-3 bg-yellow-200" />
-        <div className="absolute bottom-0 right-2 w-1.5 h-3 bg-yellow-200" />
+            {/* Dress - red with pattern */}
+            <div className="absolute top-6 left-0 w-full h-10">
+              {/* Dress body */}
+              <div className="w-full h-full bg-red-600">
+                {/* Dress pattern - white stripes */}
+                <div className="flex flex-col gap-1 p-1 h-full justify-between">
+                  <div className="w-full h-1 bg-white opacity-40" />
+                  <div className="w-full h-1 bg-white opacity-40" />
+                  <div className="w-full h-1 bg-white opacity-40" />
+                </div>
+              </div>
 
-        {/* Shoes - black */}
-        <div className="absolute bottom-0 left-1 w-2 h-1 bg-gray-800" />
-        <div className="absolute bottom-0 right-1 w-2 h-1 bg-gray-800" />
+              {/* Arms - flesh colored, animate with walk */}
+              <motion.div
+                animate={{ y: isDancing ? frame.leftArmOffset * 2 : frame.leftArmOffset }}
+                transition={{ duration: 0.05 }}
+                className="absolute top-0 -left-2 w-2 h-4 bg-yellow-200"
+              />
+              <motion.div
+                animate={{ y: isDancing ? frame.rightArmOffset * 2 : frame.rightArmOffset }}
+                transition={{ duration: 0.05 }}
+                className="absolute top-0 -right-2 w-2 h-4 bg-yellow-200"
+              />
+            </div>
+
+            {/* Legs - animate with walk */}
+            <motion.div
+              animate={{ y: isDancing ? frame.leftLegOffset * 1.5 : frame.leftLegOffset }}
+              transition={{ duration: 0.05 }}
+              className="absolute bottom-0 left-2 w-1.5 h-3 bg-yellow-200"
+            />
+            <motion.div
+              animate={{ y: isDancing ? frame.rightLegOffset * 1.5 : frame.rightLegOffset }}
+              transition={{ duration: 0.05 }}
+              className="absolute bottom-0 right-2 w-1.5 h-3 bg-yellow-200"
+            />
+
+            {/* Shoes - black */}
+            <div className="absolute bottom-0 left-1 w-2 h-1 bg-gray-800" />
+            <div className="absolute bottom-0 right-1 w-2 h-1 bg-gray-800" />
+          </div>
+        )}
 
         {/* Sparkles - only when animating */}
         {isAnimating && (
@@ -110,16 +234,20 @@ const VannaHand: React.FC<{ isAnimating: boolean }> = ({ isAnimating }) => (
         )}
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => {
+export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs, isPuzzleSolved = false, onTileVisited }) => {
   const [currentTile, setCurrentTile] = useState<number | null>(null);
   const [targetPosition, setTargetPosition] = useState<{ x: number; y: number } | null>(null);
+  const [startPosition, setStartPosition] = useState<{ x: number; y: number } | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
+  const [facingDirection, setFacingDirection] = useState<FacingDirection>('front');
   const previousRevealedRef = useRef<number[]>([]);
   const animationQueueRef = useRef<number[]>([]);
   const isAnimatingRef = useRef(false);
+  const cornerRef = useRef<HTMLDivElement>(null);
 
   // Detect newly revealed positions
   useEffect(() => {
@@ -148,6 +276,15 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
     };
   };
 
+  const getCornerPosition = () => {
+    if (!cornerRef.current) return null;
+    const rect = cornerRef.current.getBoundingClientRect();
+    return {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2
+    };
+  };
+
   const processQueue = async () => {
     isAnimatingRef.current = true;
     setIsAnimating(true);
@@ -156,73 +293,81 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
       const nextTile = animationQueueRef.current.shift();
       if (nextTile === undefined) break;
 
-      const position = getTilePosition(nextTile);
-      if (position) {
-        setCurrentTile(nextTile);
-        setTargetPosition(position);
+      const cornerPos = getCornerPosition();
+      const tilePos = getTilePosition(nextTile);
+      
+      if (cornerPos && tilePos) {
+        // Determine facing direction based on tile position relative to corner
+        const goingDirection: FacingDirection = tilePos.x < cornerPos.x ? 'left' : 'right';
+        const returnDirection: FacingDirection = goingDirection === 'left' ? 'right' : 'left';
 
-        // Wait for animation to complete
-        await new Promise(resolve => setTimeout(resolve, 600));
+        // Phase 1: Walk TO the tile
+        setCurrentTile(nextTile);
+        setStartPosition(cornerPos);
+        setTargetPosition(tilePos);
+        setIsReturning(false);
+        setFacingDirection(goingDirection);
+
+        // Wait for walk to tile (1 second)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Vanna has arrived - trigger the reveal!
+        onTileVisited?.(nextTile);
+
+        // Phase 2: Walk BACK to corner
+        setIsReturning(true);
+        setFacingDirection(returnDirection);
+
+        // Wait for walk back to corner (1 second)
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
     isAnimatingRef.current = false;
     setIsAnimating(false);
+    setIsReturning(false);
     setCurrentTile(null);
     setTargetPosition(null);
+    setStartPosition(null);
   };
 
   return (
     <>
-      {/* Vanna waiting in corner or animating to tile */}
-      <AnimatePresence>
-        {!isAnimating && (
-          <motion.div
-            key="vanna-waiting"
-            className="w-full h-full flex items-center justify-center"
-          >
-            <VannaHand isAnimating={false} />
-          </motion.div>
-        )}
+      {/* Vanna waiting in corner - this div is also used to calculate animation start position */}
+      <div 
+        ref={cornerRef}
+        className="w-full h-full flex items-center justify-center"
+      >
+        {!isAnimating && <VannaHand isAnimating={false} isDancing={isPuzzleSolved} />}
+      </div>
 
-        {isAnimating && targetPosition && (
-          <motion.div
-            key={`vanna-animating-${currentTile}`}
-            initial={{
-              x: window.innerWidth - 60,
-              y: window.innerHeight - 100,
-              scale: 0.8,
-              opacity: 1
-            }}
-            animate={{
-              x: targetPosition.x - window.innerWidth / 2,
-              y: targetPosition.y - window.innerHeight / 2,
-              scale: 1,
-              opacity: 1
-            }}
-            exit={{
-              x: window.innerWidth - 60,
-              y: window.innerHeight - 100,
-              scale: 0.8,
-              opacity: 0,
-              transition: { duration: 0.3 }
-            }}
-            transition={{
-              duration: 0.6,
-              type: "spring",
-              stiffness: 300,
-              damping: 25
-            }}
-            className="fixed w-16 h-16 pointer-events-none z-40 flex items-center justify-center"
-            style={{
-              marginLeft: '-32px',
-              marginTop: '-32px'
-            }}
-          >
-            <VannaHand isAnimating={true} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Vanna animating to tile and back - walks along the bottom, stays grounded */}
+      {isAnimating && targetPosition && startPosition && (
+        <motion.div
+          key={`vanna-animating-${currentTile}-${isReturning ? 'return' : 'go'}`}
+          initial={{
+            x: (isReturning ? targetPosition.x : startPosition.x) - 32,
+            y: startPosition.y - 32, // Stay at floor level
+            scale: 1,
+            opacity: 1
+          }}
+          animate={{
+            x: (isReturning ? startPosition.x : targetPosition.x) - 32,
+            y: startPosition.y - 32, // Stay at floor level
+            scale: 1,
+            opacity: 1
+          }}
+          transition={{
+            duration: 1.0,
+            type: "spring",
+            stiffness: 120,
+            damping: 20
+          }}
+          className="fixed top-0 left-0 w-16 h-16 pointer-events-none z-50 flex items-center justify-center"
+        >
+          <VannaHand isAnimating={true} facing={facingDirection} />
+        </motion.div>
+      )}
     </>
   );
 };

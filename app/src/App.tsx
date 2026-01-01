@@ -193,6 +193,7 @@ function App() {
               revealedPositions={state.revealedPositions}
               category={state.currentPuzzle.category}
               puzzleId={state.currentPuzzle.id}
+              isPuzzleSolved={state.turnState === 'ROUND_OVER'}
             />
          </div>
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Vanna } from './Vanna';
 
@@ -7,14 +7,29 @@ interface BoardProps {
   revealedPositions: number[];
   category: string;
   puzzleId?: string;
+  isPuzzleSolved?: boolean;
 }
 
-export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, category, puzzleId }) => {
+export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, category, puzzleId, isPuzzleSolved = false }) => {
   const words = useMemo(() => phrase.split(' '), [phrase]);
   const tileRefsArray = useRef<(HTMLDivElement | null)[]>([]);
+  const [visiblePositions, setVisiblePositions] = useState<number[]>([]);
+
+  // When Vanna visits a tile, make it visible
+  const handleTileVisited = useCallback((position: number) => {
+    setVisiblePositions(prev => 
+      prev.includes(position) ? prev : [...prev, position]
+    );
+  }, []);
+
+  // Reset visible positions when puzzle changes
+  React.useEffect(() => {
+    setVisiblePositions([]);
+  }, [puzzleId, phrase]);
 
   const renderLetter = (char: string, globalIndex: number) => {
-    const isRevealed = revealedPositions.includes(globalIndex);
+    // Letter is visible only after Vanna has visited it
+    const isRevealed = visiblePositions.includes(globalIndex);
     const isLetter = /[A-Z]/.test(char);
     const isPunctuation = /[^A-Z ]/.test(char);
 
@@ -66,7 +81,12 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
         >
         {/* Vanna positioned in lower right of board */}
         <div className="absolute bottom-2 right-2 z-40 w-16 h-16 pointer-events-none">
-          <Vanna revealedPositions={revealedPositions} tileRefs={tileRefsArray} />
+          <Vanna 
+            revealedPositions={revealedPositions} 
+            tileRefs={tileRefsArray} 
+            isPuzzleSolved={isPuzzleSolved}
+            onTileVisited={handleTileVisited}
+          />
         </div>
         <div className="flex flex-wrap justify-center gap-x-1 gap-y-1 sm:gap-x-2 sm:gap-y-2 w-full">
           {words.reduce((acc, word, wordIdx) => {
