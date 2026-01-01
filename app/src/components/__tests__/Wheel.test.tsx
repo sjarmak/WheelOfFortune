@@ -5,15 +5,22 @@ describe('Wheel angle calculation', () => {
   const wedgeAngle = 360 / WHEEL_CONFIG.length;
 
   it('should calculate correct landing angle for each wedge', () => {
+    // CSS rotate() rotates clockwise, SVG angles are counterclockwise
+    // So in SVG space: wedge appears at -rotation + wedgeCenterAngle
+    // We want: -rotation + wedgeCenterAngle = 0 (mod 360)
+    // So: rotation = wedgeCenterAngle (mod 360)
+    
     // Test each wedge from 0 to 15
     for (let randomIndex = 0; randomIndex < WHEEL_CONFIG.length; randomIndex++) {
       const wedgeCenterAngle = -90 + randomIndex * wedgeAngle + wedgeAngle / 2;
       const extraSpins = 5;
-      const spinAmount = 360 * extraSpins - wedgeCenterAngle;
+      const spinAmount = 360 * extraSpins + wedgeCenterAngle; // From rotation 0
 
-      // After rotation, the wedge should be at the pointer (0°)
-      const finalAngle = (spinAmount + wedgeCenterAngle) % 360;
-      const normalized = (finalAngle + 360) % 360;
+      const cssRotation = 0 + spinAmount; // Apply the spin
+      
+      // In SVG space, wedge appears at: -cssRotation + wedgeCenterAngle
+      const svgAngle = (-cssRotation + wedgeCenterAngle) % 360;
+      const normalized = (svgAngle + 360) % 360;
 
       expect(normalized).toBe(0, `Wedge ${randomIndex} should land at pointer (0°)`);
     }
@@ -21,20 +28,21 @@ describe('Wheel angle calculation', () => {
 
   it('should handle cumulative rotations correctly', () => {
     // Simulate multiple spins in succession
-    let rotation = 0;
+    // CSS rotate is clockwise, SVG angles are counterclockwise
+    let cssRotation = 0;
     const randomIndices = [0, 5, 10, 15, 3];
 
     randomIndices.forEach((randomIndex) => {
       const wedgeCenterAngle = -90 + randomIndex * wedgeAngle + wedgeAngle / 2;
       const extraSpins = 5;
-      // The new formula accounts for current rotation
-      const spinAmount = 360 * extraSpins - (wedgeCenterAngle + rotation);
-      rotation += spinAmount;
+      // Formula: spinAmount = extraSpins*360 + wedgeCenterAngle - rotation
+      const spinAmount = 360 * extraSpins + wedgeCenterAngle - cssRotation;
+      cssRotation += spinAmount;
 
-      // After spin, the wedge is at absolute position: wedgeCenterAngle + rotation
-      // This should be at 0° (mod 360)
-      const finalPositionRelativeToPointer = (wedgeCenterAngle + rotation) % 360;
-      const normalized = (finalPositionRelativeToPointer + 360) % 360;
+      // In SVG space, wedge is at: -cssRotation + wedgeCenterAngle
+      // This should be 0° (mod 360)
+      const svgAngle = (-cssRotation + wedgeCenterAngle) % 360;
+      const normalized = (svgAngle + 360) % 360;
       expect(normalized).toBe(0, `Spin ${randomIndex}: Wedge ${randomIndex} should be at 0°`);
     });
   });

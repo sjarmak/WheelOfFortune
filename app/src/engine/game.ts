@@ -73,6 +73,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'SPIN_RESULT': {
       const { wedge } = action;
+      console.log(`[GAME] SPIN_RESULT: ${wedge.label} (${wedge.type} $${wedge.value})`);
       if (wedge.type === 'BANKRUPT') {
         return {
           ...state,

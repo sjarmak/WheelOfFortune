@@ -27,20 +27,28 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
 
     // Calculate rotation to land on the pre-selected wedge
     // Wedge i in the SVG is drawn at center angle: -90 + i * wedgeAngle + wedgeAngle/2
-    // Currently the wheel is rotated by 'rotation' degrees
-    // So wedge i currently appears at: wedgeCenterAngle + rotation (in absolute space)
-    // We want it at 0° (the pointer position)
-    // So we need to spin by: extraSpins*360 - (wedgeCenterAngle + rotation)
+    // CSS rotate() goes clockwise, but SVG angles go counterclockwise
+    // So we need to negate the angle when converting from SVG to CSS
+    // Currently the wheel is rotated by 'rotation' degrees (CSS clockwise)
+    // Wedge i appears at: -rotation + wedgeCenterAngle (in SVG angle space)
+    // We want it at 0° (the pointer position in SVG space)
+    // So we need: -rotation + wedgeCenterAngle = 0 (mod 360)
+    // Therefore: rotation = wedgeCenterAngle (mod 360)
+    // To get there from current state: spinAmount = wedgeCenterAngle - rotation (mod 360)
+    // Add extra spins: spinAmount = extraSpins*360 + wedgeCenterAngle - rotation
     
     const wedgeCenterAngle = -90 + randomIndex * wedgeAngle + wedgeAngle / 2;
     const extraSpins = 5;
-    const spinAmount = 360 * extraSpins - (wedgeCenterAngle + rotation);
+    const spinAmount = 360 * extraSpins + wedgeCenterAngle - rotation;
     const newTotalRotation = rotation + spinAmount;
+    
+    console.log(`[WHEEL] Spin: randomIndex=${randomIndex}, targetWedge=${targetWedge.label}, wedgeCenterAngle=${wedgeCenterAngle}, rotation=${rotation}→${newTotalRotation}`);
     
     setRotation(newTotalRotation);
 
     // Report the pre-selected wedge after animation completes
     setTimeout(() => {
+      console.log(`[WHEEL] onSpinComplete: ${targetWedge.label}`);
       onSpinComplete(targetWedge);
     }, 4000); // Match CSS duration
   };

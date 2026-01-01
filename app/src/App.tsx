@@ -220,10 +220,10 @@ function App() {
                        }
                        dispatch({ type: 'BUY_VOWEL' });
                      }}
-                     disabled={!vowelsLeft}
+                     disabled={!vowelsLeft || (state.player.currentRoundScore < vowelCost && !state.player.freePlay)}
                      className="px-4 py-2 bg-purple-600 rounded-lg font-bold shadow-md hover:bg-purple-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
                    >
-                     {vowelsLeft ? `BUY VOWEL ($${vowelCost})` : 'NO MORE VOWELS'}
+                     {vowelsLeft && state.player.currentRoundScore >= vowelCost || state.player.freePlay ? `BUY VOWEL ($${vowelCost})` : vowelsLeft ? 'NEED $$$' : 'NO MORE VOWELS'}
                    </button>
                  </div>
               )}
