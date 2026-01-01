@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { WHEEL_CONFIG, WheelWedge } from '../engine/types';
+import { SeededRNG } from '../engine/rng';
 
 interface WheelProps {
   onSpinStart: () => void;
@@ -9,19 +10,20 @@ interface WheelProps {
   canSpin?: boolean; // Whether spin is allowed (disabled during GUESSING_CONSONANT)
 }
 
-export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpinning, canSpin = true }) => {
-  const [rotation, setRotation] = useState(0);
-  const wheelRef = useRef<HTMLDivElement>(null);
-  
-  // Calculate wedge angle size
-  const wedgeAngle = 360 / WHEEL_CONFIG.length;
+export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpinning, seed, canSpin = true }) => {
+   const [rotation, setRotation] = useState(0);
+   const wheelRef = useRef<HTMLDivElement>(null);
+   
+   // Calculate wedge angle size
+   const wedgeAngle = 360 / WHEEL_CONFIG.length;
 
-  const spin = () => {
-    if (isSpinning || !canSpin) return;
-    
-    // Pick the wedge deterministically before animation
-    const randomIndex = Math.floor(Math.random() * WHEEL_CONFIG.length);
-    const targetWedge = WHEEL_CONFIG[randomIndex];
+   const spin = () => {
+     if (isSpinning || !canSpin) return;
+     
+     // Pick the wedge deterministically using the seed
+     const rng = new SeededRNG(seed);
+     const randomIndex = rng.range(0, WHEEL_CONFIG.length);
+     const targetWedge = WHEEL_CONFIG[randomIndex];
     
     onSpinStart();
 
