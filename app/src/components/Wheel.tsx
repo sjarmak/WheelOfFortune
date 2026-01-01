@@ -46,6 +46,8 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
     const spinAmount = 360 * extraSpins + wedgeCenterAngle - rotation;
     const newTotalRotation = rotation + spinAmount;
     
+    console.log(`[WHEEL CALC] wedgeCenterAngle=${wedgeCenterAngle}°, currentRotation=${rotation}°, spinAmount=${spinAmount}°, newRotation=${newTotalRotation}°, newRotation%360=${newTotalRotation % 360}°`);
+    
     setRotation(newTotalRotation);
 
     // Report the pre-selected wedge after animation completes
