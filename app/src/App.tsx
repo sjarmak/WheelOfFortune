@@ -233,7 +233,7 @@ function App() {
                   <Keyboard 
                     guessedLetters={state.guessedLetters}
                     onGuess={handleGuess}
-                    disabled={state.turnState === 'SPINNING' || state.turnState === 'ROUND_OVER'}
+                    disabled={state.turnState !== 'GUESSING_CONSONANT'}
                     consonantsOnly={state.turnState === 'GUESSING_CONSONANT'}
                     vowelsOnly={false} 
                   />
