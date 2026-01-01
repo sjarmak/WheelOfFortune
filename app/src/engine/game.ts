@@ -22,6 +22,7 @@ export type GameAction =
   | { type: 'SPIN_WHEEL' }
   | { type: 'SPIN_RESULT'; wedge: WheelWedge }
   | { type: 'GUESS_LETTER'; letter: string; cost: number }
+  | { type: 'BUY_VOWEL' }
   | { type: 'SOLVE_ATTEMPT'; phrase: string }
   | { type: 'TOSS_UP_TICK' }
   | { type: 'ADD_TO_ROUND_SCORE'; points: number }
@@ -172,6 +173,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         player: { ...state.player, currentRoundScore: 0 }
+      };
+    }
+
+    case 'BUY_VOWEL': {
+      return {
+        ...state,
+        turnState: 'BUYING_VOWEL'
       };
     }
 
