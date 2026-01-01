@@ -185,15 +185,15 @@ function App() {
       </header>
 
       {/* Main Game Area */}
-      <main className="flex-1 flex flex-col items-center justify-between p-2 sm:p-3 overflow-hidden relative w-full gap-2">
+      <main className="flex-1 flex flex-col items-center justify-center p-1 sm:p-2 overflow-hidden relative w-full gap-1">
         
         <div className="w-full flex-shrink-0">
            <Board 
-             phrase={state.currentPuzzle.phrase} 
-             revealedPositions={state.revealedPositions}
-             category={state.currentPuzzle.category}
-             puzzleId={state.currentPuzzle.id}
-           />
+              phrase={state.currentPuzzle.phrase} 
+              revealedPositions={state.revealedPositions}
+              category={state.currentPuzzle.category}
+              puzzleId={state.currentPuzzle.id}
+            />
          </div>
 
          {message && (
@@ -207,24 +207,24 @@ function App() {
            {state.turnState === 'ROUND_OVER' ? (
                <button 
                  onClick={nextRound}
-                 className="px-4 py-2 bg-green-600 rounded-lg font-bold text-lg shadow-lg hover:bg-green-500 animate-pulse"
+                 className="px-3 py-1.5 bg-green-600 rounded-lg font-bold text-sm shadow-lg hover:bg-green-500 animate-pulse"
                >
                  NEXT PUZZLE
                </button>
            ) : (
              <>
                {(state.turnState === 'IDLE' || state.turnState === 'SPINNING' || state.turnState === 'GUESSING_CONSONANT') && (
-                  <div className="flex items-center justify-center flex-shrink-0">
-                    <Wheel 
-                      key={state.currentPuzzle?.id}
-                      onSpinStart={handleSpinStart}
-                      onSpinComplete={handleSpinComplete}
-                      isSpinning={state.turnState === 'SPINNING'}
-                      seed={state.seed + state.spinCount}
-                      canSpin={state.turnState === 'IDLE'}
-                    />
-                  </div>
-               )}
+                        <div className="flex items-center justify-center flex-shrink-0 w-32 h-32 sm:w-40 sm:h-40">
+                          <Wheel 
+                            key={state.currentPuzzle?.id}
+                            onSpinStart={handleSpinStart}
+                            onSpinComplete={handleSpinComplete}
+                            isSpinning={state.turnState === 'SPINNING'}
+                            seed={state.seed + state.spinCount}
+                            canSpin={state.turnState === 'IDLE'}
+                          />
+                        </div>
+                     )}
 
                {state.turnState === 'IDLE' && (
                   <div className="flex gap-2 sm:gap-3">
@@ -250,11 +250,11 @@ function App() {
                   </div>
                )}
 
-               <div className="h-4 sm:h-5 font-bold text-yellow-300 text-xs sm:text-sm px-2 text-center">
+               <div className="h-3 font-bold text-yellow-300 text-xs px-2 text-center">
                  {state.turnState === 'SPINNING' && "SPINNING..."}
-                 {state.turnState === 'GUESSING_CONSONANT' && `GUESS A CONSONANT ($${state.spinResult})`}
-                 {state.turnState === 'BUYING_VOWEL' && `PICK A VOWEL ($${vowelCost})`}
-                 {state.turnState === 'IDLE' && "SPIN, SOLVE, OR BUY VOWEL"}
+                 {state.turnState === 'GUESSING_CONSONANT' && `GUESS ($${state.spinResult})`}
+                 {state.turnState === 'BUYING_VOWEL' && `VOWEL ($${vowelCost})`}
+                 {state.turnState === 'IDLE' && "SPIN / SOLVE / VOWEL"}
                </div>
                
                {!hideKeyboard && (

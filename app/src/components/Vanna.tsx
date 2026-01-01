@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface VannaProps {
   revealedPositions: number[];
   tileRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
+  puzzleId?: string;
 }
 
 export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => {
@@ -23,7 +24,6 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
       animationQueueRef.current = [...animationQueueRef.current, ...newlyRevealed];
       previousRevealedRef.current = revealedPositions;
 
-      // Start processing queue if not already animating
       if (!isAnimatingRef.current) {
         processQueue();
       }
@@ -70,6 +70,7 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
 
   return (
     <AnimatePresence>
+      {/* Vanna Sprite - starts in lower right, moves to tile */}
       <motion.div
         key={`vanna-${currentTile}`}
         initial={{ 
@@ -105,7 +106,7 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
       >
         {/* Simple Vanna sprite - stylized hand/character */}
         <div className="relative w-full h-full">
-          {/* Sparkle burst */}
+          {/* Sparkle burst around hand */}
           <motion.div
             initial={{ scale: 0, opacity: 1 }}
             animate={{ scale: 1.5, opacity: 0 }}
@@ -144,21 +145,20 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
               {/* Sparkles around hand */}
               {[...Array(6)].map((_, i) => {
                 const angle = (i / 6) * Math.PI * 2;
-                const distance = 40;
-                const x = Math.cos(angle) * distance;
-                const y = Math.sin(angle) * distance;
+                const x = Math.cos(angle) * 18;
+                const y = Math.sin(angle) * 18;
                 return (
                   <motion.div
                     key={`sparkle-${i}`}
                     initial={{ 
-                      x: targetPosition.x, 
-                      y: targetPosition.y,
+                      x: 0, 
+                      y: 0,
                       opacity: 1,
                       scale: 1
                     }}
                     animate={{ 
-                      x: targetPosition.x + x,
-                      y: targetPosition.y + y,
+                      x,
+                      y,
                       opacity: 0,
                       scale: 0
                     }}
@@ -167,7 +167,7 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
                       ease: "easeOut",
                       delay: i * 0.05
                     }}
-                    className="fixed w-1 h-1 bg-yellow-300 rounded-full shadow-md pointer-events-none z-35"
+                    className="absolute top-1/2 left-1/2 w-1 h-1 bg-yellow-300 rounded-full shadow-md"
                     style={{
                       marginLeft: '-2px',
                       marginTop: '-2px'

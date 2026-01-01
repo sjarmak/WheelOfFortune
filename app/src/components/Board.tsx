@@ -18,13 +18,13 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
     const isLetter = /[A-Z]/.test(char);
     const isPunctuation = /[^A-Z ]/.test(char);
 
-    if (char === ' ') return <div key={globalIndex} className="w-7 h-9 sm:w-11 sm:h-16" />;
+    if (char === ' ') return <div key={globalIndex} className="w-6 h-8 sm:w-10 sm:h-14" />;
 
     return (
       <div 
         key={globalIndex}
         ref={el => { tileRefsArray.current[globalIndex] = el; }}
-        className="w-7 h-9 sm:w-11 sm:h-16 border border-gray-300 m-0.5 flex items-center justify-center text-lg sm:text-3xl font-bold shadow-md bg-white overflow-hidden"
+        className="w-6 h-8 sm:w-10 sm:h-14 border border-gray-300 m-0.5 flex items-center justify-center text-base sm:text-2xl font-bold shadow-md bg-white overflow-hidden"
       >
         {isPunctuation ? (
           <span className="text-black">{char}</span>
@@ -62,7 +62,7 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col items-center justify-center p-1.5 sm:p-3 bg-game-board rounded-lg sm:rounded-xl border-2 sm:border-4 border-yellow-500 shadow-2xl w-full max-w-5xl mx-auto relative"
+        className="flex flex-col items-center justify-center p-1 sm:p-2 bg-game-board rounded-lg sm:rounded-xl border-2 sm:border-4 border-yellow-500 shadow-2xl w-full max-w-5xl mx-auto relative"
         >
         <Vanna revealedPositions={revealedPositions} tileRefs={tileRefsArray} />
         <div className="flex flex-wrap justify-center gap-x-1 gap-y-1 sm:gap-x-2 sm:gap-y-2 w-full">
