@@ -8,8 +8,8 @@ interface VannaProps {
 }
 
 const VannaHand: React.FC<{ isAnimating: boolean }> = ({ isAnimating }) => (
-  <div className="relative w-full h-full">
-    {/* Sparkle burst around hand - only when animating */}
+  <div className="relative w-full h-full" style={{ imageRendering: 'pixelated' }}>
+    {/* Sparkle burst - only when animating */}
     {isAnimating && (
       <motion.div
         initial={{ scale: 0, opacity: 1 }}
@@ -20,40 +20,62 @@ const VannaHand: React.FC<{ isAnimating: boolean }> = ({ isAnimating }) => (
       />
     )}
 
-    {/* Main sprite - hand shape */}
+    {/* 8-bit Pixelated Woman Character */}
     <div className="absolute inset-0 flex items-center justify-center">
-      <div className="relative w-10 h-10">
-        {/* Wrist */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-3 bg-pink-200 rounded-t-lg" />
-        
-        {/* Palm */}
-        <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-5 h-4 bg-pink-300 rounded-full shadow-lg" />
-        
-        {/* Fingers - spread out */}
-        {[...Array(4)].map((_, i) => {
-          const rotation = (i - 1.5) * 20;
-          return (
-            <motion.div
-              key={i}
-              initial={{ rotate: 0 }}
-              animate={{ rotate: isAnimating ? rotation : 0 }}
-              transition={{ duration: 0.3, delay: i * 0.05 }}
-              className="absolute top-0 left-1/2 w-1 h-3 bg-pink-400 rounded-full origin-bottom"
-              style={{
-                transformOrigin: 'center bottom',
-                marginLeft: '-2px'
-              }}
-            />
-          );
-        })}
+      <div className="relative w-14 h-16" style={{ imageRendering: 'pixelated' }}>
+        {/* Hair - blonde, wavy top */}
+        <div className="absolute top-0 left-0 w-full h-3">
+          <div className="flex gap-0.5 h-full">
+            <div className="w-1 h-full bg-yellow-400" />
+            <div className="w-1 h-full bg-yellow-400" />
+            <div className="w-1 h-full bg-yellow-400" />
+            <div className="w-1 h-full bg-yellow-400" />
+            <div className="w-1 h-full bg-yellow-400" />
+          </div>
+        </div>
 
-        {/* Sparkles around hand - only when animating */}
+        {/* Face */}
+        <div className="absolute top-3 left-1 w-12 h-3">
+          <div className="w-full h-full bg-yellow-200 flex items-center justify-center gap-1 px-1">
+            {/* Left eye */}
+            <div className="w-1 h-1 bg-blue-600" />
+            {/* Right eye */}
+            <div className="w-1 h-1 bg-blue-600" />
+          </div>
+        </div>
+
+        {/* Dress - red with pattern */}
+        <div className="absolute top-6 left-0 w-full h-10">
+          {/* Dress body */}
+          <div className="w-full h-full bg-red-600">
+            {/* Dress pattern - white stripes */}
+            <div className="flex flex-col gap-1 p-1 h-full justify-between">
+              <div className="w-full h-1 bg-white opacity-40" />
+              <div className="w-full h-1 bg-white opacity-40" />
+              <div className="w-full h-1 bg-white opacity-40" />
+            </div>
+          </div>
+
+          {/* Arms - flesh colored */}
+          <div className="absolute top-0 -left-2 w-2 h-4 bg-yellow-200" />
+          <div className="absolute top-0 -right-2 w-2 h-4 bg-yellow-200" />
+        </div>
+
+        {/* Legs */}
+        <div className="absolute bottom-0 left-2 w-1.5 h-3 bg-yellow-200" />
+        <div className="absolute bottom-0 right-2 w-1.5 h-3 bg-yellow-200" />
+
+        {/* Shoes - black */}
+        <div className="absolute bottom-0 left-1 w-2 h-1 bg-gray-800" />
+        <div className="absolute bottom-0 right-1 w-2 h-1 bg-gray-800" />
+
+        {/* Sparkles - only when animating */}
         {isAnimating && (
           <>
             {[...Array(6)].map((_, i) => {
               const angle = (i / 6) * Math.PI * 2;
-              const x = Math.cos(angle) * 18;
-              const y = Math.sin(angle) * 18;
+              const x = Math.cos(angle) * 20;
+              const y = Math.sin(angle) * 20;
               return (
                 <motion.div
                   key={`sparkle-${i}`}
@@ -74,10 +96,12 @@ const VannaHand: React.FC<{ isAnimating: boolean }> = ({ isAnimating }) => (
                     ease: "easeOut",
                     delay: i * 0.05
                   }}
-                  className="absolute top-1/2 left-1/2 w-1 h-1 bg-yellow-300 rounded-full shadow-md"
+                  className="absolute top-1/2 left-1/2 w-1.5 h-1.5 rounded-full shadow-md"
                   style={{
-                    marginLeft: '-2px',
-                    marginTop: '-2px'
+                    backgroundColor: '#FFD700',
+                    marginLeft: '-3px',
+                    marginTop: '-3px',
+                    boxShadow: '0 0 4px #FFD700'
                   }}
                 />
               );
