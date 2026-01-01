@@ -24,8 +24,10 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
      const rng = new SeededRNG(seed);
      const randomIndex = rng.range(0, WHEEL_CONFIG.length);
      const targetWedge = WHEEL_CONFIG[randomIndex];
-    
-    onSpinStart();
+     
+     console.log(`[WHEEL SPIN] seed=${seed}, randomIndex=${randomIndex}, targetWedge=${targetWedge.label}`);
+     
+     onSpinStart();
 
     // Calculate rotation to land on the pre-selected wedge
     // Wedge i in the SVG is drawn at center angle: -90 + i * wedgeAngle + wedgeAngle/2
@@ -48,6 +50,7 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
 
     // Report the pre-selected wedge after animation completes
     setTimeout(() => {
+      console.log(`[WHEEL onSpinComplete] targetWedge=${targetWedge.label}`);
       onSpinComplete(targetWedge);
     }, 4000); // Match CSS duration
   };
