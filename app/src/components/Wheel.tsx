@@ -31,10 +31,8 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
     const targetAngle = (randomIndex * wedgeAngle) + (wedgeAngle / 2);
     const targetRotation = -targetAngle - 90;
     
-    const jitter = (Math.random() - 0.5) * (wedgeAngle * 0.8);
-    
     // Add to current rotation to make spins additive (prevents backwards spin on subsequent spins)
-    const spinAmount = baseRotation + targetRotation + jitter;
+    const spinAmount = baseRotation + targetRotation;
     const newTotalRotation = rotation + spinAmount;
     
     setRotation(newTotalRotation);
