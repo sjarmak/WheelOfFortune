@@ -15,7 +15,7 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
   // A standard board is 12x4 or 14x4 roughly, but we can be dynamic for mobile
   // We'll just flow them in a container that looks like the board.
   
-  const renderLetter = (char: string, index: number, globalIndex: number) => {
+  const renderLetter = (char: string, _index: number, globalIndex: number) => {
     const isRevealed = revealedPositions.includes(globalIndex);
     const isLetter = /[A-Z]/.test(char);
     const isPunctuation = /[^A-Z ]/.test(char);
@@ -47,7 +47,6 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
   };
 
   // Reconstruct full flattened render to manage indices easily
-  let globalIdx = 0;
   
   return (
     <div className="flex flex-col items-center justify-center p-2 sm:p-4 bg-game-board rounded-xl border-4 border-yellow-500 shadow-2xl w-full max-w-4xl mx-auto min-h-[200px]">

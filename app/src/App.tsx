@@ -7,7 +7,6 @@ import { DEFAULT_PUZZLES } from './engine/defaultPack';
 import { Puzzle, VOWELS, WheelWedge } from './engine/types';
 import { Settings as SettingsIcon, RotateCcw, Upload, X, Eye, EyeOff } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { clsx } from 'clsx';
 
 function App() {
   const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE, (initial) => {
@@ -104,7 +103,7 @@ function App() {
     setShowSolveModal(false);
   };
 
-  const showToast = (msg: string, type: 'info' | 'success' | 'error') => {
+  const showToast = (msg: string, _type: 'info' | 'success' | 'error') => {
     setMessage(msg);
     setTimeout(() => setMessage(null), 3000);
   };

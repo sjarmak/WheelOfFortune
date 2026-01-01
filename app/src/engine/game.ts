@@ -1,4 +1,4 @@
-import { GameState, Puzzle, WHEEL_CONFIG, VOWELS, CONSONANTS, WheelWedge } from './types';
+import { GameState, Puzzle, VOWELS, WheelWedge } from './types';
 import { SeededRNG } from './rng';
 
 export const INITIAL_STATE: GameState = {
