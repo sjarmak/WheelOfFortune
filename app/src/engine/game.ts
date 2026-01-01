@@ -103,6 +103,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const puzzle = state.currentPuzzle!;
       const upper = letter.toUpperCase();
       
+      // Prevent guessing same letter twice
+      if (state.guessedLetters.includes(upper)) {
+        return state;
+      }
+      
       const isVowel = VOWELS.includes(upper);
       
       // Deduct cost (buying vowel)
@@ -124,16 +129,27 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         newScore += (state.spinResult * count);
       }
       
-      // If free play, no penalty for wrong guess. 
-      // If normal play, wrong consonant = lose turn (UI handles flow).
+      // Determine next turn state
+      let nextTurnState: typeof state.turnState = state.turnState;
+      
+      // If letter was found, stay in current turn state (GUESSING_CONSONANT or BUYING_VOWEL)
+      // If letter NOT found (count === 0), end turn - UI will handle showing message/next action
+      if (count === 0 && !state.player.freePlay) {
+        nextTurnState = 'IDLE'; // No letters found, turn ends
+      }
+      // If guessing a vowel successfully, go back to consonant guessing
+      else if (isVowel && count > 0) {
+        nextTurnState = 'GUESSING_CONSONANT';
+      }
       
       return {
         ...state,
         guessedLetters: [...state.guessedLetters, upper],
         revealedPositions: newRevealed,
         player: { ...state.player, currentRoundScore: newScore },
-        turnState: 'IDLE', // Back to idle to spin/solve/buy again
-        spinResult: null // Reset spin value
+        turnState: nextTurnState,
+        // Keep spinResult so player can continue guessing/buying without re-spinning
+        spinResult: state.spinResult
       };
     }
 

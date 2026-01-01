@@ -41,30 +41,47 @@ export type GameState = {
 
 export interface WheelWedge {
   id: string;
-  type: 'CASH' | 'BANKRUPT' | 'LOSE_TURN' | 'FREE_PLAY';
+  type: 'CASH' | 'BANKRUPT' | 'LOSE_TURN' | 'FREE_PLAY' | 'PRIZE';
   value: number;
   label: string;
   color: string;
-  weight: number; // For RNG probability if we simulate physics result directly
 }
 
+// Authentic 24-wedge Wheel of Fortune layout (Round 1 configuration)
+// Colors based on actual show: Red, Orange, Yellow, Green, Blue, Purple, Pink
+const RED = '#CF3030';
+const ORANGE = '#E58432';
+const YELLOW = '#D2D456';
+const GREEN = '#9CCF57';
+const BLUE = '#88BBF7';
+const PURPLE = '#9966CC';
+const PINK = '#E57BA2';
+
 export const WHEEL_CONFIG: WheelWedge[] = [
-  { id: '1', type: 'CASH', value: 2500, label: '$2500', color: '#ffecb3', weight: 1 },
-  { id: '2', type: 'CASH', value: 500, label: '$500', color: '#d1c4e9', weight: 1 },
-  { id: '3', type: 'CASH', value: 900, label: '$900', color: '#ffcdd2', weight: 1 },
-  { id: '4', type: 'BANKRUPT', value: 0, label: 'BANKRUPT', color: '#000000', weight: 1 },
-  { id: '5', type: 'CASH', value: 600, label: '$600', color: '#c8e6c9', weight: 1 },
-  { id: '6', type: 'CASH', value: 400, label: '$400', color: '#fff9c4', weight: 1 },
-  { id: '7', type: 'LOSE_TURN', value: 0, label: 'LOSE TURN', color: '#E0E0E0', weight: 1 },
-  { id: '8', type: 'CASH', value: 800, label: '$800', color: '#b3e5fc', weight: 1 },
-  { id: '9', type: 'CASH', value: 350, label: '$350', color: '#f8bbd0', weight: 1 },
-  { id: '10', type: 'FREE_PLAY', value: 500, label: 'FREE PLAY', color: '#FFEB3B', weight: 1 },
-  { id: '11', type: 'CASH', value: 700, label: '$700', color: '#ffcc80', weight: 1 },
-  { id: '12', type: 'BANKRUPT', value: 0, label: 'BANKRUPT', color: '#000000', weight: 1 },
-  { id: '13', type: 'CASH', value: 650, label: '$650', color: '#e1bee7', weight: 1 },
-  { id: '14', type: 'CASH', value: 1000, label: '$1000', color: '#ffab91', weight: 1 },
-  { id: '15', type: 'CASH', value: 500, label: '$500', color: '#d7ccc8', weight: 1 },
-  { id: '16', type: 'CASH', value: 600, label: '$600', color: '#cfd8dc', weight: 1 }
+  { id: '1',  type: 'CASH',      value: 2500, label: '$2500',       color: YELLOW },   // Top dollar - Gold/Yellow
+  { id: '2',  type: 'CASH',      value: 600,  label: '$600',        color: PURPLE },
+  { id: '3',  type: 'CASH',      value: 700,  label: '$700',        color: ORANGE },
+  { id: '4',  type: 'CASH',      value: 600,  label: '$600',        color: PINK },
+  { id: '5',  type: 'CASH',      value: 650,  label: '$650',        color: BLUE },
+  { id: '6',  type: 'BANKRUPT',  value: 0,    label: 'BANKRUPT',    color: '#000000' },
+  { id: '7',  type: 'CASH',      value: 500,  label: '$500',        color: GREEN },
+  { id: '8',  type: 'CASH',      value: 800,  label: '$800',        color: RED },
+  { id: '9',  type: 'CASH',      value: 550,  label: '$550',        color: PURPLE },
+  { id: '10', type: 'CASH',      value: 500,  label: '$500',        color: YELLOW },
+  { id: '11', type: 'CASH',      value: 900,  label: '$900',        color: BLUE },
+  { id: '12', type: 'FREE_PLAY', value: 500,  label: 'FREE PLAY',   color: GREEN },
+  { id: '13', type: 'CASH',      value: 700,  label: '$700',        color: PINK },
+  { id: '14', type: 'CASH',      value: 600,  label: '$600',        color: BLUE },
+  { id: '15', type: 'CASH',      value: 800,  label: '$800',        color: ORANGE },
+  { id: '16', type: 'LOSE_TURN', value: 0,    label: 'LOSE A TURN', color: '#FFFFFF' },
+  { id: '17', type: 'CASH',      value: 650,  label: '$650',        color: GREEN },
+  { id: '18', type: 'CASH',      value: 500,  label: '$500',        color: PURPLE },
+  { id: '19', type: 'CASH',      value: 900,  label: '$900',        color: YELLOW },
+  { id: '20', type: 'BANKRUPT',  value: 0,    label: 'BANKRUPT',    color: '#000000' },
+  { id: '21', type: 'CASH',      value: 500,  label: '$500',        color: RED },
+  { id: '22', type: 'CASH',      value: 850,  label: '$850',        color: BLUE },
+  { id: '23', type: 'CASH',      value: 700,  label: '$700',        color: GREEN },
+  { id: '24', type: 'CASH',      value: 600,  label: '$600',        color: PINK },
 ];
 
 export const VOWELS = ['A', 'E', 'I', 'O', 'U'];

@@ -25,9 +25,9 @@ export const Keyboard: React.FC<KeyboardProps> = ({
   consonantsOnly = false
 }) => {
   return (
-    <div className="flex flex-col gap-1 w-full mx-auto p-2 flex-shrink">
+    <div className="flex flex-col gap-0.5 sm:gap-1 w-full mx-auto p-1 sm:p-2 flex-shrink">
       {ROWS.map((row, i) => (
-        <div key={i} className="flex justify-center gap-0.5 sm:gap-1">
+        <div key={i} className="flex justify-center gap-0.5">
           {row.map(char => {
             const isGuessed = guessedLetters.includes(char);
             const isVowel = VOWELS.includes(char);
@@ -42,7 +42,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({
                 onClick={() => onGuess(char)}
                 disabled={!isAllowed}
                 className={clsx(
-                  "w-6 h-8 sm:w-8 sm:h-10 md:w-10 md:h-12 rounded font-bold text-xs sm:text-sm md:text-base transition-colors flex-shrink-0",
+                  "w-7 h-9 sm:w-8 sm:h-10 md:w-10 md:h-12 rounded font-bold text-sm sm:text-sm md:text-base transition-colors flex-shrink-0",
                   isGuessed 
                     ? "bg-slate-700 text-slate-500 opacity-50" 
                     : isAllowed 

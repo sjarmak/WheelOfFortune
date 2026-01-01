@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { WHEEL_CONFIG, WheelWedge } from '../engine/types';
 import { SeededRNG } from '../engine/rng';
 
@@ -6,144 +6,175 @@ interface WheelProps {
   onSpinStart: () => void;
   onSpinComplete: (wedge: WheelWedge) => void;
   isSpinning: boolean;
-  seed: number; // Used to determine result deterministically from outside or we pick here
-  canSpin?: boolean; // Whether spin is allowed (disabled during GUESSING_CONSONANT)
+  seed: number;
+  canSpin?: boolean;
 }
 
-export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpinning, seed, canSpin = true }) => {
-   const [rotation, setRotation] = useState(0);
-   const wheelRef = useRef<HTMLDivElement>(null);
-   
-   // Calculate wedge angle size
-   const wedgeAngle = 360 / WHEEL_CONFIG.length;
+const WEDGE_COUNT = WHEEL_CONFIG.length; // 24 wedges
+const WEDGE_ANGLE = 360 / WEDGE_COUNT;   // 15 degrees each
+const MIN_SWIPE_VELOCITY = 0.5; // Minimum velocity to trigger spin
 
-   const spin = () => {
-     if (isSpinning || !canSpin) return;
-     
-     // Pick the wedge deterministically using the seed
-     const rng = new SeededRNG(seed);
-     const randomIndex = rng.range(0, WHEEL_CONFIG.length);
-     const targetWedge = WHEEL_CONFIG[randomIndex];
-     
-     console.log(`[WHEEL SPIN] seed=${seed}, randomIndex=${randomIndex}, targetWedge=${targetWedge.label}`);
-     
-     onSpinStart();
+export const Wheel: React.FC<WheelProps> = ({ 
+  onSpinStart, 
+  onSpinComplete, 
+  isSpinning, 
+  seed, 
+  canSpin = true 
+}) => {
+  const [rotation, setRotation] = useState(0);
+  const wheelRef = useRef<HTMLDivElement>(null);
+  
+  // Touch tracking state
+  const touchStartRef = useRef<{ x: number; y: number; time: number; angle: number } | null>(null);
+  const lastTouchRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
-    // Calculate rotation to land on the pre-selected wedge
-    // Wedge i in the SVG is drawn at center angle: -90 + i * wedgeAngle + wedgeAngle/2
-    // CSS rotate() goes clockwise, but SVG angles go counterclockwise
-    // So we need to negate the angle when converting from SVG to CSS
-    // Currently the wheel is rotated by 'rotation' degrees (CSS clockwise)
-    // Wedge i appears at: -rotation + wedgeCenterAngle (in SVG angle space)
-    // We want it at 0° (the pointer position in SVG space)
-    // So we need: -rotation + wedgeCenterAngle = 0 (mod 360)
-    // Therefore: rotation = wedgeCenterAngle (mod 360)
-    // To get there from current state: spinAmount = wedgeCenterAngle - rotation (mod 360)
-    // Add extra spins: spinAmount = extraSpins*360 + wedgeCenterAngle - rotation
+  // Calculate angle from touch point relative to wheel center
+  const getTouchAngle = (clientX: number, clientY: number): number => {
+    if (!wheelRef.current) return 0;
+    const rect = wheelRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    return Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
+  };
+
+  const triggerSpin = () => {
+    if (isSpinning || !canSpin) return;
+
+    // 1. Pick random wedge using seeded RNG
+    const rng = new SeededRNG(seed);
+    const winningIndex = rng.range(0, WEDGE_COUNT);
+    const winningWedge = WHEEL_CONFIG[winningIndex];
+
+    onSpinStart();
+
+    // 2. Calculate target rotation
+    const wedgeCenterOffset = winningIndex * WEDGE_ANGLE + WEDGE_ANGLE / 2;
+    const landingAngle = (360 - wedgeCenterOffset) % 360;
+    const currentAngle = rotation % 360;
     
-    const wedgeCenterAngle = -90 + randomIndex * wedgeAngle + wedgeAngle / 2;
+    let delta = landingAngle - currentAngle;
+    if (delta < 0) delta += 360;
+    
     const extraSpins = 5;
-    const spinAmount = 360 * extraSpins - (wedgeCenterAngle + rotation);
-    const newTotalRotation = rotation + spinAmount;
+    const spinAmount = extraSpins * 360 + delta;
     
-    console.log(`[WHEEL CALC] wedgeCenterAngle=${wedgeCenterAngle}°, currentRotation=${rotation}°, spinAmount=${spinAmount}°, newRotation=${newTotalRotation}°, newRotation%360=${newTotalRotation % 360}°`);
-    
-    // Verify which wedge visually lands at the pointer
-    const tolerance = 11.25;
-    let visualWedgeIndex = -1;
-    for (let i = 0; i < WHEEL_CONFIG.length; i++) {
-      const wc = -90 + i * wedgeAngle + wedgeAngle / 2;
-      const svgAngle = (-newTotalRotation + wc) % 360;
-      const normalized = (svgAngle + 360) % 360;
-      if (normalized < tolerance || normalized > 360 - tolerance) {
-        visualWedgeIndex = i;
-        break;
-      }
-    }
-    console.log(`[WHEEL VISUAL] Should visually land on index ${visualWedgeIndex} (${WHEEL_CONFIG[visualWedgeIndex]?.label}), but reporting index ${randomIndex} (${targetWedge.label})`);
-    
-    setRotation(newTotalRotation);
+    setRotation(rotation + spinAmount);
 
-    // Report the pre-selected wedge after animation completes
+    // 3. Report result after animation
     setTimeout(() => {
-      // Check what visual wedge is actually at the pointer now
-      const tolerance = 11.25;
-      let actualVisualWedge = -1;
-      for (let i = 0; i < WHEEL_CONFIG.length; i++) {
-        const wc = -90 + i * wedgeAngle + wedgeAngle / 2;
-        const svgAngle = (-newTotalRotation + wc) % 360;
-        const normalized = (svgAngle + 360) % 360;
-        if (normalized < tolerance || normalized > 360 - tolerance) {
-          actualVisualWedge = i;
-          break;
-        }
-      }
-      
-      // Also check the actual DOM rotation value
-      const computedStyle = wheelRef.current ? window.getComputedStyle(wheelRef.current) : null;
-      const actualDOMRotation = computedStyle?.transform || 'unknown';
-      
-      console.log(`[WHEEL onSpinComplete] targetWedge=${targetWedge.label} (index ${randomIndex}), calculatedVisualWedge=${WHEEL_CONFIG[actualVisualWedge]?.label} (index ${actualVisualWedge}), DOM rotation=${actualDOMRotation}`);
-      onSpinComplete(targetWedge);
-    }, 4000); // Match CSS duration
+      onSpinComplete(winningWedge);
+    }, 4000);
+  };
+
+  // Touch handlers for swipe-to-spin
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isSpinning || !canSpin) return;
+    
+    const touch = e.touches[0];
+    const angle = getTouchAngle(touch.clientX, touch.clientY);
+    
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now(),
+      angle
+    };
+    lastTouchRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now()
+    };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isSpinning || !canSpin || !touchStartRef.current) return;
+    
+    const touch = e.touches[0];
+    lastTouchRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now()
+    };
+  };
+
+  const handleTouchEnd = () => {
+    if (isSpinning || !canSpin) return;
+    
+    const start = touchStartRef.current;
+    const end = lastTouchRef.current;
+    
+    if (!start || !end) return;
+    
+    const timeDelta = (end.time - start.time) / 1000; // seconds
+    if (timeDelta <= 0) return;
+    
+    // Calculate swipe distance
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Calculate velocity (pixels per second)
+    const velocity = distance / timeDelta;
+    
+    // If swipe was fast enough, trigger spin
+    if (velocity > MIN_SWIPE_VELOCITY * 100) {
+      triggerSpin();
+    }
+    
+    // Reset touch state
+    touchStartRef.current = null;
+    lastTouchRef.current = null;
   };
 
   return (
-    <div className="relative mx-auto my-2 w-full max-w-xs sm:max-w-sm aspect-square">
-      {/* Pointer */}
+    <div className="relative mx-auto w-full max-w-[240px] sm:max-w-sm aspect-square touch-none">
+      {/* Pointer at top */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[20px] border-t-white drop-shadow-md" />
 
-      {/* Wheel Container */}
-      <div 
+      {/* Wheel */}
+      <div
         ref={wheelRef}
-        className="w-full h-full rounded-full border-8 border-yellow-600 shadow-2xl overflow-hidden relative transition-transform duration-[4000ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
+        className="w-full h-full rounded-full border-8 border-yellow-600 shadow-2xl overflow-hidden transition-transform duration-[4000ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
         style={{ transform: `rotate(${rotation}deg)` }}
-        onClick={spin}
+        onClick={triggerSpin}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <svg viewBox="0 0 100 100" className="w-full h-full">
-          {/* Wedges */}
-          <g>
-            {WHEEL_CONFIG.map((wedge, i) => {
-              const angleOffset = -90; 
-              const startAngle = (i * wedgeAngle + angleOffset) * (Math.PI / 180);
-              const endAngle = ((i + 1) * wedgeAngle + angleOffset) * (Math.PI / 180);
-              const x1 = 50 + 50 * Math.cos(startAngle);
-              const y1 = 50 + 50 * Math.sin(startAngle);
-              const x2 = 50 + 50 * Math.cos(endAngle);
-              const y2 = 50 + 50 * Math.sin(endAngle);
-              
-              return (
-                <path
-                  key={wedge.id}
-                  d={`M50,50 L${x1},${y1} A50,50 0 0,1 ${x2},${y2} Z`}
-                  fill={wedge.color}
-                  stroke="#333"
-                  strokeWidth="0.2"
-                />
-              );
-            })}
-          </g>
-          
+          {/* Draw wedges starting from top, going clockwise */}
+          {WHEEL_CONFIG.map((wedge, i) => {
+            const startAngle = (i * WEDGE_ANGLE - 90) * (Math.PI / 180);
+            const endAngle = ((i + 1) * WEDGE_ANGLE - 90) * (Math.PI / 180);
+            const x1 = 50 + 50 * Math.cos(startAngle);
+            const y1 = 50 + 50 * Math.sin(startAngle);
+            const x2 = 50 + 50 * Math.cos(endAngle);
+            const y2 = 50 + 50 * Math.sin(endAngle);
+
+            return (
+              <path
+                key={wedge.id}
+                d={`M50,50 L${x1},${y1} A50,50 0 0,1 ${x2},${y2} Z`}
+                fill={wedge.color}
+                stroke="#333"
+                strokeWidth="0.2"
+              />
+            );
+          })}
+
+          {/* Center circles */}
           <circle cx="50" cy="50" r="50" fill="transparent" stroke="rgba(0,0,0,0.2)" strokeWidth="2" />
           <circle cx="50" cy="50" r="10" fill="#888" stroke="#555" strokeWidth="1" />
 
-          {/* Text paths for labels - OPTIMAL VISUAL CONFIGURATION */}
-          {/* This configuration provides the best visual balance:
-              - Radius 44→16: Text positioned in the middle-to-outer area of wedges
-              - 3° counterclockwise offset: Centers text within wedge boundaries
-              - lengthAdjust="spacingAndGlyphs": Allows text to stretch/compress to fit the path
-              - Font sizes (5.5 for CASH, 4.2 for text): Matches visual importance
-              All text is vertically centered and nicely distributed within each wedge. */}
+          {/* Text labels */}
           <defs>
             {WHEEL_CONFIG.map((wedge, i) => {
-              const midAngleDeg = i * wedgeAngle + wedgeAngle / 2 - 90 - 3; // Shift counterclockwise by 3 degrees
-              const midAngleRad = midAngleDeg * (Math.PI / 180);
-              // Path from radius 44 to radius 16 (optimal outward positioning)
-              const x1 = 50 + 44 * Math.cos(midAngleRad);
-              const y1 = 50 + 44 * Math.sin(midAngleRad);
-              const x2 = 50 + 16 * Math.cos(midAngleRad);
-              const y2 = 50 + 16 * Math.sin(midAngleRad);
-              
+              const midAngle = (i * WEDGE_ANGLE + WEDGE_ANGLE / 2 - 90 - 3) * (Math.PI / 180);
+              const x1 = 50 + 44 * Math.cos(midAngle);
+              const y1 = 50 + 44 * Math.sin(midAngle);
+              const x2 = 50 + 16 * Math.cos(midAngle);
+              const y2 = 50 + 16 * Math.sin(midAngle);
+
               return (
                 <path
                   key={`path-${wedge.id}`}
@@ -155,33 +186,36 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
             })}
           </defs>
 
-          {/* Labels along paths */}
-          <g>
-            {WHEEL_CONFIG.map((wedge) => {
-              const fillColor = wedge.type === 'BANKRUPT' ? '#fff' : '#000';
-              
-              return (
-                <text
-                  key={`label-${wedge.id}`}
-                  fontSize={wedge.type === 'CASH' ? '5.5' : '4.2'}
-                  fontWeight="bold"
-                  fill={fillColor}
-                  style={{ pointerEvents: 'none' }}
+          {WHEEL_CONFIG.map((wedge) => {
+            const isSpecial = wedge.type === 'BANKRUPT' || wedge.type === 'LOSE_TURN' || wedge.type === 'FREE_PLAY';
+            const textColor = wedge.type === 'BANKRUPT' ? '#fff' : 
+                              wedge.type === 'LOSE_TURN' ? '#000' : '#000';
+            return (
+              <text
+                key={`label-${wedge.id}`}
+                fontSize={isSpecial ? '3' : '4'}
+                fontWeight="bold"
+                fill={textColor}
+                style={{ pointerEvents: 'none' }}
+                lengthAdjust="spacingAndGlyphs"
+              >
+                <textPath 
+                  href={`#path-${wedge.id}`} 
+                  startOffset="50%" 
+                  textAnchor="middle"
                   lengthAdjust="spacingAndGlyphs"
                 >
-                  <textPath href={`#path-${wedge.id}`} startOffset="50%" textAnchor="middle" lengthAdjust="spacingAndGlyphs">
-                    {wedge.label}
-                  </textPath>
-                </text>
-              );
-            })}
-          </g>
+                  {wedge.label}
+                </textPath>
+              </text>
+            );
+          })}
         </svg>
       </div>
-      
-      {/* Center Cap */}
-      <button 
-        onClick={spin}
+
+      {/* Spin button */}
+      <button
+        onClick={triggerSpin}
         disabled={isSpinning || !canSpin}
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-game-accent border-2 border-white flex items-center justify-center z-10 hover:scale-110 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
       >

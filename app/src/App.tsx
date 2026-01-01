@@ -11,7 +11,16 @@ import confetti from 'canvas-confetti';
 function App() {
   const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE, (initial) => {
     const saved = localStorage.getItem('wof_state');
-    return saved ? { ...initial, ...JSON.parse(saved) } : initial;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Ensure spinCount exists (missing in old saved states)
+        return { ...initial, ...parsed, spinCount: parsed.spinCount ?? 0 };
+      } catch {
+        return initial;
+      }
+    }
+    return initial;
   });
 
   const [activePack, setActivePack] = useState<Puzzle[]>(DEFAULT_PUZZLES);
@@ -19,6 +28,7 @@ function App() {
   const [showSolveModal, setShowSolveModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [showSunsetEasterEgg, setShowSunsetEasterEgg] = useState(false);
   
   // Settings State
   const [vowelCost, setVowelCost] = useState(250);
@@ -98,6 +108,16 @@ function App() {
 
   const handleSolve = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Easter egg: "MAGNIFICENT SUNSET"
+    if (solveInput.toUpperCase() === 'MAGNIFICENT SUNSET') {
+      confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+      setShowSunsetEasterEgg(true);
+      setSolveInput('');
+      setShowSolveModal(false);
+      return;
+    }
+    
     dispatch({ type: 'SOLVE_ATTEMPT', phrase: solveInput });
     setSolveInput('');
     setShowSolveModal(false);
@@ -165,13 +185,14 @@ function App() {
       </header>
 
       {/* Main Game Area */}
-      <main className="flex-1 flex flex-col items-center justify-start p-2 sm:p-4 overflow-y-auto relative w-full">
+      <main className="flex-1 flex flex-col items-center justify-between p-1 sm:p-4 overflow-hidden relative w-full">
         
-        <div className="w-full max-w-4xl flex-shrink-0">
+        <div className="w-full max-w-4xl flex-shrink-0 px-1">
           <Board 
             phrase={state.currentPuzzle.phrase} 
             revealedPositions={state.revealedPositions}
             category={state.currentPuzzle.category}
+            puzzleId={state.currentPuzzle.id}
           />
         </div>
 
@@ -181,7 +202,7 @@ function App() {
           </div>
         )}
 
-        <div className="w-full flex-1 flex flex-col items-center justify-center min-h-0">
+        <div className="w-full flex flex-col items-center flex-1 min-h-0">
           
           {state.turnState === 'ROUND_OVER' ? (
              <button 
@@ -193,7 +214,7 @@ function App() {
           ) : (
             <>
               {(state.turnState === 'IDLE' || state.turnState === 'SPINNING' || state.turnState === 'GUESSING_CONSONANT') && (
-                 <div className="max-h-[40vh] aspect-square flex items-center justify-center overflow-hidden">
+                 <div className="flex items-center justify-center">
                    <Wheel 
                      key={state.currentPuzzle?.id}
                      onSpinStart={handleSpinStart}
@@ -205,11 +226,11 @@ function App() {
                  </div>
               )}
 
-              {state.turnState === 'IDLE' && (
-                 <div className="flex gap-4 my-2">
+              {(state.turnState === 'IDLE' || state.turnState === 'GUESSING_CONSONANT') && (
+                 <div className="flex gap-2 sm:gap-4">
                    <button 
                      onClick={() => setShowSolveModal(true)}
-                     className="px-4 py-2 bg-blue-600 rounded-lg font-bold shadow-md hover:bg-blue-500"
+                     className="px-3 py-1 sm:px-4 sm:py-2 bg-blue-600 rounded-lg font-bold text-sm sm:text-base shadow-md hover:bg-blue-500"
                    >
                      SOLVE
                    </button>
@@ -222,14 +243,14 @@ function App() {
                        dispatch({ type: 'BUY_VOWEL' });
                      }}
                      disabled={!vowelsLeft || (state.player.currentRoundScore < vowelCost && !state.player.freePlay)}
-                     className="px-4 py-2 bg-purple-600 rounded-lg font-bold shadow-md hover:bg-purple-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
+                     className="px-3 py-1 sm:px-4 sm:py-2 bg-purple-600 rounded-lg font-bold text-sm sm:text-base shadow-md hover:bg-purple-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
                    >
-                     {vowelsLeft && state.player.currentRoundScore >= vowelCost || state.player.freePlay ? `BUY VOWEL ($${vowelCost})` : vowelsLeft ? 'NEED $$$' : 'NO MORE VOWELS'}
+                     {vowelsLeft && state.player.currentRoundScore >= vowelCost || state.player.freePlay ? `VOWEL $${vowelCost}` : vowelsLeft ? 'NEED $$$' : 'NO VOWELS'}
                    </button>
                  </div>
               )}
 
-              <div className="h-6 mb-1 font-bold text-yellow-300 text-sm sm:text-base px-4 text-center">
+              <div className="h-4 sm:h-6 font-bold text-yellow-300 text-xs sm:text-base px-2 text-center">
                 {state.turnState === 'SPINNING' && "SPINNING..."}
                 {state.turnState === 'GUESSING_CONSONANT' && `SPUN $${state.spinResult}! GUESS A CONSONANT`}
                 {state.turnState === 'BUYING_VOWEL' && `PICK A VOWEL ($${vowelCost})`}
@@ -237,7 +258,7 @@ function App() {
               </div>
               
               {!hideKeyboard && (
-                <div className="w-full flex-shrink-0 overflow-y-auto pb-2">
+                <div className="w-full flex-shrink-0">
                   <Keyboard 
                     guessedLetters={state.guessedLetters}
                     onGuess={handleGuess}
@@ -357,12 +378,58 @@ function App() {
                       <RotateCcw size={16} /> Reset All Progress
                     </button>
                  </div>
-             </div>
-           </div>
-        </div>
-      )}
-    </div>
-  );
-}
+                 </div>
+                 </div>
+                 </div>
+                 )}
 
-export default App;
+                 {/* Easter Egg: Magnificent Sunset */}
+                 {showSunsetEasterEgg && (
+                 <div 
+                 className="fixed inset-0 z-50 flex items-center justify-center cursor-pointer"
+                 onClick={() => setShowSunsetEasterEgg(false)}
+                 >
+                 {/* Sunset gradient background */}
+                 <div className="absolute inset-0 bg-gradient-to-b from-orange-400 via-pink-500 to-purple-700 animate-pulse" />
+                 
+                 {/* Sun */}
+                 <div className="absolute bottom-1/3 left-1/2 -translate-x-1/2">
+                 <div className="w-40 h-40 rounded-full bg-gradient-to-t from-yellow-300 to-orange-500 shadow-[0_0_100px_50px_rgba(255,200,50,0.6)] animate-bounce" />
+                 </div>
+                 
+                 {/* Horizon line */}
+                 <div className="absolute bottom-1/4 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-200 to-transparent" />
+                 
+                 {/* Water reflection */}
+                 <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-t from-purple-900 to-transparent opacity-60" />
+                 
+                 {/* Text */}
+                 <div className="relative z-10 text-center">
+                 <h1 className="text-6xl font-bold text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.8)] animate-pulse">
+                   MAGNIFICENT SUNSET
+                 </h1>
+                 <p className="text-white/70 mt-8 text-sm">Click anywhere to close</p>
+                 </div>
+                 
+                 {/* Floating particles */}
+                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                 {[...Array(20)].map((_, i) => (
+                 <div
+                 key={i}
+                 className="absolute w-2 h-2 bg-yellow-200 rounded-full opacity-60 animate-ping"
+                 style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 60}%`,
+                  animationDelay: `${Math.random() * 2}s`,
+                  animationDuration: `${2 + Math.random() * 3}s`
+                 }}
+                 />
+                 ))}
+                 </div>
+                 </div>
+                 )}
+                 </div>
+                 );
+                 }
+
+                 export default App;
