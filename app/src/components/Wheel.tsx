@@ -66,7 +66,19 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
 
     // Report the pre-selected wedge after animation completes
     setTimeout(() => {
-      console.log(`[WHEEL onSpinComplete] targetWedge=${targetWedge.label}`);
+      // Check what visual wedge is actually at the pointer now
+      const tolerance = 11.25;
+      let actualVisualWedge = -1;
+      for (let i = 0; i < WHEEL_CONFIG.length; i++) {
+        const wc = -90 + i * wedgeAngle + wedgeAngle / 2;
+        const svgAngle = (-newTotalRotation + wc) % 360;
+        const normalized = (svgAngle + 360) % 360;
+        if (normalized < tolerance || normalized > 360 - tolerance) {
+          actualVisualWedge = i;
+          break;
+        }
+      }
+      console.log(`[WHEEL onSpinComplete] targetWedge=${targetWedge.label} (index ${randomIndex}), actualVisualWedge=${WHEEL_CONFIG[actualVisualWedge]?.label} (index ${actualVisualWedge})`);
       onSpinComplete(targetWedge);
     }, 4000); // Match CSS duration
   };
