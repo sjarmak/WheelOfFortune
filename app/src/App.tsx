@@ -193,7 +193,7 @@ function App() {
              </button>
           ) : (
             <>
-              {(state.turnState === 'IDLE' || state.turnState === 'SPINNING') && (
+              {(state.turnState === 'IDLE' || state.turnState === 'SPINNING' || state.turnState === 'GUESSING_CONSONANT') && (
                  <div className="max-h-[40vh] aspect-square flex items-center justify-center overflow-hidden">
                    <Wheel 
                      onSpinStart={handleSpinStart}
