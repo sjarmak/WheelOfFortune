@@ -148,9 +148,6 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
     setTargetPosition(null);
   };
 
-  const startX = typeof window !== 'undefined' ? window.innerWidth - 60 : 0;
-  const startY = typeof window !== 'undefined' ? window.innerHeight - 100 : 0;
-
   return (
     <>
       {/* Vanna waiting in corner or animating to tile */}
@@ -158,11 +155,7 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
         {!isAnimating && (
           <motion.div
             key="vanna-waiting"
-            className="fixed w-16 h-16 pointer-events-none z-40 flex items-center justify-center"
-            style={{
-              bottom: '10px',
-              right: '10px'
-            }}
+            className="w-full h-full flex items-center justify-center"
           >
             <VannaHand isAnimating={false} />
           </motion.div>
@@ -172,20 +165,20 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
           <motion.div
             key={`vanna-animating-${currentTile}`}
             initial={{
-              left: startX,
-              top: startY,
+              x: window.innerWidth - 60,
+              y: window.innerHeight - 100,
               scale: 0.8,
               opacity: 1
             }}
             animate={{
-              left: targetPosition.x,
-              top: targetPosition.y,
+              x: targetPosition.x - window.innerWidth / 2,
+              y: targetPosition.y - window.innerHeight / 2,
               scale: 1,
               opacity: 1
             }}
             exit={{
-              left: startX,
-              top: startY,
+              x: window.innerWidth - 60,
+              y: window.innerHeight - 100,
               scale: 0.8,
               opacity: 0,
               transition: { duration: 0.3 }

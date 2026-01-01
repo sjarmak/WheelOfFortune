@@ -62,9 +62,12 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col items-center justify-center p-1 sm:p-2 bg-game-board rounded-lg sm:rounded-xl border-2 sm:border-4 border-yellow-500 shadow-2xl w-full max-w-5xl mx-auto relative"
+        className="flex flex-col items-center justify-center p-1 sm:p-2 bg-game-board rounded-lg sm:rounded-xl border-2 sm:border-4 border-yellow-500 shadow-2xl w-full max-w-5xl mx-auto relative overflow-hidden"
         >
-        <Vanna revealedPositions={revealedPositions} tileRefs={tileRefsArray} />
+        {/* Vanna positioned in lower right of board */}
+        <div className="absolute bottom-2 right-2 z-40 w-16 h-16 pointer-events-none">
+          <Vanna revealedPositions={revealedPositions} tileRefs={tileRefsArray} />
+        </div>
         <div className="flex flex-wrap justify-center gap-x-1 gap-y-1 sm:gap-x-2 sm:gap-y-2 w-full">
           {words.reduce((acc, word, wordIdx) => {
              const wordStartIndex = phrase.split(' ').slice(0, wordIdx).reduce((sum, w) => sum + w.length + 1, 0);
