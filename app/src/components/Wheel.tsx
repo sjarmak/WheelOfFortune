@@ -18,30 +18,26 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
   const spin = () => {
     if (isSpinning) return;
     
-    onSpinStart();
-
+    // Pick the wedge deterministically before animation
     const randomIndex = Math.floor(Math.random() * WHEEL_CONFIG.length);
     const targetWedge = WHEEL_CONFIG[randomIndex];
     
+    onSpinStart();
+
+    // Calculate rotation to land on the pre-selected wedge
+    // Wedges start at -90° (top) and go clockwise
     const extraSpins = 5;
     const baseRotation = 360 * extraSpins;
-    
-    // Calculate the angle to the middle of the target wedge
-    // Wedges are drawn starting at -90° and going clockwise
-    // Middle of wedge i is at: -90 + (i * wedgeAngle) + (wedgeAngle / 2)
-    // Normalize to [0, 360) for the CSS rotation
     const middleAngleDeg = -90 + (randomIndex * wedgeAngle) + (wedgeAngle / 2);
     const normalizedMiddleAngle = ((middleAngleDeg % 360) + 360) % 360;
-    
-    // To land at pointer (0° = top), rotate so the wedge middle is at 0°
     const targetRotation = -normalizedMiddleAngle;
     
-    // Add to current rotation to make spins additive (prevents backwards spin on subsequent spins)
     const spinAmount = baseRotation + targetRotation;
     const newTotalRotation = rotation + spinAmount;
     
     setRotation(newTotalRotation);
 
+    // Report the pre-selected wedge after animation completes
     setTimeout(() => {
       onSpinComplete(targetWedge);
     }, 4000); // Match CSS duration
