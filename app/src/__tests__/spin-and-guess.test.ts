@@ -53,7 +53,7 @@ describe('Spin and Guess Flow', () => {
     expect(state.guessedLetters).toContain('H');
     expect(state.revealedPositions).toContain(0); // H is at position 0
     expect(state.player.currentRoundScore).toBe(500); // 1 * 500
-    expect(state.turnState).toBe('GUESSING_CONSONANT'); // Stay in GUESSING_CONSONANT to continue guessing or buy vowel
+    expect(state.turnState).toBe('IDLE'); // Return to choice state to spin again, buy vowel, or solve
     expect(state.spinResult).toBe(500); // Keep the spin value
   });
 

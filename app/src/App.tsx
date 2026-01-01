@@ -226,7 +226,7 @@ function App() {
                   </div>
                )}
 
-               {(state.turnState === 'IDLE' || state.turnState === 'GUESSING_CONSONANT') && (
+               {state.turnState === 'IDLE' && (
                   <div className="flex gap-2 sm:gap-3">
                     <button 
                       onClick={() => setShowSolveModal(true)}

@@ -132,15 +132,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       // Determine next turn state
       let nextTurnState: typeof state.turnState = state.turnState;
       
-      // If letter was found, stay in current turn state (GUESSING_CONSONANT or BUYING_VOWEL)
-      // If letter NOT found (count === 0), end turn - UI will handle showing message/next action
-      if (count === 0 && !state.player.freePlay) {
-        nextTurnState = 'IDLE'; // No letters found, turn ends
-      }
-      // If guessing a vowel successfully, go back to consonant guessing
-      else if (isVowel && count > 0) {
-        nextTurnState = 'GUESSING_CONSONANT';
-      }
+      // After any letter guess (consonant or vowel), return to IDLE to allow choosing next action
+      // (spin again, buy vowel, solve, or guess another consonant)
+      // On wrong guess and not free play, turn ends; UI handles flow
+      nextTurnState = 'IDLE';
       
       return {
         ...state,

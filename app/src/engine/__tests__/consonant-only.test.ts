@@ -44,7 +44,7 @@ describe('Consonant-Only Guessing after Spin', () => {
     expect(state.spinResult).toBe('BANKRUPT');
   });
 
-  test('After consonant guess, turnState stays GUESSING_CONSONANT (allowing more guesses or vowels)', () => {
+  test('After consonant guess, turnState returns to IDLE to allow choosing next action', () => {
     let state = gameReducer(INITIAL_STATE, {
       type: 'START_ROUND',
       puzzle: mockPuzzle
@@ -66,7 +66,7 @@ describe('Consonant-Only Guessing after Spin', () => {
       cost: 0
     });
 
-    expect(state.turnState).toBe('GUESSING_CONSONANT'); // Stay in GUESSING_CONSONANT
+    expect(state.turnState).toBe('IDLE'); // Return to choice state (can spin, buy vowel, solve, or guess again)
     expect(state.spinResult).toBe(500); // Keep spin value
   });
 
@@ -92,7 +92,7 @@ describe('Consonant-Only Guessing after Spin', () => {
     expect(VOWELS).not.toContain('Y');
   });
 
-  test('After guessing consonant in free play, vowels also become available', () => {
+  test('After guessing consonant in free play, returns to IDLE', () => {
     let state = gameReducer(INITIAL_STATE, {
       type: 'START_ROUND',
       puzzle: mockPuzzle
@@ -115,7 +115,7 @@ describe('Consonant-Only Guessing after Spin', () => {
       cost: 0
     });
 
-    expect(state.turnState).toBe('GUESSING_CONSONANT'); // Stay in GUESSING_CONSONANT with free play
+    expect(state.turnState).toBe('IDLE'); // Back to choice state even with free play
     expect(state.player.freePlay).toBe(true);
     expect(state.spinResult).toBe(500); // Keep spin value
   });
