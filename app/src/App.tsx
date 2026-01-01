@@ -252,7 +252,7 @@ function App() {
 
                <div className="h-4 sm:h-5 font-bold text-yellow-300 text-xs sm:text-sm px-2 text-center">
                  {state.turnState === 'SPINNING' && "SPINNING..."}
-                 {state.turnState === 'GUESSING_CONSONANT' && `SPUN $${state.spinResult}! GUESS A CONSONANT`}
+                 {state.turnState === 'GUESSING_CONSONANT' && `GUESS A CONSONANT ($${state.spinResult})`}
                  {state.turnState === 'BUYING_VOWEL' && `PICK A VOWEL ($${vowelCost})`}
                  {state.turnState === 'IDLE' && "SPIN, SOLVE, OR BUY VOWEL"}
                </div>
