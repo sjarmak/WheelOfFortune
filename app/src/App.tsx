@@ -199,7 +199,7 @@ function App() {
                      onSpinStart={handleSpinStart}
                      onSpinComplete={handleSpinComplete}
                      isSpinning={state.turnState === 'SPINNING'}
-                     seed={state.seed}
+                     seed={state.seed + state.spinCount}
                      canSpin={state.turnState === 'IDLE'}
                    />
                  </div>

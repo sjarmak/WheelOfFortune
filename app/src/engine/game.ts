@@ -14,7 +14,8 @@ export const INITIAL_STATE: GameState = {
   bonusPicks: [],
   packId: 'default',
   seed: Date.now(),
-  roundCount: 0
+  roundCount: 0,
+  spinCount: 0
 };
 
 export type GameAction = 
@@ -64,12 +65,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         tossUpRevealOrder: shuffledReveal,
         tossUpIndex: 0,
         player: { ...state.player, currentRoundScore: 0, freePlay: false },
-        roundCount: state.roundCount + 1
+        roundCount: state.roundCount + 1,
+        spinCount: 0
       };
     }
 
     case 'SPIN_WHEEL':
-      return { ...state, turnState: 'SPINNING' };
+      return { ...state, turnState: 'SPINNING', spinCount: state.spinCount + 1 };
 
     case 'SPIN_RESULT': {
       const { wedge } = action;

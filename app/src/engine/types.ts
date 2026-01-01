@@ -36,6 +36,7 @@ export type GameState = {
   packId: string;
   seed: number;
   roundCount: number;
+  spinCount: number; // Number of spins in current round (for RNG variation)
 };
 
 export interface WheelWedge {
