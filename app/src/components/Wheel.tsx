@@ -78,7 +78,12 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
           break;
         }
       }
-      console.log(`[WHEEL onSpinComplete] targetWedge=${targetWedge.label} (index ${randomIndex}), actualVisualWedge=${WHEEL_CONFIG[actualVisualWedge]?.label} (index ${actualVisualWedge})`);
+      
+      // Also check the actual DOM rotation value
+      const computedStyle = wheelRef.current ? window.getComputedStyle(wheelRef.current) : null;
+      const actualDOMRotation = computedStyle?.transform || 'unknown';
+      
+      console.log(`[WHEEL onSpinComplete] targetWedge=${targetWedge.label} (index ${randomIndex}), calculatedVisualWedge=${WHEEL_CONFIG[actualVisualWedge]?.label} (index ${actualVisualWedge}), DOM rotation=${actualDOMRotation}`);
       onSpinComplete(targetWedge);
     }, 4000); // Match CSS duration
   };
