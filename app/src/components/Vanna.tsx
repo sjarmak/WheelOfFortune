@@ -114,6 +114,8 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs }) => 
           }}
           className="fixed w-14 h-14 pointer-events-none z-40 flex items-center justify-center"
           style={{
+            left: isAnimating && targetPosition ? `${targetPosition.x}px` : `${startX}px`,
+            top: isAnimating && targetPosition ? `${targetPosition.y}px` : `${startY}px`,
             marginLeft: '-28px',
             marginTop: '-28px'
           }}
