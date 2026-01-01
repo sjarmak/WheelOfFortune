@@ -147,15 +147,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'SOLVE_ATTEMPT': {
       const correct = action.phrase.toUpperCase() === state.currentPuzzle?.phrase.toUpperCase();
       if (correct) {
-        const winScore = state.player.currentRoundScore < 1000 ? 1000 : state.player.currentRoundScore; // Min $1000
         return {
           ...state,
           turnState: 'ROUND_OVER',
           revealedPositions: Array.from({ length: state.currentPuzzle!.phrase.length }, (_, i) => i), // Reveal all
           player: {
              ...state.player,
-             currentRoundScore: winScore,
-             totalScore: state.player.totalScore + winScore
+             totalScore: state.player.totalScore + state.player.currentRoundScore
           }
         };
       }
