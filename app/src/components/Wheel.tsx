@@ -36,8 +36,12 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
     const wedgeMiddleAngle = -90 + (randomIndex * wedgeAngle) + (wedgeAngle / 2);
     
     // The rotation needed to bring this angle to 0° (pointer position)
-    // We need to rotate by -wedgeMiddleAngle, but normalize to handle the modulo correctly
-    const targetRotation = -wedgeMiddleAngle;
+    // Normalize the wedge angle to [0, 360) first
+    const normalizedWedgeAngle = ((wedgeMiddleAngle % 360) + 360) % 360;
+    
+    // To bring a point at normalizedWedgeAngle to 0°, rotate by -normalizedWedgeAngle
+    // This ensures we always rotate forward, landing the wedge correctly at top
+    const targetRotation = 360 - normalizedWedgeAngle;
     
     const spinAmount = baseRotation + targetRotation;
     const newTotalRotation = rotation + spinAmount;
