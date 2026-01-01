@@ -329,17 +329,26 @@ function App() {
                    </div>
                 </div>
 
-                <div className="border-t border-slate-700 pt-4">
+                <div className="border-t border-slate-700 pt-4 space-y-2">
                    <button 
-                     onClick={() => {
-                        dispatch({ type: 'RESET_GAME' });
-                        setShowSettings(false);
-                     }}
-                     className="w-full py-3 bg-red-900/50 text-red-200 rounded font-bold hover:bg-red-900 transition-colors flex items-center justify-center gap-2"
-                   >
-                     <RotateCcw size={16} /> Reset All Progress
-                   </button>
-                </div>
+                      onClick={() => {
+                         nextRound();
+                         setShowSettings(false);
+                      }}
+                      className="w-full py-3 bg-yellow-700/50 text-yellow-200 rounded font-bold hover:bg-yellow-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <RotateCcw size={16} /> Reset Puzzle
+                    </button>
+                   <button 
+                      onClick={() => {
+                         dispatch({ type: 'RESET_GAME' });
+                         setShowSettings(false);
+                      }}
+                      className="w-full py-3 bg-red-900/50 text-red-200 rounded font-bold hover:bg-red-900 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <RotateCcw size={16} /> Reset All Progress
+                    </button>
+                 </div>
              </div>
            </div>
         </div>
