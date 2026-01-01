@@ -59,7 +59,7 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col items-center justify-center p-2 sm:p-4 bg-game-board rounded-lg sm:rounded-xl border-2 sm:border-4 border-yellow-500 shadow-2xl w-full max-w-5xl mx-auto"
+        className="flex flex-col items-center justify-center p-1.5 sm:p-3 bg-game-board rounded-lg sm:rounded-xl border-2 sm:border-4 border-yellow-500 shadow-2xl w-full max-w-5xl mx-auto"
         >
         <div className="flex flex-wrap justify-center gap-x-1 gap-y-1 sm:gap-x-2 sm:gap-y-2 w-full">
           {words.reduce((acc, word, wordIdx) => {
@@ -76,7 +76,7 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
              return acc;
            }, [] as React.ReactNode[])}
          </div>
-         <div className="mt-2 sm:mt-4 bg-blue-900 px-3 sm:px-6 py-1 sm:py-2 rounded-full border border-white sm:border-2 text-white font-bold text-xs sm:text-sm tracking-widest uppercase">
+         <div className="mt-1 sm:mt-2 bg-blue-900 px-3 sm:px-4 py-0.5 sm:py-1 rounded-full border border-white sm:border-2 text-white font-bold text-xs sm:text-sm tracking-widest uppercase">
           {category.replace(/_/g, ' ')}
         </div>
       </motion.div>

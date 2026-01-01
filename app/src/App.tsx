@@ -205,12 +205,12 @@ function App() {
          <div className="w-full flex flex-col items-center flex-1 min-h-0 gap-0.5">
            
            {state.turnState === 'ROUND_OVER' ? (
-              <button 
-                onClick={nextRound}
-                className="px-6 py-3 bg-green-600 rounded-xl font-bold text-xl shadow-lg hover:bg-green-500 animate-pulse"
-              >
-                NEXT PUZZLE
-              </button>
+               <button 
+                 onClick={nextRound}
+                 className="px-4 py-2 bg-green-600 rounded-lg font-bold text-lg shadow-lg hover:bg-green-500 animate-pulse"
+               >
+                 NEXT PUZZLE
+               </button>
            ) : (
              <>
                {(state.turnState === 'IDLE' || state.turnState === 'SPINNING' || state.turnState === 'GUESSING_CONSONANT') && (
