@@ -26,24 +26,15 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
     onSpinStart();
 
     // Calculate rotation to land on the pre-selected wedge
-    // Wedges are drawn with middle angles at: -90 + (i * wedgeAngle) + (wedgeAngle / 2)
-    // The pointer is at the top (0° on screen)
-    // We want the wedge's middle angle to reach 0° when rotated
+    // Wedge i in the SVG is drawn at center angle: -90 + i * wedgeAngle + wedgeAngle/2
+    // Currently the wheel is rotated by 'rotation' degrees
+    // So wedge i currently appears at: wedgeCenterAngle + rotation (in absolute space)
+    // We want it at 0° (the pointer position)
+    // So we need to spin by: extraSpins*360 - (wedgeCenterAngle + rotation)
+    
+    const wedgeCenterAngle = -90 + randomIndex * wedgeAngle + wedgeAngle / 2;
     const extraSpins = 5;
-    const baseRotation = 360 * extraSpins;
-    
-    // Middle angle of the selected wedge in the SVG coordinate system
-    const wedgeMiddleAngle = -90 + (randomIndex * wedgeAngle) + (wedgeAngle / 2);
-    
-    // The rotation needed to bring this angle to 0° (pointer position)
-    // Normalize the wedge angle to [0, 360) first
-    const normalizedWedgeAngle = ((wedgeMiddleAngle % 360) + 360) % 360;
-    
-    // To bring a point at normalizedWedgeAngle to 0°, rotate by -normalizedWedgeAngle
-    // This ensures we always rotate forward, landing the wedge correctly at top
-    const targetRotation = 360 - normalizedWedgeAngle;
-    
-    const spinAmount = baseRotation + targetRotation;
+    const spinAmount = 360 * extraSpins - (wedgeCenterAngle + rotation);
     const newTotalRotation = rotation + spinAmount;
     
     setRotation(newTotalRotation);
