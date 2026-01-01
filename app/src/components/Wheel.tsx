@@ -42,13 +42,10 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
     const spinAmount = 360 * extraSpins + wedgeCenterAngle - rotation;
     const newTotalRotation = rotation + spinAmount;
     
-    console.log(`[WHEEL] Spin: randomIndex=${randomIndex}, targetWedge=${targetWedge.label}, wedgeCenterAngle=${wedgeCenterAngle}, rotation=${rotation}→${newTotalRotation}`);
-    
     setRotation(newTotalRotation);
 
     // Report the pre-selected wedge after animation completes
     setTimeout(() => {
-      console.log(`[WHEEL] onSpinComplete: ${targetWedge.label}`);
       onSpinComplete(targetWedge);
     }, 4000); // Match CSS duration
   };
