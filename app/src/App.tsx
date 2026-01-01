@@ -202,7 +202,7 @@ function App() {
            </div>
          )}
 
-         <div className="w-full flex flex-col items-center flex-1 min-h-0 gap-1">
+         <div className="w-full flex flex-col items-center flex-1 min-h-0 gap-0.5">
            
            {state.turnState === 'ROUND_OVER' ? (
               <button 
