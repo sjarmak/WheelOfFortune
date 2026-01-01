@@ -6,9 +6,10 @@ interface WheelProps {
   onSpinComplete: (wedge: WheelWedge) => void;
   isSpinning: boolean;
   seed: number; // Used to determine result deterministically from outside or we pick here
+  canSpin?: boolean; // Whether spin is allowed (disabled during GUESSING_CONSONANT)
 }
 
-export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpinning }) => {
+export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpinning, canSpin = true }) => {
   const [rotation, setRotation] = useState(0);
   const wheelRef = useRef<HTMLDivElement>(null);
   
@@ -16,7 +17,7 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
   const wedgeAngle = 360 / WHEEL_CONFIG.length;
 
   const spin = () => {
-    if (isSpinning) return;
+    if (isSpinning || !canSpin) return;
     
     // Pick the wedge deterministically before animation
     const randomIndex = Math.floor(Math.random() * WHEEL_CONFIG.length);
@@ -25,12 +26,18 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
     onSpinStart();
 
     // Calculate rotation to land on the pre-selected wedge
-    // Wedges start at -90° (top) and go clockwise
+    // Wedges are drawn with middle angles at: -90 + (i * wedgeAngle) + (wedgeAngle / 2)
+    // The pointer is at the top (0° on screen)
+    // We want the wedge's middle angle to reach 0° when rotated
     const extraSpins = 5;
     const baseRotation = 360 * extraSpins;
-    const middleAngleDeg = -90 + (randomIndex * wedgeAngle) + (wedgeAngle / 2);
-    const normalizedMiddleAngle = ((middleAngleDeg % 360) + 360) % 360;
-    const targetRotation = -normalizedMiddleAngle;
+    
+    // Middle angle of the selected wedge in the SVG coordinate system
+    const wedgeMiddleAngle = -90 + (randomIndex * wedgeAngle) + (wedgeAngle / 2);
+    
+    // The rotation needed to bring this angle to 0° (pointer position)
+    // We need to rotate by -wedgeMiddleAngle, but normalize to handle the modulo correctly
+    const targetRotation = -wedgeMiddleAngle;
     
     const spinAmount = baseRotation + targetRotation;
     const newTotalRotation = rotation + spinAmount;
@@ -137,8 +144,8 @@ export const Wheel: React.FC<WheelProps> = ({ onSpinStart, onSpinComplete, isSpi
       {/* Center Cap */}
       <button 
         onClick={spin}
-        disabled={isSpinning}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-game-accent border-2 border-white flex items-center justify-center z-10 hover:scale-110 active:scale-95 transition-transform"
+        disabled={isSpinning || !canSpin}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-game-accent border-2 border-white flex items-center justify-center z-10 hover:scale-110 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span className="text-[10px] font-bold text-white">SPIN</span>
       </button>

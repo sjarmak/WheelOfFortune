@@ -200,6 +200,7 @@ function App() {
                      onSpinComplete={handleSpinComplete}
                      isSpinning={state.turnState === 'SPINNING'}
                      seed={state.seed}
+                     canSpin={state.turnState === 'IDLE'}
                    />
                  </div>
               )}
