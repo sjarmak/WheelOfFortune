@@ -169,108 +169,108 @@ function App() {
   return (
     <div className="h-screen bg-game-bg flex flex-col text-white pb-safe overflow-hidden">
       {/* Header */}
-      <header className="p-2 sm:p-4 flex justify-between items-center bg-game-accent shadow-md z-10 flex-shrink-0">
-        <h1 className="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+      <header className="py-2 px-3 sm:py-3 sm:px-4 flex justify-between items-center bg-game-accent shadow-md z-10 flex-shrink-0">
+        <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
           WHEEL PRACTICE
         </h1>
-        <div className="flex gap-2 sm:gap-4 items-center">
-          <div className="flex flex-col items-end text-sm font-mono">
+        <div className="flex gap-3 sm:gap-4 items-center">
+          <div className="flex flex-col items-end text-base sm:text-lg font-mono">
              <span className="text-green-400">${state.player.currentRoundScore}</span>
-             <span className="text-yellow-400 text-xs">${state.player.totalScore}</span>
+             <span className="text-yellow-400 text-sm">${state.player.totalScore}</span>
           </div>
           <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-white/10 rounded-full">
-            <SettingsIcon size={20} />
+            <SettingsIcon size={24} />
           </button>
         </div>
       </header>
 
       {/* Main Game Area */}
-      <main className="flex-1 flex flex-col items-center justify-between p-1 sm:p-4 overflow-hidden relative w-full">
+      <main className="flex-1 flex flex-col items-center justify-between p-2 sm:p-3 overflow-hidden relative w-full gap-2">
         
-        <div className="w-full max-w-4xl flex-shrink-0 px-1">
-          <Board 
-            phrase={state.currentPuzzle.phrase} 
-            revealedPositions={state.revealedPositions}
-            category={state.currentPuzzle.category}
-            puzzleId={state.currentPuzzle.id}
-          />
-        </div>
+        <div className="w-full flex-shrink-0">
+           <Board 
+             phrase={state.currentPuzzle.phrase} 
+             revealedPositions={state.revealedPositions}
+             category={state.currentPuzzle.category}
+             puzzleId={state.currentPuzzle.id}
+           />
+         </div>
 
-        {message && (
-          <div className="fixed top-20 z-50 animate-bounce bg-white text-black px-6 py-2 rounded-full font-bold shadow-xl border-2 border-yellow-400">
-            {message}
-          </div>
-        )}
+         {message && (
+           <div className="fixed top-20 z-50 animate-bounce bg-white text-black px-6 py-2 rounded-full font-bold shadow-xl border-2 border-yellow-400">
+             {message}
+           </div>
+         )}
 
-        <div className="w-full flex flex-col items-center flex-1 min-h-0">
-          
-          {state.turnState === 'ROUND_OVER' ? (
-             <button 
-               onClick={nextRound}
-               className="px-8 py-4 bg-green-600 rounded-xl font-bold text-2xl shadow-lg hover:bg-green-500 animate-pulse"
-             >
-               NEXT PUZZLE
-             </button>
-          ) : (
-            <>
-              {(state.turnState === 'IDLE' || state.turnState === 'SPINNING' || state.turnState === 'GUESSING_CONSONANT') && (
-                 <div className="flex items-center justify-center">
-                   <Wheel 
-                     key={state.currentPuzzle?.id}
-                     onSpinStart={handleSpinStart}
-                     onSpinComplete={handleSpinComplete}
-                     isSpinning={state.turnState === 'SPINNING'}
-                     seed={state.seed + state.spinCount}
-                     canSpin={state.turnState === 'IDLE'}
+         <div className="w-full flex flex-col items-center flex-1 min-h-0 gap-1">
+           
+           {state.turnState === 'ROUND_OVER' ? (
+              <button 
+                onClick={nextRound}
+                className="px-6 py-3 bg-green-600 rounded-xl font-bold text-xl shadow-lg hover:bg-green-500 animate-pulse"
+              >
+                NEXT PUZZLE
+              </button>
+           ) : (
+             <>
+               {(state.turnState === 'IDLE' || state.turnState === 'SPINNING' || state.turnState === 'GUESSING_CONSONANT') && (
+                  <div className="flex items-center justify-center flex-shrink-0">
+                    <Wheel 
+                      key={state.currentPuzzle?.id}
+                      onSpinStart={handleSpinStart}
+                      onSpinComplete={handleSpinComplete}
+                      isSpinning={state.turnState === 'SPINNING'}
+                      seed={state.seed + state.spinCount}
+                      canSpin={state.turnState === 'IDLE'}
+                    />
+                  </div>
+               )}
+
+               {(state.turnState === 'IDLE' || state.turnState === 'GUESSING_CONSONANT') && (
+                  <div className="flex gap-3 sm:gap-4">
+                    <button 
+                      onClick={() => setShowSolveModal(true)}
+                      className="px-4 py-2 sm:px-5 sm:py-2.5 bg-blue-600 rounded-lg font-bold text-base sm:text-lg shadow-md hover:bg-blue-500"
+                    >
+                      SOLVE
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (state.player.currentRoundScore < vowelCost && !state.player.freePlay) {
+                          showToast('Not enough money to buy vowel!', 'error');
+                          return;
+                        }
+                        dispatch({ type: 'BUY_VOWEL' });
+                      }}
+                      disabled={!vowelsLeft || (state.player.currentRoundScore < vowelCost && !state.player.freePlay)}
+                      className="px-4 py-2 sm:px-5 sm:py-2.5 bg-purple-600 rounded-lg font-bold text-base sm:text-lg shadow-md hover:bg-purple-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
+                    >
+                      {vowelsLeft && state.player.currentRoundScore >= vowelCost || state.player.freePlay ? `VOWEL $${vowelCost}` : vowelsLeft ? 'NEED $$$' : 'NO VOWELS'}
+                    </button>
+                  </div>
+               )}
+
+               <div className="h-5 sm:h-6 font-bold text-yellow-300 text-sm sm:text-base px-2 text-center">
+                 {state.turnState === 'SPINNING' && "SPINNING..."}
+                 {state.turnState === 'GUESSING_CONSONANT' && `SPUN $${state.spinResult}! GUESS A CONSONANT`}
+                 {state.turnState === 'BUYING_VOWEL' && `PICK A VOWEL ($${vowelCost})`}
+                 {state.turnState === 'IDLE' && "SPIN, SOLVE, OR BUY VOWEL"}
+               </div>
+               
+               {!hideKeyboard && (
+                 <div className="w-full flex-shrink-0">
+                   <Keyboard 
+                     guessedLetters={state.guessedLetters}
+                     onGuess={handleGuess}
+                     disabled={state.turnState !== 'GUESSING_CONSONANT' && state.turnState !== 'BUYING_VOWEL'}
+                     consonantsOnly={state.turnState === 'GUESSING_CONSONANT'}
+                     vowelsOnly={state.turnState === 'BUYING_VOWEL'} 
                    />
                  </div>
-              )}
-
-              {(state.turnState === 'IDLE' || state.turnState === 'GUESSING_CONSONANT') && (
-                 <div className="flex gap-2 sm:gap-4">
-                   <button 
-                     onClick={() => setShowSolveModal(true)}
-                     className="px-3 py-1 sm:px-4 sm:py-2 bg-blue-600 rounded-lg font-bold text-sm sm:text-base shadow-md hover:bg-blue-500"
-                   >
-                     SOLVE
-                   </button>
-                   <button 
-                     onClick={() => {
-                       if (state.player.currentRoundScore < vowelCost && !state.player.freePlay) {
-                         showToast('Not enough money to buy vowel!', 'error');
-                         return;
-                       }
-                       dispatch({ type: 'BUY_VOWEL' });
-                     }}
-                     disabled={!vowelsLeft || (state.player.currentRoundScore < vowelCost && !state.player.freePlay)}
-                     className="px-3 py-1 sm:px-4 sm:py-2 bg-purple-600 rounded-lg font-bold text-sm sm:text-base shadow-md hover:bg-purple-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
-                   >
-                     {vowelsLeft && state.player.currentRoundScore >= vowelCost || state.player.freePlay ? `VOWEL $${vowelCost}` : vowelsLeft ? 'NEED $$$' : 'NO VOWELS'}
-                   </button>
-                 </div>
-              )}
-
-              <div className="h-4 sm:h-6 font-bold text-yellow-300 text-xs sm:text-base px-2 text-center">
-                {state.turnState === 'SPINNING' && "SPINNING..."}
-                {state.turnState === 'GUESSING_CONSONANT' && `SPUN $${state.spinResult}! GUESS A CONSONANT`}
-                {state.turnState === 'BUYING_VOWEL' && `PICK A VOWEL ($${vowelCost})`}
-                {state.turnState === 'IDLE' && "SPIN, SOLVE, OR BUY VOWEL"}
-              </div>
-              
-              {!hideKeyboard && (
-                <div className="w-full flex-shrink-0">
-                  <Keyboard 
-                    guessedLetters={state.guessedLetters}
-                    onGuess={handleGuess}
-                    disabled={state.turnState !== 'GUESSING_CONSONANT' && state.turnState !== 'BUYING_VOWEL'}
-                    consonantsOnly={state.turnState === 'GUESSING_CONSONANT'}
-                    vowelsOnly={state.turnState === 'BUYING_VOWEL'} 
-                  />
-                </div>
-              )}
-            </>
-          )}
-        </div>
+               )}
+             </>
+           )}
+         </div>
       </main>
 
       {/* Solve Modal */}

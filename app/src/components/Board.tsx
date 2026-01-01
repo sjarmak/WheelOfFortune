@@ -16,12 +16,12 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
     const isLetter = /[A-Z]/.test(char);
     const isPunctuation = /[^A-Z ]/.test(char);
 
-    if (char === ' ') return <div key={globalIndex} className="w-6 h-8 sm:w-10 sm:h-14" />;
+    if (char === ' ') return <div key={globalIndex} className="w-7 h-9 sm:w-11 sm:h-16" />;
 
     return (
       <div 
         key={globalIndex} 
-        className="w-6 h-8 sm:w-10 sm:h-14 border border-gray-300 m-0.5 flex items-center justify-center text-base sm:text-2xl font-bold shadow-md bg-white overflow-hidden"
+        className="w-7 h-9 sm:w-11 sm:h-16 border border-gray-300 m-0.5 flex items-center justify-center text-lg sm:text-3xl font-bold shadow-md bg-white overflow-hidden"
       >
         {isPunctuation ? (
           <span className="text-black">{char}</span>
@@ -59,24 +59,24 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col items-center justify-center p-1 sm:p-4 bg-game-board rounded-lg sm:rounded-xl border-2 sm:border-4 border-yellow-500 shadow-2xl w-full max-w-4xl mx-auto"
-      >
-        <div className="flex flex-wrap justify-center gap-x-1 gap-y-1 sm:gap-x-3 sm:gap-y-2 w-full">
+        className="flex flex-col items-center justify-center p-2 sm:p-4 bg-game-board rounded-lg sm:rounded-xl border-2 sm:border-4 border-yellow-500 shadow-2xl w-full max-w-5xl mx-auto"
+        >
+        <div className="flex flex-wrap justify-center gap-x-1 gap-y-1 sm:gap-x-2 sm:gap-y-2 w-full">
           {words.reduce((acc, word, wordIdx) => {
-            const wordStartIndex = phrase.split(' ').slice(0, wordIdx).reduce((sum, w) => sum + w.length + 1, 0);
-            
-            acc.push(
-              <div key={wordIdx} className="flex gap-x-0">
-                {word.split('').map((char, charIdx) => {
-                  const globalIndex = wordStartIndex + charIdx;
-                  return renderLetter(char, globalIndex);
-                })}
-              </div>
-            );
-            return acc;
-          }, [] as React.ReactNode[])}
-        </div>
-        <div className="mt-2 sm:mt-6 bg-blue-900 px-3 sm:px-6 py-0.5 sm:py-2 rounded-full border border-white sm:border-2 text-white font-bold text-[10px] sm:text-sm tracking-widest uppercase">
+             const wordStartIndex = phrase.split(' ').slice(0, wordIdx).reduce((sum, w) => sum + w.length + 1, 0);
+             
+             acc.push(
+               <div key={wordIdx} className="flex gap-x-0">
+                 {word.split('').map((char, charIdx) => {
+                   const globalIndex = wordStartIndex + charIdx;
+                   return renderLetter(char, globalIndex);
+                 })}
+               </div>
+             );
+             return acc;
+           }, [] as React.ReactNode[])}
+         </div>
+         <div className="mt-2 sm:mt-4 bg-blue-900 px-3 sm:px-6 py-1 sm:py-2 rounded-full border border-white sm:border-2 text-white font-bold text-xs sm:text-sm tracking-widest uppercase">
           {category.replace(/_/g, ' ')}
         </div>
       </motion.div>

@@ -127,7 +127,7 @@ export const Wheel: React.FC<WheelProps> = ({
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-[240px] sm:max-w-sm aspect-square touch-none">
+    <div className="relative mx-auto w-full max-w-xs sm:max-w-md aspect-square touch-none">
       {/* Pointer at top */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[20px] border-t-white drop-shadow-md" />
 
