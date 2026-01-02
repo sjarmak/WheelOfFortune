@@ -1,0 +1,223 @@
+{
+  "pack_id": "seasons_1_20",
+  "created_at": "2026-01-01T23:19:30.956Z",
+  "inputs": [
+    "data/raw/wof_seasons_1_20.txt"
+  ],
+  "total_rows_read": 12882,
+  "valid_puzzles_kept": 12847,
+  "skipped": {
+    "looks_like_header_or_null": 21
+  },
+  "duplicates_removed": 14,
+  "category_distribution": {
+    "OTHER": 12847
+  },
+  "round_type_distribution": {
+    "MAIN": 12847
+  },
+  "hardest": [
+    {
+      "id": "0e240b9ffee94f8b40958b7a6a8795b005fbc3aa",
+      "phrase": "WEEKEND UPDATE ANCHORS JIMMY FALLON &...",
+      "score": 0.5
+    },
+    {
+      "id": "13a56a4f6aef5ec28a216ae4f4440cb1303ef78b",
+      "phrase": "SHAMELESSLY SCRAPED FROM HTTP:BUYAVOW...",
+      "score": 0.5
+    },
+    {
+      "id": "27aabd8f38f97c11508d5cf30908c67a98ac9212",
+      "phrase": "BENJAMIN FRANKLIN'S FAMOUS KITE EXPER...",
+      "score": 0.5
+    },
+    {
+      "id": "3c2c67ae02e9d7db049ce1bdfa1e5a296fad87b8",
+      "phrase": "DOPEY SNEEZY HAPPY GRUMPY DOC BASHFUL...",
+      "score": 0.5
+    },
+    {
+      "id": "45bda9f722b7d44265072bfa4d9db02055873b1d",
+      "phrase": "JAMES BOND WAS CREATED BY THIS ENGLIS...",
+      "score": 0.5
+    },
+    {
+      "id": "534f1d158fa8946f9f7fdcd4048b69f717bf91d9",
+      "phrase": "MAILING IN YOUR TAXES JUST BEFORE MID...",
+      "score": 0.5
+    },
+    {
+      "id": "5eb54e3f69127c32738d7861d3d4356ea6574d32",
+      "phrase": "SNEEZY DOC BASHFUL HAPPY GRUMPY SLEEP...",
+      "score": 0.5
+    },
+    {
+      "id": "7bc183354f48065b6d6414b0caf7a60742aa73ed",
+      "phrase": "HOCKEY HALL OF FAME INDUCTS WAYNE GRE...",
+      "score": 0.5
+    },
+    {
+      "id": "8d4f5f02442918d2601a07492818f21549b6c140",
+      "phrase": "PLOP PLOP FIZZ FIZZ OH WHAT A RELIEF ...",
+      "score": 0.5
+    },
+    {
+      "id": "97a5b162ab0037932278c424fee8b1e08e4d2020",
+      "phrase": "WITH A QUACK QUACK HERE AND A QUACK Q...",
+      "score": 0.5
+    },
+    {
+      "id": "9dad48dfaada5014111152bdc028ed05979398bb",
+      "phrase": "HISTORIC DOCUMENT FIRST SIGNED BY JOH...",
+      "score": 0.5
+    },
+    {
+      "id": "9f05d066d3e4edb283c9eff0ce0fd1d183a5a8c3",
+      "phrase": "JIM BAKKER & JIMMY SWAGGART FALL FROM...",
+      "score": 0.5
+    },
+    {
+      "id": "b0b76982d2d0e3bf85eb25c7226ee83d4f2d0521",
+      "phrase": "WATCHING THE NEW YEAR'S EVE BALL DROP...",
+      "score": 0.5
+    },
+    {
+      "id": "f1f7e325aa712cd55734acd78960226122caaa1a",
+      "phrase": "JINGLE BELLS JINGLE BELLS JINGLE ALL ...",
+      "score": 0.5
+    },
+    {
+      "id": "0095a5d1274ede9b7d9779547163755f254851d5",
+      "phrase": "MAGELLAN LEADS FIRST VOYAGE AROUND TH...",
+      "score": 0.4
+    },
+    {
+      "id": "0289e7a017bac6f43eed9a62b38e43bd141cfb2c",
+      "phrase": "ELWAY LEADS BRONCOS TO SUPER BOWL VIC...",
+      "score": 0.4
+    },
+    {
+      "id": "02971b09abf3e4cd0b79699bf60f66038a39eff9",
+      "phrase": "U.S. WOMEN'S HOCKEY TEAM WINS HISTORI...",
+      "score": 0.4
+    },
+    {
+      "id": "036675c2d768ecd792c8b80b5970b5e6991a4154",
+      "phrase": "BUY ME SOME PEANUTS AND CRACKER JACK",
+      "score": 0.4
+    },
+    {
+      "id": "039848d48994a7417c3ad5def8d5c0a78f3cfea1",
+      "phrase": "JUST SAY THE FIRST THING THAT POPS IN...",
+      "score": 0.4
+    },
+    {
+      "id": "03ed1b893116300b44d1e29b6d30bb868b2cc5df",
+      "phrase": "THE VOICE OF MICHAEL J. FOX AS STUART...",
+      "score": 0.4
+    }
+  ],
+  "easiest": [
+    {
+      "id": "fffc3eacf13544cd00407c5f99886ef2e6e9a36b",
+      "phrase": "WOLF",
+      "score": 0
+    },
+    {
+      "id": "ffbb38936c36f7afd6c8f3aba0079297bdd45f34",
+      "phrase": "VOCAL CORDS",
+      "score": 0
+    },
+    {
+      "id": "ff9a47eff099eb8233487c0f7af950a1ce2a5815",
+      "phrase": "DOMINOES",
+      "score": 0
+    },
+    {
+      "id": "ff8124b30367d06e8e9f43ced3b42964682c8b7c",
+      "phrase": "DAYDREAMER",
+      "score": 0
+    },
+    {
+      "id": "ff7264613e4403de365f19967f81dd2c93c08689",
+      "phrase": "SLAPHAPPY",
+      "score": 0
+    },
+    {
+      "id": "ff5a53186c8ad4d93afbb56469444f39ffe25786",
+      "phrase": "MAGICIAN",
+      "score": 0
+    },
+    {
+      "id": "ff214dc9f3591f378e7da4e93810ac9bc9dcb318",
+      "phrase": "TWO OF A KIND",
+      "score": 0
+    },
+    {
+      "id": "fef2e0f441d682cf538666b51b60bcee1000b040",
+      "phrase": "GEMINIS",
+      "score": 0
+    },
+    {
+      "id": "fed8033cc9abd6825c67917da29602d59fbc04db",
+      "phrase": "DULUTH",
+      "score": 0
+    },
+    {
+      "id": "fecc97b30607326d773b842100e2e8d538cbf9a8",
+      "phrase": "ON THE AIR",
+      "score": 0
+    },
+    {
+      "id": "feaa0000a39cb4935865a6799a9cca29cdcce07c",
+      "phrase": "KEY WORD",
+      "score": 0
+    },
+    {
+      "id": "fe9c909e093d3f8c2f49a08a25cfbec62bbb50f5",
+      "phrase": "IN THE BUFF",
+      "score": 0
+    },
+    {
+      "id": "fe976cb213efb34ed6f8f0149486208341c7c83e",
+      "phrase": "CHOPIN",
+      "score": 0
+    },
+    {
+      "id": "fe7efc8f55c4bb0f8c58f48c1928a99cc33011a4",
+      "phrase": "HOT ITEM",
+      "score": 0
+    },
+    {
+      "id": "fe7b75f554d93cac9433897c66b3d4796c7a61b2",
+      "phrase": "BRIGHT IDEA",
+      "score": 0
+    },
+    {
+      "id": "fe7938bde2608b4f465c5ec8a32a4bd9ccea4db1",
+      "phrase": "CAIRO EGYPT",
+      "score": 0
+    },
+    {
+      "id": "fe774967910cb62c20fb175fe184846cbf2f82d8",
+      "phrase": "STEER CLEAR",
+      "score": 0
+    },
+    {
+      "id": "fe25c8000ef1f20c7f3dc702e86f19ab7ba2dff9",
+      "phrase": "DIGNITARY",
+      "score": 0
+    },
+    {
+      "id": "fe22b96207fbf8c278dd54a84cc6684d6d0bbf77",
+      "phrase": "HITCHCOCK",
+      "score": 0
+    },
+    {
+      "id": "fe1aca171120cac87106c1553061143b55028807",
+      "phrase": "CANTON OHIO",
+      "score": 0
+    }
+  ]
+}

@@ -1,0 +1,241 @@
+{
+  "pack_id": "seasons_40_42",
+  "created_at": "2026-01-01T23:56:17.345Z",
+  "inputs": [
+    "data/scraped/buyavowel/season_42.json",
+    "data/scraped/buyavowel/season_41.json",
+    "data/scraped/buyavowel/season_40.json"
+  ],
+  "total_rows_read": 5775,
+  "valid_puzzles_kept": 2269,
+  "skipped": {
+    "round_type_filtered": 3496,
+    "looks_like_header_or_null": 9
+  },
+  "duplicates_removed": 1,
+  "category_distribution": {
+    "OTHER": 488,
+    "AROUND_THE_HOUSE": 45,
+    "PHRASE": 366,
+    "WHAT_ARE_YOU_DOING": 254,
+    "THING": 172,
+    "TITLE": 41,
+    "ON_THE_MAP": 30,
+    "PLACE": 131,
+    "LIVING_THING": 54,
+    "SAME_NAME": 88,
+    "EVENT": 123,
+    "OCCUPATION": 28,
+    "BEFORE_AND_AFTER": 217,
+    "PERSON": 87,
+    "FOOD_AND_DRINK": 135,
+    "FICTIONAL_CHARACTER": 10
+  },
+  "round_type_distribution": {
+    "MAIN": 2269
+  },
+  "hardest": [
+    {
+      "id": "4635eaa330ec36d44733829a642629fda96960f1",
+      "phrase": "I'M NOT LAZY I'M JUST VERY RELAXED",
+      "score": 0.5
+    },
+    {
+      "id": "05c8eb1dae5986948cea018cd4ee5e229c048fb2",
+      "phrase": "PUMPKIN PIE PECAN PIE PIZZA PIE POTPIE",
+      "score": 0.4
+    },
+    {
+      "id": "0909e668492c9b427b7668704e76c9b9bb499e8d",
+      "phrase": "A BEAUTIFUL SKY FILLED WITH MILLIONS ...",
+      "score": 0.4
+    },
+    {
+      "id": "122316690a689512a1ff6af8a7f68af41ce83de0",
+      "phrase": "IT'S COLDER THAN A POLAR BEAR'S PAJAMAS",
+      "score": 0.4
+    },
+    {
+      "id": "18928e79e2dd9c02f362ae4f661b901e5db51de2",
+      "phrase": "WARM TOASTED BAGELS WITH LOX AND CREA...",
+      "score": 0.4
+    },
+    {
+      "id": "2736edf2fd199e20e11340eadc2562f4158ff2db",
+      "phrase": "GOLDEN STATE WARRIORS WIN NBA CHAMPIO...",
+      "score": 0.4
+    },
+    {
+      "id": "3f9de85817840525826516269d8bf0b260e7e376",
+      "phrase": "SNATCHING VICTORY FROM THE JAWS OF DE...",
+      "score": 0.4
+    },
+    {
+      "id": "6557a67dc16e167ec22fc1a95e1ebfa69677c1a2",
+      "phrase": "THESE AREN'T THE DROIDS YOU'RE LOOKIN...",
+      "score": 0.4
+    },
+    {
+      "id": "71745bdb6bf9e28e0407b5735142a1bc19d5047e",
+      "phrase": "DARTH VADER LUKE SKYWALKER AND PRINCE...",
+      "score": 0.4
+    },
+    {
+      "id": "78cc81a31c7353ad354e08573475423de1854b81",
+      "phrase": "PUBLIC DISPLAYS OF AFFECTION THAT ARE...",
+      "score": 0.4
+    },
+    {
+      "id": "adc2eb556ee9316ba3b53ba2b021e3a3a0336f33",
+      "phrase": "FEELING THE OCEAN BREEZE ON MY FACE",
+      "score": 0.4
+    },
+    {
+      "id": "bbafc7c8b3b81c60db282a54fbec29f31cd31ba3",
+      "phrase": "WHEN THE CAT'S AWAY THE MICE WILL PLA...",
+      "score": 0.4
+    },
+    {
+      "id": "c6128c46f9e5a94e051666a9f1b8904d7907382e",
+      "phrase": "LIVE FROM NEW YORK IT'S SATURDAY NIGH...",
+      "score": 0.4
+    },
+    {
+      "id": "c8389c14515b3e6d3e830dff9cb43b7d20de7c0a",
+      "phrase": "WINTER SQUASH WITH CARAMELIZED ONIONS",
+      "score": 0.4
+    },
+    {
+      "id": "d29d75928a71f98390e4dcd5f5f81aa8ae0abb57",
+      "phrase": "I'M JUST KEN ANYWHERE ELSE I'D BE A TEN",
+      "score": 0.4
+    },
+    {
+      "id": "d453fa018c55af2f8b311f9acebcb657e6c06112",
+      "phrase": "THERE'S NO SUCH THING AS A DUMB QUESTION",
+      "score": 0.4
+    },
+    {
+      "id": "ef505cc36d1e0761c784de4c9ba4aff560254b75",
+      "phrase": "SEE THE LINE WHERE THE SKY MEETS THE ...",
+      "score": 0.4
+    },
+    {
+      "id": "f058ef5dc01b56924c4c1c611a30a74b454eb23a",
+      "phrase": "MAJESTIC PEAKS OF SWITZERLAND",
+      "score": 0.4
+    },
+    {
+      "id": "f40e6d8bc3c9e42cad027489e356bbb21ad86dad",
+      "phrase": "CAN I BRING LAUNDRY HOME THIS WEEKEND...",
+      "score": 0.4
+    },
+    {
+      "id": "fdb5aa5519597dbe31b51ce15a21ff8ec8e3fdd7",
+      "phrase": "SPECTACULAR INTERNATIONAL BOX OFFICE ...",
+      "score": 0.4
+    }
+  ],
+  "easiest": [
+    {
+      "id": "f9b6c0f48f6fb198a14e3b40e8b3767c243c21ec",
+      "phrase": "THE MOMENT OF TRUTH",
+      "score": 0
+    },
+    {
+      "id": "ddfefef226265335eb467eeab912374ad6fc32c3",
+      "phrase": "BASKING IN THE SUN",
+      "score": 0
+    },
+    {
+      "id": "da5a0c88692467e8ce9c2c6713f1ee547f1c6039",
+      "phrase": "CANDY CANES",
+      "score": 0
+    },
+    {
+      "id": "c6b0bfac4b05fc78fca5e178f678043aba84fe5c",
+      "phrase": "TALK OF THE TOWN",
+      "score": 0
+    },
+    {
+      "id": "bd236fc9b91af08df8212259b730269846d6f662",
+      "phrase": "NAILED IT!",
+      "score": 0
+    },
+    {
+      "id": "acb1a71acee68feea8f748ac3321aa07ec5ebcba",
+      "phrase": "K-POP BAND",
+      "score": 0
+    },
+    {
+      "id": "ac25f8f6203be22c48625c0d2c9cbde083a91943",
+      "phrase": "THE TIDE IS HIGH",
+      "score": 0
+    },
+    {
+      "id": "a829b9c8395554e160c87295aede148ed2ed4c48",
+      "phrase": "ESCAPE ROOM",
+      "score": 0
+    },
+    {
+      "id": "a5b12ad59b8de70fac4ea586da14b643ce8705ac",
+      "phrase": "IN THE NICK OF TIME",
+      "score": 0
+    },
+    {
+      "id": "9d2601f073f82d44150ce78c1dd83c84b594bb0f",
+      "phrase": "SUPER-DUPER",
+      "score": 0
+    },
+    {
+      "id": "97fc5add6552d153068c09aac52e6e83db6f2447",
+      "phrase": "A FOR EFFORT!",
+      "score": 0
+    },
+    {
+      "id": "6c892a0e9397553eea63b9ef5e64feb1f7010395",
+      "phrase": "CONCERT IN THE PARK",
+      "score": 0
+    },
+    {
+      "id": "615d646754b3da4326af48d8363437e4dc8a21bb",
+      "phrase": "ANT-MAN OF THE YEAR",
+      "score": 0
+    },
+    {
+      "id": "4ecfa3bafc265b0d3f16339882795ea6eaa7cf53",
+      "phrase": "NAIL POLISH",
+      "score": 0
+    },
+    {
+      "id": "49be1eb8f2466c94af7cd48eb91b632e569e9589",
+      "phrase": "THE POWER OF LOVE",
+      "score": 0
+    },
+    {
+      "id": "489849a30083daf41d7f69abc770386bf6a28685",
+      "phrase": "CARTOONIST",
+      "score": 0
+    },
+    {
+      "id": "42495d2e16bbb1523c3c90315fd817d9f459c4c7",
+      "phrase": "SLAYING IT!",
+      "score": 0
+    },
+    {
+      "id": "3eab8ffe7865189864457e5811c5e07205f2ba47",
+      "phrase": "I TOLD YOU SO",
+      "score": 0
+    },
+    {
+      "id": "34f05f0add581114bbf9128ada230ea825767efb",
+      "phrase": "SUGAR BOWL",
+      "score": 0
+    },
+    {
+      "id": "307c785cddbf522ce501438dd6f303b93ac39e75",
+      "phrase": "WORLD ATLAS",
+      "score": 0
+    }
+  ]
+}

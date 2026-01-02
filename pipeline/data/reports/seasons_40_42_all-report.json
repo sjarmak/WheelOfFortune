@@ -1,0 +1,242 @@
+{
+  "pack_id": "seasons_40_42_all",
+  "created_at": "2026-01-01T23:56:23.666Z",
+  "inputs": [
+    "data/scraped/buyavowel/season_42.json",
+    "data/scraped/buyavowel/season_41.json",
+    "data/scraped/buyavowel/season_40.json"
+  ],
+  "total_rows_read": 5775,
+  "valid_puzzles_kept": 5724,
+  "skipped": {
+    "looks_like_header_or_null": 9
+  },
+  "duplicates_removed": 42,
+  "category_distribution": {
+    "OTHER": 962,
+    "TITLE": 97,
+    "WHAT_ARE_YOU_DOING": 739,
+    "AROUND_THE_HOUSE": 176,
+    "PLACE": 379,
+    "LIVING_THING": 160,
+    "PERSON": 417,
+    "THING": 690,
+    "ON_THE_MAP": 160,
+    "OCCUPATION": 94,
+    "EVENT": 261,
+    "FOOD_AND_DRINK": 431,
+    "PHRASE": 830,
+    "SAME_NAME": 88,
+    "BEFORE_AND_AFTER": 217,
+    "FICTIONAL_CHARACTER": 23
+  },
+  "round_type_distribution": {
+    "MAIN": 2261,
+    "TOSSUP": 2879,
+    "BONUS": 584
+  },
+  "hardest": [
+    {
+      "id": "4635eaa330ec36d44733829a642629fda96960f1",
+      "phrase": "I'M NOT LAZY I'M JUST VERY RELAXED",
+      "score": 0.5
+    },
+    {
+      "id": "05c8eb1dae5986948cea018cd4ee5e229c048fb2",
+      "phrase": "PUMPKIN PIE PECAN PIE PIZZA PIE POTPIE",
+      "score": 0.4
+    },
+    {
+      "id": "0909e668492c9b427b7668704e76c9b9bb499e8d",
+      "phrase": "A BEAUTIFUL SKY FILLED WITH MILLIONS ...",
+      "score": 0.4
+    },
+    {
+      "id": "122316690a689512a1ff6af8a7f68af41ce83de0",
+      "phrase": "IT'S COLDER THAN A POLAR BEAR'S PAJAMAS",
+      "score": 0.4
+    },
+    {
+      "id": "18928e79e2dd9c02f362ae4f661b901e5db51de2",
+      "phrase": "WARM TOASTED BAGELS WITH LOX AND CREA...",
+      "score": 0.4
+    },
+    {
+      "id": "2736edf2fd199e20e11340eadc2562f4158ff2db",
+      "phrase": "GOLDEN STATE WARRIORS WIN NBA CHAMPIO...",
+      "score": 0.4
+    },
+    {
+      "id": "3f9de85817840525826516269d8bf0b260e7e376",
+      "phrase": "SNATCHING VICTORY FROM THE JAWS OF DE...",
+      "score": 0.4
+    },
+    {
+      "id": "6557a67dc16e167ec22fc1a95e1ebfa69677c1a2",
+      "phrase": "THESE AREN'T THE DROIDS YOU'RE LOOKIN...",
+      "score": 0.4
+    },
+    {
+      "id": "71745bdb6bf9e28e0407b5735142a1bc19d5047e",
+      "phrase": "DARTH VADER LUKE SKYWALKER AND PRINCE...",
+      "score": 0.4
+    },
+    {
+      "id": "78cc81a31c7353ad354e08573475423de1854b81",
+      "phrase": "PUBLIC DISPLAYS OF AFFECTION THAT ARE...",
+      "score": 0.4
+    },
+    {
+      "id": "adc2eb556ee9316ba3b53ba2b021e3a3a0336f33",
+      "phrase": "FEELING THE OCEAN BREEZE ON MY FACE",
+      "score": 0.4
+    },
+    {
+      "id": "bbafc7c8b3b81c60db282a54fbec29f31cd31ba3",
+      "phrase": "WHEN THE CAT'S AWAY THE MICE WILL PLA...",
+      "score": 0.4
+    },
+    {
+      "id": "c6128c46f9e5a94e051666a9f1b8904d7907382e",
+      "phrase": "LIVE FROM NEW YORK IT'S SATURDAY NIGH...",
+      "score": 0.4
+    },
+    {
+      "id": "c8389c14515b3e6d3e830dff9cb43b7d20de7c0a",
+      "phrase": "WINTER SQUASH WITH CARAMELIZED ONIONS",
+      "score": 0.4
+    },
+    {
+      "id": "d29d75928a71f98390e4dcd5f5f81aa8ae0abb57",
+      "phrase": "I'M JUST KEN ANYWHERE ELSE I'D BE A TEN",
+      "score": 0.4
+    },
+    {
+      "id": "d453fa018c55af2f8b311f9acebcb657e6c06112",
+      "phrase": "THERE'S NO SUCH THING AS A DUMB QUESTION",
+      "score": 0.4
+    },
+    {
+      "id": "ef505cc36d1e0761c784de4c9ba4aff560254b75",
+      "phrase": "SEE THE LINE WHERE THE SKY MEETS THE ...",
+      "score": 0.4
+    },
+    {
+      "id": "f058ef5dc01b56924c4c1c611a30a74b454eb23a",
+      "phrase": "MAJESTIC PEAKS OF SWITZERLAND",
+      "score": 0.4
+    },
+    {
+      "id": "f40e6d8bc3c9e42cad027489e356bbb21ad86dad",
+      "phrase": "CAN I BRING LAUNDRY HOME THIS WEEKEND...",
+      "score": 0.4
+    },
+    {
+      "id": "fdb5aa5519597dbe31b51ce15a21ff8ec8e3fdd7",
+      "phrase": "SPECTACULAR INTERNATIONAL BOX OFFICE ...",
+      "score": 0.4
+    }
+  ],
+  "easiest": [
+    {
+      "id": "ffd6dedd317274f18f613f87335e70c21dce2107",
+      "phrase": "BRIGHT SPOT",
+      "score": 0
+    },
+    {
+      "id": "ff4ad02a660687cb14e3ee3263bce6ba478bd3fd",
+      "phrase": "SMARTPHONE",
+      "score": 0
+    },
+    {
+      "id": "fefcbcb039cfe619681a983ceb8612f492bddf3e",
+      "phrase": "BEN STILLER",
+      "score": 0
+    },
+    {
+      "id": "fe9e8a437b279517fd41b2a85af3b03deafdba82",
+      "phrase": "PENGUIN",
+      "score": 0
+    },
+    {
+      "id": "fe2e585d48fb8165ce6f1c4d5aba16e1f8bce6d8",
+      "phrase": "BALD EAGLE",
+      "score": 0
+    },
+    {
+      "id": "fd6e6ceabe8a15c8459810dca965f3995f064f65",
+      "phrase": "SPORK",
+      "score": 0
+    },
+    {
+      "id": "fd58e63c9bead7281586c1f0ef32323d5b8e1b97",
+      "phrase": "TRIVIA BUFF",
+      "score": 0
+    },
+    {
+      "id": "fd57a10603375d54e1af26128690776620677cdc",
+      "phrase": "SAUNA",
+      "score": 0
+    },
+    {
+      "id": "fc6bc778a9cd403d4ff9fc0db3d2aaae41f60165",
+      "phrase": "WILD GOOSE",
+      "score": 0
+    },
+    {
+      "id": "fab30f838bac8902e1b6ed7bb111bdd277bee417",
+      "phrase": "MAKING UP",
+      "score": 0
+    },
+    {
+      "id": "f9e5665f0c248f6fe2080b9d98c4c79dab22aad1",
+      "phrase": "CANDY LAND",
+      "score": 0
+    },
+    {
+      "id": "f9b6c0f48f6fb198a14e3b40e8b3767c243c21ec",
+      "phrase": "THE MOMENT OF TRUTH",
+      "score": 0
+    },
+    {
+      "id": "f9907b33bf79586ca018cc7e02a07402e53b36e2",
+      "phrase": "TEAM EFFORT",
+      "score": 0
+    },
+    {
+      "id": "f950f25aeb514e83e44f13c68fc4e56265cbb163",
+      "phrase": "ICE CUBE",
+      "score": 0
+    },
+    {
+      "id": "f8ae28dc5459ed4cd92ba630bffe118905a9fad4",
+      "phrase": "DOLPHINS",
+      "score": 0
+    },
+    {
+      "id": "f89162f19c858cd196ed8289c86b5de66a843533",
+      "phrase": "SHAG CARPET",
+      "score": 0
+    },
+    {
+      "id": "f80cb2b0315d727863878ee0a43bdfdfc575e6ce",
+      "phrase": "PILLOWCASE",
+      "score": 0
+    },
+    {
+      "id": "f7fc2b7edef55ce18ac5436b2ee88755c67b568c",
+      "phrase": "INSIDE OUT",
+      "score": 0
+    },
+    {
+      "id": "f670c9360fee816d6f3d76d7b37bfe1998836003",
+      "phrase": "FIRST DATE",
+      "score": 0
+    },
+    {
+      "id": "f6494bd2524ddf2fb392a137fb86573dd679108f",
+      "phrase": "GIRLS TRIP",
+      "score": 0
+    }
+  ]
+}

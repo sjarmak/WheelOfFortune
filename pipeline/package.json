@@ -1,23 +1,26 @@
 {
   "name": "wof-pipeline",
   "version": "1.0.0",
-  "description": "Data ingestion pipeline for Wheel of Fortune practice app",
+  "description": "Puzzle ingestion pipeline for Wheel of Fortune practice app",
   "type": "module",
   "scripts": {
-    "ingest": "tsx src/cli.ts",
-    "test": "vitest"
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "pipeline:ingest": "tsx src/cli.ts",
+    "pipeline:fetch": "tsx src/fetch.ts",
+    "pipeline:scrape": "tsx src/scrape.ts"
   },
   "dependencies": {
-    "commander": "^11.0.0",
+    "commander": "^12.0.0",
     "csv-parse": "^5.5.0",
-    "zod": "^3.22.0",
-    "fs-extra": "^11.1.0"
+    "glob": "^10.3.0",
+    "zod": "^3.22.0"
   },
   "devDependencies": {
-    "tsx": "^4.0.0",
-    "typescript": "^5.0.0",
-    "vitest": "^0.34.0",
-    "@types/node": "^20.0.0",
-    "@types/fs-extra": "^11.0.0"
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
   }
 }

@@ -1,10 +1,17 @@
 export type RoundType = 'MAIN' | 'TOSSUP' | 'BONUS';
 
+export interface PuzzleDifficulty {
+  score: number;
+  reasons: string[];
+}
+
 export interface Puzzle {
   id: string;
   phrase: string;
   category: string;
   round_type: RoundType;
+  difficulty?: PuzzleDifficulty;
+  season?: number;
 }
 
 export type PlayerState = {

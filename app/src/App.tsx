@@ -1,11 +1,12 @@
-import React, { useReducer, useEffect, useState, useMemo } from 'react';
+import React, { useReducer, useEffect, useState, useMemo, useCallback } from 'react';
 import { gameReducer, INITIAL_STATE } from './engine/game';
 import { Board } from './components/Board';
 import { Wheel } from './components/Wheel';
 import { Keyboard } from './components/Keyboard';
-import { DEFAULT_PUZZLES } from './engine/defaultPack';
-import { Puzzle, VOWELS, WheelWedge } from './engine/types';
-import { Settings as SettingsIcon, RotateCcw, Upload, X, Eye, EyeOff } from 'lucide-react';
+import { PackSelector } from './components/PackSelector';
+import { ALL_PACKS, PuzzlePack } from './engine/packs';
+import { VOWELS, WheelWedge } from './engine/types';
+import { Settings as SettingsIcon, RotateCcw, X, Eye, EyeOff, Library } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 function App() {
@@ -15,7 +16,29 @@ function App() {
       try {
         const parsed = JSON.parse(saved);
         // Ensure spinCount exists (missing in old saved states)
-        return { ...initial, ...parsed, spinCount: parsed.spinCount ?? 0 };
+        const restored = { ...initial, ...parsed, spinCount: parsed.spinCount ?? 0 };
+        
+        // Validate state consistency: guessedLetters should match revealedPositions
+        // If a letter is revealed but not in guessedLetters, the state is corrupt
+        if (restored.currentPuzzle && restored.revealedPositions && restored.guessedLetters) {
+          const phrase = restored.currentPuzzle.phrase.toUpperCase();
+          const revealedLetters = new Set(
+            restored.revealedPositions
+              .filter((i: number) => /[A-Z]/.test(phrase[i]))
+              .map((i: number) => phrase[i])
+          );
+          const guessedSet = new Set(restored.guessedLetters);
+          
+          // Check if revealed letters are missing from guessedLetters
+          const missingFromGuessed = [...revealedLetters].filter(l => !guessedSet.has(l));
+          if (missingFromGuessed.length > 0) {
+            // State is corrupt, reset the game
+            console.warn('Corrupt state detected: revealed letters not in guessedLetters', missingFromGuessed);
+            return initial;
+          }
+        }
+        
+        return restored;
       } catch {
         return initial;
       }
@@ -23,10 +46,11 @@ function App() {
     return initial;
   });
 
-  const [activePack, setActivePack] = useState<Puzzle[]>(DEFAULT_PUZZLES);
+  const [activePack, setActivePack] = useState<PuzzlePack>(ALL_PACKS[0]);
   const [solveInput, setSolveInput] = useState('');
   const [showSolveModal, setShowSolveModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showPackSelector, setShowPackSelector] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [showSunsetEasterEgg, setShowSunsetEasterEgg] = useState(false);
   
@@ -40,11 +64,21 @@ function App() {
     localStorage.setItem('wof_state', JSON.stringify(state));
   }, [state]);
 
-  const nextRound = () => {
+  const nextRound = useCallback(() => {
     const seed = customSeed ? parseInt(customSeed) + state.roundCount : undefined;
-    const next = activePack[Math.floor(Math.random() * activePack.length)];
+    const puzzles = activePack.puzzles;
+    const next = puzzles[Math.floor(Math.random() * puzzles.length)];
     dispatch({ type: 'START_ROUND', puzzle: next, seed });
-  };
+  }, [activePack, customSeed, state.roundCount]);
+
+  const selectPack = useCallback((pack: PuzzlePack) => {
+    setActivePack(pack);
+    setShowPackSelector(false);
+    // Start a new round from the new pack
+    const seed = customSeed ? parseInt(customSeed) + state.roundCount : undefined;
+    const next = pack.puzzles[Math.floor(Math.random() * pack.puzzles.length)];
+    dispatch({ type: 'START_ROUND', puzzle: next, seed });
+  }, [customSeed, state.roundCount]);
   
   // Load puzzle if none
   useEffect(() => {
@@ -53,25 +87,49 @@ function App() {
     }
   }, [state.currentPuzzle, activePack]);
 
-  // Vowel Logic
+  // Vowel Logic - check which puzzle vowels haven't been guessed yet
   const puzzleVowels = useMemo(() => {
     if (!state.currentPuzzle) return [];
-    return [...new Set(state.currentPuzzle.phrase.match(/[AEIOU]/g) || [])];
+    return [...new Set(state.currentPuzzle.phrase.toUpperCase().match(/[AEIOU]/g) || [])];
+  }, [state.currentPuzzle]);
+
+  // Also track which consonants in the puzzle haven't been guessed
+  const puzzleConsonants = useMemo(() => {
+    if (!state.currentPuzzle) return [];
+    return [...new Set(state.currentPuzzle.phrase.toUpperCase().match(/[BCDFGHJKLMNPQRSTVWXYZ]/g) || [])];
   }, [state.currentPuzzle]);
 
   const vowelsLeft = useMemo(() => {
     return puzzleVowels.some(v => !state.guessedLetters.includes(v));
   }, [puzzleVowels, state.guessedLetters]);
 
+  const consonantsLeft = useMemo(() => {
+    return puzzleConsonants.some(c => !state.guessedLetters.includes(c));
+  }, [puzzleConsonants, state.guessedLetters]);
+
+  // Debug: Detect unsolvable state and warn
   useEffect(() => {
-    if (state.currentPuzzle && !vowelsLeft) {
-      const allVowelsGuessed = puzzleVowels.every(v => state.guessedLetters.includes(v));
-      if(allVowelsGuessed && puzzleVowels.length > 0) {
-        // This will fire multiple times, but it is safe.
-        // The user can be annoyed but the app will work.
+    if (state.currentPuzzle && state.turnState !== 'ROUND_OVER') {
+      // If no vowels AND no consonants left to guess, but puzzle isn't solved = bug
+      if (!vowelsLeft && !consonantsLeft) {
+        const allLettersRevealed = state.currentPuzzle.phrase
+          .split('')
+          .every((char, i) => !/[A-Z]/.test(char) || state.revealedPositions.includes(i));
+        
+        if (!allLettersRevealed) {
+          console.error('BUG: No letters left to guess but puzzle not fully revealed!', {
+            guessedLetters: state.guessedLetters,
+            puzzleVowels,
+            puzzleConsonants,
+            revealedPositions: state.revealedPositions,
+            phrase: state.currentPuzzle.phrase
+          });
+          showToast('Bug detected! Starting new puzzle...', 'error');
+          setTimeout(() => nextRound(), 2000);
+        }
       }
     }
-  }, [vowelsLeft, state.currentPuzzle, puzzleVowels, state.guessedLetters]);
+  }, [vowelsLeft, consonantsLeft, state.currentPuzzle, state.turnState, state.revealedPositions]);
 
 
   // Toss-up tick
@@ -135,35 +193,6 @@ function App() {
     }
   }, [state.turnState]);
 
-  const handleImportPack = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const json = JSON.parse(ev.target?.result as string);
-        if (json.puzzles && Array.isArray(json.puzzles)) {
-          const newPuzzles = json.puzzles.map((p: any) => ({
-             id: p.id,
-             phrase: p.phrase,
-             category: p.category,
-             round_type: p.round_type
-          }));
-          setActivePack(newPuzzles);
-          showToast(`Imported ${newPuzzles.length} puzzles`, 'success');
-          setShowSettings(false);
-          // Use a timeout to allow the settings modal to close before resetting
-          setTimeout(() => dispatch({ type: 'RESET_GAME' }), 200);
-        } else {
-          showToast('Invalid pack format', 'error');
-        }
-      } catch (err) {
-        showToast('Failed to parse JSON', 'error');
-      }
-    };
-    reader.readAsText(file);
-  };
-
   if (!state.currentPuzzle) return <div className="h-screen flex items-center justify-center">Loading...</div>;
 
   return (
@@ -173,11 +202,18 @@ function App() {
         <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
           WHEEL PRACTICE
         </h1>
-        <div className="flex gap-3 sm:gap-4 items-center">
+        <div className="flex gap-2 sm:gap-4 items-center">
           <div className="flex flex-col items-end text-base sm:text-lg font-mono">
              <span className="text-green-400">${state.player.currentRoundScore}</span>
              <span className="text-yellow-400 text-sm">${state.player.totalScore}</span>
           </div>
+          <button 
+            onClick={() => setShowPackSelector(true)} 
+            className="p-2 hover:bg-white/10 rounded-full"
+            title="Select Pack"
+          >
+            <Library size={24} />
+          </button>
           <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-white/10 rounded-full">
             <SettingsIcon size={24} />
           </button>
@@ -334,15 +370,22 @@ function App() {
                 </div>
 
                 <div className="border-t border-slate-700 pt-4">
-                  <h3 className="font-bold mb-2">Import Pack</h3>
-                  <label className="flex items-center gap-2 px-4 py-2 bg-slate-700 rounded cursor-pointer hover:bg-slate-600 transition-colors">
-                    <Upload size={16} />
-                    <span>Select JSON File</span>
-                    <input type="file" accept=".json" onChange={handleImportPack} className="hidden" />
-                  </label>
-                  <p className="text-xs text-slate-500 mt-2">
-                    Active Pack: {activePack.length} puzzles loaded.
-                  </p>
+                  <h3 className="font-bold mb-2">Current Pack</h3>
+                  <div className="bg-slate-900 p-3 rounded mb-3">
+                    <div className="font-medium text-white">{activePack.name}</div>
+                    <div className="text-sm text-slate-400 mt-1">
+                      {activePack.puzzleCount.toLocaleString()} puzzles
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowSettings(false);
+                      setShowPackSelector(true);
+                    }}
+                    className="w-full py-2 bg-blue-600 text-white rounded font-bold hover:bg-blue-500 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Library size={16} /> Change Pack
+                  </button>
                 </div>
 
                 <div className="border-t border-slate-700 pt-4">
@@ -428,6 +471,16 @@ function App() {
                  ))}
                  </div>
                  </div>
+                 )}
+
+                 {/* Pack Selector Modal */}
+                 {showPackSelector && (
+                   <PackSelector
+                     packs={ALL_PACKS}
+                     currentPackId={activePack.id}
+                     onSelectPack={selectPack}
+                     onClose={() => setShowPackSelector(false)}
+                   />
                  )}
                  </div>
                  );
