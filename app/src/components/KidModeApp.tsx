@@ -426,21 +426,21 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
           </div>
         </div>
 
-        {/* Game area - wheel, controls, side panel */}
-        <div className="flex-1 w-full flex items-center justify-center gap-0.5 overflow-hidden">
+        {/* Game area - centered wheel */}
+        <div className="flex-1 w-full flex flex-col items-center justify-center gap-2 overflow-hidden">
           {state.turnState === 'ROUND_OVER' ? (
             <button
               onClick={nextRound}
-              className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:scale-105 transition-transform flex-shrink-0"
+              className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition-transform"
               aria-label="Next puzzle"
             >
-              NEXT
+              NEXT PUZZLE
             </button>
           ) : (
             <>
-              {/* Wheel - very compact */}
-              <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
-                <div className="w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center flex-shrink-0">
+              {/* Wheel - centered and prominent */}
+              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                <div className="w-40 h-40 sm:w-48 sm:h-48 flex items-center justify-center">
                   <KidWheel
                     onSpinStart={handleSpinStart}
                     onSpinComplete={handleSpinComplete}
@@ -450,36 +450,34 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
                     wheelThemeId={equippedWheelTheme}
                   />
                 </div>
-                <div className="font-bold text-yellow-200 text-[0.6rem] sm:text-xs text-center min-h-4">
-                  {state.turnState === 'SPINNING' && '🎡'}
-                  {state.turnState === 'IDLE' && 'Tap!'}
-                  {state.turnState === 'GUESSING_LETTER' && '🔤'}
-                  {state.turnState === 'PICKING_VOWEL' && '🌟'}
-                  {state.turnState === 'PICKING_CONSONANT' && '🌟'}
+                <div className="font-bold text-yellow-200 text-xs text-center">
+                  {state.turnState === 'SPINNING' && '🎡 Spinning...'}
+                  {state.turnState === 'IDLE' && 'Tap to spin!'}
+                  {state.turnState === 'GUESSING_LETTER' && '🔤 Pick a letter!'}
+                  {state.turnState === 'PICKING_VOWEL' && '🌟 Pick a VOWEL!'}
+                  {state.turnState === 'PICKING_CONSONANT' && '🌟 Pick any letter!'}
                 </div>
               </div>
 
-              {/* Side controls */}
-              <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+              {/* Controls below wheel */}
+              <div className="flex gap-2 items-center justify-center flex-wrap flex-shrink-0">
                 {state.turnState === 'CHOOSING_LETTER' && (
-                  <div className="flex-shrink-0">
-                    <LetterSuggestions
-                      letters={state.kidState.letterSuggestions}
-                      onSelect={handleGuess}
-                      title="Pick!"
-                      readAloudEnabled={settings.readAloud}
-                      autoSpeak={true}
-                    />
-                  </div>
+                  <LetterSuggestions
+                    letters={state.kidState.letterSuggestions}
+                    onSelect={handleGuess}
+                    title="Pick one!"
+                    readAloudEnabled={settings.readAloud}
+                    autoSpeak={true}
+                  />
                 )}
 
                 {(state.turnState === 'IDLE') && (
                   <button
                     onClick={handleEnterWordBuilder}
-                    className="flex-shrink-0 px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg font-bold text-xs sm:text-sm shadow-lg hover:scale-105 transition-transform flex items-center gap-1 justify-center w-full"
+                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold text-base shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
                     aria-label="Solve puzzle"
                   >
-                    <PuzzleIcon className="w-3 h-3" />
+                    <PuzzleIcon className="w-5 h-5" />
                     SOLVE
                   </button>
                 )}
