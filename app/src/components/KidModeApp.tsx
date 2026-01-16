@@ -22,7 +22,6 @@ import { StarCollection } from './StarCollection';
 import { ModeIndicator } from './ModeSelector';
 import { PackSelector } from './PackSelector';
 import { HearWords } from './HearWords';
-import { WheelLegend } from './WheelLegend';
 import { TreasureShop } from './TreasureShop';
 import { TreasureBox } from './TreasureBox';
 import { MusicRoom } from './MusicRoom';
@@ -301,50 +300,47 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-900 via-pink-800 to-orange-700 flex flex-col text-white pb-safe overflow-hidden">
-      {/* Header */}
-      <header className="py-2 px-3 flex justify-between items-center bg-black/30 shadow-lg z-10 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <h1 className="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 to-pink-300">
+    <div className="h-screen bg-gradient-to-br from-purple-900 via-pink-800 to-orange-700 flex flex-col text-white overflow-hidden">
+      {/* Header - minimal */}
+      <header className="py-1.5 px-2 sm:px-3 flex justify-between items-center bg-black/30 z-10 flex-shrink-0">
+        <div className="flex items-center gap-1">
+          <h1 className="text-base sm:text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 to-pink-300">
             WHEEL FUN!
           </h1>
           <ModeIndicator mode="KID" onClick={onModeChange} />
         </div>
 
-        <div className="flex gap-1 sm:gap-2 items-center">
+        <div className="flex gap-0.5 sm:gap-1 items-center">
           {/* Stars/Bank button */}
           <button
             onClick={() => setShowStarCollection(true)}
-            className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full shadow-lg hover:scale-105 transition-transform"
+            className="flex items-center gap-1 px-1.5 sm:px-2 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full shadow-lg hover:scale-105 transition-transform text-xs sm:text-sm"
             aria-label="View kid bank and star collection"
           >
-            <DollarSign className="w-4 h-4 text-white" />
-            <div className="flex flex-col leading-tight text-left">
-              <span className="text-[0.55rem] uppercase tracking-widest text-white/80">Kid Bank</span>
-              <span className="text-sm font-bold text-white">{formattedKidBank}</span>
-            </div>
+            <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+            <span className="hidden sm:inline font-bold">{formattedKidBank}</span>
           </button>
 
           {/* Shop button */}
           <button
             onClick={() => setShowShop(true)}
-            className="p-2 hover:bg-white/10 rounded-full"
+            className="p-1 hover:bg-white/10 rounded-full"
             title="Shop"
             aria-label="Open shop"
           >
-            <ShoppingBag size={20} className="text-green-400" />
+            <ShoppingBag size={16} className="text-green-400" />
           </button>
 
           {/* Treasure Box button */}
           <button
             onClick={() => setShowTreasureBox(true)}
-            className="p-2 hover:bg-white/10 rounded-full relative"
+            className="p-1 hover:bg-white/10 rounded-full relative"
             title="Treasure Box"
             aria-label="View treasure box"
           >
-            <Package size={20} className="text-amber-400" />
+            <Package size={16} className="text-amber-400" />
             {ownedItems.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-[0.6rem] w-4 h-4 rounded-full flex items-center justify-center">
+              <span className="absolute -top-0.5 -right-0.5 bg-amber-500 text-white text-[0.5rem] w-3 h-3 rounded-full flex items-center justify-center text-xs">
                 {ownedItems.length}
               </span>
             )}
@@ -354,64 +350,69 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
           {ownedInstruments.length > 0 && (
             <button
               onClick={() => setShowMusicRoom(true)}
-              className="p-2 hover:bg-white/10 rounded-full"
+              className="p-1 hover:bg-white/10 rounded-full"
               title="Music Room"
               aria-label="Open music room"
             >
-              <Music size={20} className="text-pink-400" />
+              <Music size={16} className="text-pink-400" />
             </button>
           )}
 
           {/* Pack selector */}
           <button
             onClick={() => setShowPackSelector(true)}
-            className="p-2 hover:bg-white/10 rounded-full"
+            className="p-1 hover:bg-white/10 rounded-full"
             title="Select Pack"
             aria-label="Select puzzle pack"
           >
-            <Library size={20} />
+            <Library size={16} />
           </button>
 
           {/* Settings */}
           <button
             onClick={() => setShowSettings(true)}
-            className="p-2 hover:bg-white/10 rounded-full"
+            className="p-1 hover:bg-white/10 rounded-full"
             aria-label="Settings"
           >
-            <SettingsIcon size={20} />
+            <SettingsIcon size={16} />
           </button>
         </div>
       </header>
 
-      {/* Kid Mode HUD */}
-      <KidModeHUD
-        kidState={state.kidState}
-        category={state.currentPuzzle.category}
-        phrase={state.currentPuzzle.phrase}
-        revealedPositions={state.revealedPositions}
-        isSolved={state.turnState === 'ROUND_OVER'}
-        showNudge={showNudge}
-        onUseHint={handleUseHint}
-        readAloudEnabled={settings.readAloud}
-      />
+      {/* HUD - compact */}
+      <div className="flex-shrink-0 py-1 px-2">
+        <KidModeHUD
+          kidState={state.kidState}
+          category={state.currentPuzzle.category}
+          phrase={state.currentPuzzle.phrase}
+          revealedPositions={state.revealedPositions}
+          isSolved={state.turnState === 'ROUND_OVER'}
+          showNudge={showNudge}
+          onUseHint={handleUseHint}
+          readAloudEnabled={settings.readAloud}
+        />
+      </div>
 
-      <main className="flex-1 w-full px-2 sm:px-3 relative flex flex-col items-center gap-2 overflow-y-auto">
+      {/* Main content - no scrolling */}
+      <div className="flex-1 w-full px-1 sm:px-2 flex flex-col items-center gap-0.5 overflow-hidden">
         {message && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce bg-gradient-to-r from-yellow-400 to-pink-500 text-white px-6 py-2 rounded-full font-bold shadow-xl text-base">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce bg-gradient-to-r from-yellow-400 to-pink-500 text-white px-4 py-1 rounded-full font-bold shadow-xl text-xs sm:text-base">
             {message}
           </div>
         )}
 
-        <div className="w-full max-w-4xl flex flex-col gap-2">
-          {/* Hear Words - easy tap to hear */}
+        {/* Hear Words */}
+        <div className="flex-shrink-0">
           <HearWords
             phrase={state.currentPuzzle.phrase}
             revealedPositions={state.revealedPositions}
             readAloudEnabled={settings.readAloud}
           />
+        </div>
 
-          {/* Board - compact */}
-          <div className="bg-black/10 rounded-2xl p-1.5">
+        {/* Board - smaller */}
+        <div className="flex-shrink-0 bg-black/10 rounded-lg p-1">
+          <div className="max-w-full">
             <InteractiveBoard
               phrase={state.currentPuzzle.phrase}
               revealedPositions={state.revealedPositions}
@@ -423,88 +424,80 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
               hairColorId={equippedHairColor}
             />
           </div>
+        </div>
 
-          {/* Wheel + Controls - horizontal layout */}
-          <div className="flex flex-col sm:flex-row gap-2 items-center justify-center w-full">
-            {state.turnState === 'ROUND_OVER' ? (
-              <button
-                onClick={nextRound}
-                className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition-transform"
-                aria-label="Next puzzle"
-              >
-                NEXT PUZZLE
-              </button>
-            ) : (
-              <>
-                {/* Legend (desktop only) */}
-                <div className="hidden sm:block">
-                  <WheelLegend readAloudEnabled={settings.readAloud} />
+        {/* Game area - wheel, controls, side panel */}
+        <div className="flex-1 w-full flex items-center justify-center gap-0.5 overflow-hidden">
+          {state.turnState === 'ROUND_OVER' ? (
+            <button
+              onClick={nextRound}
+              className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:scale-105 transition-transform flex-shrink-0"
+              aria-label="Next puzzle"
+            >
+              NEXT
+            </button>
+          ) : (
+            <>
+              {/* Wheel - very compact */}
+              <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
+                <div className="w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center flex-shrink-0">
+                  <KidWheel
+                    onSpinStart={handleSpinStart}
+                    onSpinComplete={handleSpinComplete}
+                    isSpinning={state.turnState === 'SPINNING'}
+                    seed={state.seed + state.spinCount}
+                    canSpin={state.turnState === 'IDLE'}
+                    wheelThemeId={equippedWheelTheme}
+                  />
                 </div>
-
-                {/* Wheel - smaller on mobile */}
-                <div className="flex flex-col items-center gap-1">
-                  <div className="w-40 h-40 sm:w-56 sm:h-56 flex items-center justify-center">
-                    <KidWheel
-                      onSpinStart={handleSpinStart}
-                      onSpinComplete={handleSpinComplete}
-                      isSpinning={state.turnState === 'SPINNING'}
-                      seed={state.seed + state.spinCount}
-                      canSpin={state.turnState === 'IDLE'}
-                      wheelThemeId={equippedWheelTheme}
-                    />
-                  </div>
-                  <div className="font-bold text-yellow-200 text-xs sm:text-base text-center min-h-[1.75rem]">
-                    {state.turnState === 'SPINNING' && '🎡 Spinning...'}
-                    {state.turnState === 'IDLE' && 'Tap the wheel!'}
-                    {state.turnState === 'CHOOSING_LETTER' && '🎯 Pick one!'}
-                    {state.turnState === 'GUESSING_LETTER' && (
-                      state.kidState.guessesRemaining > 1
-                        ? `🔤 Guess ${state.kidState.guessesRemaining}!`
-                        : '🔤 Guess!'
-                    )}
-                    {state.turnState === 'PICKING_VOWEL' && '🌟 VOWEL!'}
-                    {state.turnState === 'PICKING_CONSONANT' && '🌟 Any letter!'}
-                  </div>
+                <div className="font-bold text-yellow-200 text-[0.6rem] sm:text-xs text-center min-h-4">
+                  {state.turnState === 'SPINNING' && '🎡'}
+                  {state.turnState === 'IDLE' && 'Tap!'}
+                  {state.turnState === 'GUESSING_LETTER' && '🔤'}
+                  {state.turnState === 'PICKING_VOWEL' && '🌟'}
+                  {state.turnState === 'PICKING_CONSONANT' && '🌟'}
                 </div>
+              </div>
 
-                {/* Side panel - minimal on mobile */}
-                <div className="flex flex-col gap-2 w-full sm:w-auto">
-                  {state.turnState === 'CHOOSING_LETTER' && (
+              {/* Side controls */}
+              <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                {state.turnState === 'CHOOSING_LETTER' && (
+                  <div className="flex-shrink-0">
                     <LetterSuggestions
                       letters={state.kidState.letterSuggestions}
                       onSelect={handleGuess}
-                      title="Pick one!"
+                      title="Pick!"
                       readAloudEnabled={settings.readAloud}
                       autoSpeak={true}
                     />
-                  )}
+                  </div>
+                )}
 
-                  {(state.turnState === 'IDLE') && (
-                    <button
-                      onClick={handleEnterWordBuilder}
-                      className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg font-bold text-sm shadow-lg hover:scale-105 transition-transform flex items-center gap-2 justify-center"
-                      aria-label="Solve puzzle"
-                    >
-                      <PuzzleIcon className="w-4 h-4" />
-                      SOLVE
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
+                {(state.turnState === 'IDLE') && (
+                  <button
+                    onClick={handleEnterWordBuilder}
+                    className="flex-shrink-0 px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg font-bold text-xs sm:text-sm shadow-lg hover:scale-105 transition-transform flex items-center gap-1 justify-center w-full"
+                    aria-label="Solve puzzle"
+                  >
+                    <PuzzleIcon className="w-3 h-3" />
+                    SOLVE
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
-      </main>
+      </div>
 
-      {/* Keyboard - fixed at bottom */}
+      {/* Keyboard - fixed at bottom, full width */}
       {!['SPINNING', 'SHOWING_OUTCOME', 'WORD_BUILDER', 'ROUND_OVER'].includes(state.turnState) && (
-        <div className={`w-full px-2 py-2 rounded-t-3xl flex-shrink-0 ${
+        <div className={`w-full px-1 py-1 flex-shrink-0 overflow-x-auto ${
           state.turnState === 'GUESSING_LETTER'
-            ? 'bg-green-500/30 ring-4 ring-green-400'
+            ? 'bg-green-500/30 ring-2 ring-green-400'
             : state.turnState === 'PICKING_VOWEL'
-              ? 'bg-yellow-500/30 ring-4 ring-yellow-400'
+              ? 'bg-yellow-500/30 ring-2 ring-yellow-400'
               : state.turnState === 'PICKING_CONSONANT'
-                ? 'bg-blue-500/30 ring-4 ring-blue-400'
+                ? 'bg-blue-500/30 ring-2 ring-blue-400'
                 : 'bg-black/30'
         }`}>
           <Keyboard
@@ -512,7 +505,7 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
             onGuess={handleGuess}
             disabled={state.turnState === 'SPINNING'}
             highlightVowels={true}
-            large={true}
+            large={false}
             vowelsOnly={state.turnState === 'PICKING_VOWEL'}
             consonantsOnly={state.turnState === 'PICKING_CONSONANT'}
           />
