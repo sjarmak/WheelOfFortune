@@ -47,6 +47,13 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
 }
 
 function App() {
+  // Debug logs
+  useEffect(() => {
+    console.log('App mounted');
+    console.log('ALL_PACKS length:', ALL_PACKS?.length);
+    console.log('DEFAULT_PUZZLES length:', DEFAULT_PUZZLES?.length);
+  }, []);
+
   // Game mode state (persisted)
   const [gameMode, setGameMode] = useState<GameMode>(() => {
     const saved = localStorage.getItem('wof_game_mode');
