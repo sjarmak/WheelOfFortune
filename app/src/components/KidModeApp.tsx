@@ -66,7 +66,20 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        return { ...initial, ...parsed };
+        // Deep merge to preserve nested structures like kidState.treasure
+        const restored = { 
+          ...initial, 
+          ...parsed,
+          kidState: {
+            ...initial.kidState,
+            ...(parsed.kidState || {}),
+            treasure: {
+              ...initial.kidState.treasure,
+              ...(parsed.kidState?.treasure || {})
+            }
+          }
+        };
+        return restored;
       } catch {
         return initial;
       }
