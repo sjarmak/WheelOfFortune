@@ -21,7 +21,6 @@ import { WordBuilder } from './WordBuilder';
 import { StarCollection } from './StarCollection';
 import { ModeIndicator } from './ModeSelector';
 import { PackSelector } from './PackSelector';
-import { HearWords } from './HearWords';
 import { TreasureShop } from './TreasureShop';
 import { TreasureBox } from './TreasureBox';
 import { MusicRoom } from './MusicRoom';
@@ -387,7 +386,7 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
           </div>
         )}
 
-        {/* Left panel: Board and HearWords */}
+        {/* Left panel: Board and HUD */}
         <div className="flex-shrink-0 flex flex-col gap-1 items-center">
           {/* Board */}
           <div className="bg-black/10 rounded-lg p-1">
@@ -403,16 +402,7 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
             />
           </div>
 
-          {/* Hear Words - very compact on side */}
-          <div className="text-[0.65rem] bg-black/20 rounded-lg p-1.5 w-full">
-            <HearWords
-              phrase={state.currentPuzzle.phrase}
-              revealedPositions={state.revealedPositions}
-              readAloudEnabled={settings.readAloud}
-            />
-          </div>
-
-          {/* HUD moved below */}
+          {/* HUD */}
           <div className="text-[0.7rem] bg-black/20 rounded-lg p-1.5 w-full">
             <KidModeHUD
               kidState={state.kidState}
@@ -441,7 +431,7 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
             <>
               {/* Wheel - centered and prominent */}
               <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                <div className="w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
+                <div className="w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center">
                   <KidWheel
                     onSpinStart={handleSpinStart}
                     onSpinComplete={handleSpinComplete}
