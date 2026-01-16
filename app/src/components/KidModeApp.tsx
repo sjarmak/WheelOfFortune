@@ -379,31 +379,18 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
         </div>
       </header>
 
-      {/* HUD - compact */}
-      <div className="flex-shrink-0 py-1 px-2">
-        <KidModeHUD
-          kidState={state.kidState}
-          category={state.currentPuzzle.category}
-          phrase={state.currentPuzzle.phrase}
-          revealedPositions={state.revealedPositions}
-          isSolved={state.turnState === 'ROUND_OVER'}
-          showNudge={showNudge}
-          onUseHint={handleUseHint}
-          readAloudEnabled={settings.readAloud}
-        />
-      </div>
-
-      {/* Main content - no scrolling */}
-      <div className="flex-1 w-full px-1 sm:px-2 flex flex-col items-center gap-1 overflow-hidden">
+      {/* Main content - board, wheel, and controls */}
+      <div className="flex-1 w-full px-1 sm:px-2 flex gap-2 items-stretch overflow-hidden">
         {message && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce bg-gradient-to-r from-yellow-400 to-pink-500 text-white px-4 py-1 rounded-full font-bold shadow-xl text-xs sm:text-base">
             {message}
           </div>
         )}
 
-        {/* Board and HearWords together at top */}
-        <div className="flex-shrink-0 w-full flex flex-col gap-0.5 items-center">
-          <div className="bg-black/10 rounded-lg p-1 w-full max-w-sm">
+        {/* Left panel: Board and HearWords */}
+        <div className="flex-shrink-0 flex flex-col gap-1 items-center">
+          {/* Board */}
+          <div className="bg-black/10 rounded-lg p-1">
             <InteractiveBoard
               phrase={state.currentPuzzle.phrase}
               revealedPositions={state.revealedPositions}
@@ -416,18 +403,32 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
             />
           </div>
 
-          {/* Hear Words - compact and below board */}
-          <div className="text-xs">
+          {/* Hear Words - very compact on side */}
+          <div className="text-[0.65rem] bg-black/20 rounded-lg p-1.5 w-full">
             <HearWords
               phrase={state.currentPuzzle.phrase}
               revealedPositions={state.revealedPositions}
               readAloudEnabled={settings.readAloud}
             />
           </div>
+
+          {/* HUD moved below */}
+          <div className="text-[0.7rem] bg-black/20 rounded-lg p-1.5 w-full">
+            <KidModeHUD
+              kidState={state.kidState}
+              category={state.currentPuzzle.category}
+              phrase={state.currentPuzzle.phrase}
+              revealedPositions={state.revealedPositions}
+              isSolved={state.turnState === 'ROUND_OVER'}
+              showNudge={showNudge}
+              onUseHint={handleUseHint}
+              readAloudEnabled={settings.readAloud}
+            />
+          </div>
         </div>
 
-        {/* Game area - centered wheel */}
-        <div className="flex-1 w-full flex flex-col items-center justify-center gap-1.5 overflow-hidden">
+        {/* Right side: Game area - centered wheel */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-1 overflow-hidden">
           {state.turnState === 'ROUND_OVER' ? (
             <button
               onClick={nextRound}
@@ -440,7 +441,7 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
             <>
               {/* Wheel - centered and prominent */}
               <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                <div className="w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
+                <div className="w-48 h-48 sm:w-56 sm:h-56 flex items-center justify-center">
                   <KidWheel
                     onSpinStart={handleSpinStart}
                     onSpinComplete={handleSpinComplete}
