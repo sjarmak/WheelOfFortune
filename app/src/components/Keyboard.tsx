@@ -7,6 +7,8 @@ interface KeyboardProps {
   disabled: boolean;
   vowelsOnly?: boolean;
   consonantsOnly?: boolean;
+  highlightVowels?: boolean;
+  large?: boolean;
 }
 
 const ROWS = [
@@ -17,24 +19,35 @@ const ROWS = [
 
 const VOWELS = ['A', 'E', 'I', 'O', 'U'];
 
-export const Keyboard: React.FC<KeyboardProps> = ({ 
-  guessedLetters, 
-  onGuess, 
-  disabled, 
+export const Keyboard: React.FC<KeyboardProps> = ({
+  guessedLetters,
+  onGuess,
+  disabled,
   vowelsOnly = false,
-  consonantsOnly = false
+  consonantsOnly = false,
+  highlightVowels = false,
+  large = false
 }) => {
   return (
-    <div className="flex flex-col gap-1 sm:gap-1.5 w-full mx-auto px-2 sm:px-3 py-1 flex-shrink">
+    <div className={clsx(
+      "flex flex-col w-full mx-auto px-2 sm:px-3 py-1 flex-shrink",
+      large ? "gap-2" : "gap-1 sm:gap-1.5"
+    )}>
       {ROWS.map((row, i) => (
-        <div key={i} className="flex justify-center gap-1 sm:gap-1.5">
+        <div key={i} className={clsx(
+          "flex justify-center",
+          large ? "gap-2" : "gap-1 sm:gap-1.5"
+        )}>
           {row.map(char => {
             const isGuessed = guessedLetters.includes(char);
             const isVowel = VOWELS.includes(char);
-            
+
             let isAllowed = !isGuessed && !disabled;
             if (vowelsOnly && !isVowel) isAllowed = false;
             if (consonantsOnly && isVowel) isAllowed = false;
+
+            // Vowel highlighting styles
+            const vowelHighlight = highlightVowels && isVowel && !isGuessed;
 
             return (
               <button
@@ -42,12 +55,17 @@ export const Keyboard: React.FC<KeyboardProps> = ({
                 onClick={() => onGuess(char)}
                 disabled={!isAllowed}
                 className={clsx(
-                  "w-8 h-10 sm:w-9 sm:h-11 md:w-10 md:h-12 rounded font-bold text-sm sm:text-base transition-colors flex-shrink-0",
-                  isGuessed 
-                    ? "bg-slate-700 text-slate-500 opacity-50" 
-                    : isAllowed 
-                      ? "bg-white text-slate-900 hover:bg-slate-200 active:bg-slate-300 shadow"
-                      : "bg-slate-800 text-slate-600 opacity-50"
+                  "rounded font-bold transition-all flex-shrink-0",
+                  large
+                    ? "w-10 h-12 sm:w-12 sm:h-14 text-lg sm:text-xl"
+                    : "w-8 h-10 sm:w-9 sm:h-11 md:w-10 md:h-12 text-sm sm:text-base",
+                  isGuessed
+                    ? "bg-slate-700 text-slate-500 opacity-50"
+                    : vowelHighlight
+                      ? "bg-gradient-to-b from-yellow-300 to-orange-400 text-black shadow-lg ring-2 ring-yellow-200 animate-pulse hover:scale-110"
+                      : isAllowed
+                        ? "bg-white text-slate-900 hover:bg-slate-200 active:bg-slate-300 shadow hover:scale-105"
+                        : "bg-slate-800 text-slate-600 opacity-50"
                 )}
               >
                 {char}
@@ -56,6 +74,11 @@ export const Keyboard: React.FC<KeyboardProps> = ({
           })}
         </div>
       ))}
+      {highlightVowels && (
+        <div className="text-center text-yellow-300 text-xs mt-1 font-medium">
+          ✨ Yellow letters are vowels (A, E, I, O, U)
+        </div>
+      )}
     </div>
   );
 };

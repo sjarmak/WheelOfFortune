@@ -1,0 +1,23 @@
+export const CANONICAL_CATEGORIES = [
+    'PHRASE',
+    'FOOD_AND_DRINK',
+    'PLACE',
+    'WHAT_ARE_YOU_DOING',
+    'BEFORE_AND_AFTER',
+    'SAME_NAME',
+    'TITLE',
+    'PERSON',
+    'EVENT',
+    'AROUND_THE_HOUSE',
+    'THING',
+    'LIVING_THING',
+    'ON_THE_MAP',
+    'PROPER_NAME',
+    'RHYME_TIME',
+    'SONG_TITLE',
+    'THE_80S',
+    'THE_90S',
+    'FAMILY',
+    'FUN_AND_GAMES',
+    'OCCUPATION'
+];

@@ -1,6 +1,7 @@
 import originalPack from '../assets/original.json';
 import seasonsPack from '../assets/seasons_1_20.json';
 import seasons40_42Pack from '../assets/seasons_40_42_all.json';
+import kidPack from '../assets/kid_pack.json';
 import { Puzzle, RoundType } from './types';
 
 export interface PuzzlePack {
@@ -125,6 +126,19 @@ function createDifficultyPacks(
 function buildPacks(): PuzzlePack[] {
   const packs: PuzzlePack[] = [];
 
+  // Kid Mode pack (first for easy access)
+  const kidPuzzles = mapPuzzles(kidPack.puzzles);
+  const kidStats = computePackStats(kidPuzzles);
+  packs.push({
+    id: 'kid-pack',
+    name: 'Kid Mode Puzzles',
+    description: '220 kid-friendly puzzles with simple words',
+    source: 'kid-pack',
+    puzzleCount: kidPuzzles.length,
+    ...kidStats,
+    puzzles: kidPuzzles,
+  });
+
   // Original practice pack
   const originalPuzzles = mapPuzzles(originalPack.puzzles);
   const originalStats = computePackStats(originalPuzzles);
@@ -163,6 +177,9 @@ function buildPacks(): PuzzlePack[] {
     ...seasons40_42Stats,
     puzzles: seasons40_42Puzzles,
   });
+
+  // Individual season packs for Seasons 1-20 (estimated from source order)
+  packs.push(...createSeasonPacks(seasonsPuzzles, Array.from({ length: 20 }, (_, i) => i + 1)));
 
   // Individual season packs for Seasons 40-42 (metadata available in source)
   packs.push(...createSeasonPacks(seasons40_42Puzzles, [40, 41, 42]));

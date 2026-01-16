@@ -1,5 +1,8 @@
 export type RoundType = 'MAIN' | 'TOSSUP' | 'BONUS';
 
+/** Game mode - Standard (adult) or Kid */
+export type GameMode = 'STANDARD' | 'KID';
+
 export interface PuzzleDifficulty {
   score: number;
   reasons: string[];

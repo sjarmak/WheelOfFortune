@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { getShopItem } from '../engine/shopTypes';
 
 interface VannaProps {
   revealedPositions: number[];
@@ -7,6 +8,8 @@ interface VannaProps {
   puzzleId?: string;
   isPuzzleSolved?: boolean;
   onTileVisited?: (position: number) => void;
+  dressColorId?: string | null; // Equipped dress item ID
+  hairColorId?: string | null;  // Equipped hair item ID
 }
 
 interface WalkFrame {
@@ -29,7 +32,25 @@ const WALK_FRAMES: WalkFrame[] = [
 
 type FacingDirection = 'front' | 'left' | 'right';
 
-const VannaHand: React.FC<{ isAnimating: boolean; facing?: FacingDirection; isDancing?: boolean }> = ({ isAnimating, facing = 'front', isDancing = false }) => {
+interface VannaHandProps {
+  isAnimating: boolean;
+  facing?: FacingDirection;
+  isDancing?: boolean;
+  hairColor?: string; // Hex color like '#FACC15'
+  dressColor?: string; // Hex color like '#DC2626'
+}
+
+// Default colors (original Vanna appearance)
+const DEFAULT_HAIR_COLOR = '#FACC15'; // yellow-400
+const DEFAULT_DRESS_COLOR = '#DC2626'; // red-600
+
+const VannaHand: React.FC<VannaHandProps> = ({
+  isAnimating,
+  facing = 'front',
+  isDancing = false,
+  hairColor = DEFAULT_HAIR_COLOR,
+  dressColor = DEFAULT_DRESS_COLOR
+}) => {
   const [walkFrame, setWalkFrame] = React.useState(0);
 
   // Cycle through walk frames while animating or dancing
@@ -79,9 +100,9 @@ const VannaHand: React.FC<{ isAnimating: boolean; facing?: FacingDirection; isDa
         {isSideView ? (
           /* SIDE VIEW SPRITE */
           <div className="relative w-10 h-16" style={{ imageRendering: 'pixelated' }}>
-            {/* Hair - blonde, side view (ponytail effect) */}
-            <div className="absolute top-0 left-1 w-6 h-3 bg-yellow-400" />
-            <div className="absolute top-1 right-0 w-2 h-4 bg-yellow-400" /> {/* Hair flowing back */}
+            {/* Hair - side view (ponytail effect) */}
+            <div className="absolute top-0 left-1 w-6 h-3" style={{ backgroundColor: hairColor }} />
+            <div className="absolute top-1 right-0 w-2 h-4" style={{ backgroundColor: hairColor }} /> {/* Hair flowing back */}
 
             {/* Face - side profile */}
             <div className="absolute top-3 left-1 w-5 h-3 bg-yellow-200">
@@ -91,9 +112,9 @@ const VannaHand: React.FC<{ isAnimating: boolean; facing?: FacingDirection; isDa
               <div className="absolute top-1 left-0 w-1 h-1 bg-yellow-300" />
             </div>
 
-            {/* Dress - red, side view (narrower) */}
+            {/* Dress - side view (narrower) */}
             <div className="absolute top-6 left-1 w-6 h-10">
-              <div className="w-full h-full bg-red-600">
+              <div className="w-full h-full" style={{ backgroundColor: dressColor }}>
                 {/* Dress pattern */}
                 <div className="flex flex-col gap-1 p-0.5 h-full justify-between">
                   <div className="w-full h-0.5 bg-white opacity-40" />
@@ -129,14 +150,14 @@ const VannaHand: React.FC<{ isAnimating: boolean; facing?: FacingDirection; isDa
         ) : (
           /* FRONT VIEW SPRITE (original) */
           <div className="relative w-14 h-16" style={{ imageRendering: 'pixelated' }}>
-            {/* Hair - blonde, wavy top */}
+            {/* Hair - wavy top */}
             <div className="absolute top-0 left-0 w-full h-3">
               <div className="flex gap-0.5 h-full">
-                <div className="w-1 h-full bg-yellow-400" />
-                <div className="w-1 h-full bg-yellow-400" />
-                <div className="w-1 h-full bg-yellow-400" />
-                <div className="w-1 h-full bg-yellow-400" />
-                <div className="w-1 h-full bg-yellow-400" />
+                <div className="w-1 h-full" style={{ backgroundColor: hairColor }} />
+                <div className="w-1 h-full" style={{ backgroundColor: hairColor }} />
+                <div className="w-1 h-full" style={{ backgroundColor: hairColor }} />
+                <div className="w-1 h-full" style={{ backgroundColor: hairColor }} />
+                <div className="w-1 h-full" style={{ backgroundColor: hairColor }} />
               </div>
             </div>
 
@@ -150,10 +171,10 @@ const VannaHand: React.FC<{ isAnimating: boolean; facing?: FacingDirection; isDa
               </div>
             </div>
 
-            {/* Dress - red with pattern */}
+            {/* Dress - with pattern */}
             <div className="absolute top-6 left-0 w-full h-10">
               {/* Dress body */}
-              <div className="w-full h-full bg-red-600">
+              <div className="w-full h-full" style={{ backgroundColor: dressColor }}>
                 {/* Dress pattern - white stripes */}
                 <div className="flex flex-col gap-1 p-1 h-full justify-between">
                   <div className="w-full h-1 bg-white opacity-40" />
@@ -237,7 +258,20 @@ const VannaHand: React.FC<{ isAnimating: boolean; facing?: FacingDirection; isDa
   );
 };
 
-export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs, isPuzzleSolved = false, onTileVisited }) => {
+export const Vanna: React.FC<VannaProps> = ({
+  revealedPositions,
+  tileRefs,
+  isPuzzleSolved = false,
+  onTileVisited,
+  dressColorId,
+  hairColorId
+}) => {
+  // Get hex colors from equipped items
+  const dressItem = dressColorId ? getShopItem(dressColorId) : null;
+  const hairItem = hairColorId ? getShopItem(hairColorId) : null;
+  const dressColor = dressItem?.hexColor || DEFAULT_DRESS_COLOR;
+  const hairColor = hairItem?.hexColor || DEFAULT_HAIR_COLOR;
+
   const [currentTile, setCurrentTile] = useState<number | null>(null);
   const [targetPosition, setTargetPosition] = useState<{ x: number; y: number } | null>(null);
   const [startPosition, setStartPosition] = useState<{ x: number; y: number } | null>(null);
@@ -290,10 +324,23 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs, isPuz
     setIsAnimating(true);
 
     while (animationQueueRef.current.length > 0) {
+      // Before each tile, sort remaining queue by distance from corner to pick closest next
+      const cornerPos = getCornerPosition();
+      if (cornerPos && animationQueueRef.current.length > 1) {
+        animationQueueRef.current.sort((tileA, tileB) => {
+          const posA = getTilePosition(tileA);
+          const posB = getTilePosition(tileB);
+          if (!posA || !posB) return 0;
+
+          const distA = Math.hypot(posA.x - cornerPos.x, posA.y - cornerPos.y);
+          const distB = Math.hypot(posB.x - cornerPos.x, posB.y - cornerPos.y);
+          return distA - distB;
+        });
+      }
+
       const nextTile = animationQueueRef.current.shift();
       if (nextTile === undefined) break;
 
-      const cornerPos = getCornerPosition();
       const tilePos = getTilePosition(nextTile);
       
       if (cornerPos && tilePos) {
@@ -338,7 +385,7 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs, isPuz
         ref={cornerRef}
         className="w-full h-full flex items-center justify-center"
       >
-        {!isAnimating && <VannaHand isAnimating={false} isDancing={isPuzzleSolved} />}
+        {!isAnimating && <VannaHand isAnimating={false} isDancing={isPuzzleSolved} hairColor={hairColor} dressColor={dressColor} />}
       </div>
 
       {/* Vanna animating to tile and back - walks along the bottom, stays grounded */}
@@ -365,7 +412,7 @@ export const Vanna: React.FC<VannaProps> = ({ revealedPositions, tileRefs, isPuz
           }}
           className="fixed top-0 left-0 w-16 h-16 pointer-events-none z-50 flex items-center justify-center"
         >
-          <VannaHand isAnimating={true} facing={facingDirection} />
+          <VannaHand isAnimating={true} facing={facingDirection} hairColor={hairColor} dressColor={dressColor} />
         </motion.div>
       )}
     </>

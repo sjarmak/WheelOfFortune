@@ -11,7 +11,80 @@ interface BoardProps {
 }
 
 export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, category, puzzleId, isPuzzleSolved = false }) => {
-  const words = useMemo(() => phrase.split(' '), [phrase]);
+  const MAX_COLS_PER_ROW = 12;
+  const boardRows = useMemo(() => {
+    type Tile = { char: string; index: number };
+
+    const rows: Tile[][] = [];
+    let currentRow: Tile[] = [];
+    let currentCount = 0;
+    let wordBuffer: Tile[] = [];
+
+    const trimTrailingSpaces = () => {
+      while (currentRow.length > 0 && currentRow[currentRow.length - 1].char === ' ') {
+        currentRow.pop();
+        currentCount--;
+      }
+    };
+
+    const pushWordBuffer = () => {
+      if (wordBuffer.length === 0) return;
+
+      if (currentCount > 0 && currentCount + wordBuffer.length > MAX_COLS_PER_ROW) {
+        trimTrailingSpaces();
+        rows.push(currentRow);
+        currentRow = [];
+        currentCount = 0;
+      }
+
+      while (wordBuffer.length > 0) {
+        const available = MAX_COLS_PER_ROW - currentCount;
+        const take = available <= 0 ? wordBuffer.length : Math.min(wordBuffer.length, available);
+        const chunk = wordBuffer.splice(0, take);
+        currentRow.push(...chunk);
+        currentCount += chunk.length;
+
+        if (currentCount >= MAX_COLS_PER_ROW) {
+          trimTrailingSpaces();
+          rows.push(currentRow);
+          currentRow = [];
+          currentCount = 0;
+        }
+      }
+    };
+
+    for (let index = 0; index < phrase.length; index++) {
+      const char = phrase[index];
+      if (char === ' ') {
+        pushWordBuffer();
+        if (currentCount === 0) {
+          continue;
+        }
+        if (currentCount + 1 > MAX_COLS_PER_ROW) {
+          trimTrailingSpaces();
+          rows.push(currentRow);
+          currentRow = [];
+          currentCount = 0;
+        }
+        currentRow.push({ char: ' ', index });
+        currentCount += 1;
+      } else {
+        wordBuffer.push({ char, index });
+      }
+    }
+
+    pushWordBuffer();
+    if (currentRow.length > 0) {
+      trimTrailingSpaces();
+      rows.push(currentRow);
+    }
+
+    if (rows.length === 0) {
+      rows.push([]);
+    }
+
+    return rows;
+  }, [phrase]);
   const tileRefsArray = useRef<(HTMLDivElement | null)[]>([]);
   const [visiblePositions, setVisiblePositions] = useState<number[]>([]);
 
@@ -88,21 +161,13 @@ export const Board: React.FC<BoardProps> = ({ phrase, revealedPositions, categor
             onTileVisited={handleTileVisited}
           />
         </div>
-        <div className="flex flex-wrap justify-center gap-x-1 gap-y-1 sm:gap-x-2 sm:gap-y-2 w-full">
-          {words.reduce((acc, word, wordIdx) => {
-             const wordStartIndex = phrase.split(' ').slice(0, wordIdx).reduce((sum, w) => sum + w.length + 1, 0);
-             
-             acc.push(
-               <div key={wordIdx} className="flex gap-x-0">
-                 {word.split('').map((char, charIdx) => {
-                   const globalIndex = wordStartIndex + charIdx;
-                   return renderLetter(char, globalIndex);
-                 })}
-               </div>
-             );
-             return acc;
-           }, [] as React.ReactNode[])}
-         </div>
+        <div className="flex flex-col gap-1 sm:gap-2 w-full">
+          {boardRows.map((row, rowIdx) => (
+            <div key={`${puzzleId}-row-${rowIdx}`} className="flex justify-center gap-1 sm:gap-2 flex-wrap">
+              {row.map(tile => renderLetter(tile.char, tile.index))}
+            </div>
+          ))}
+        </div>
          <div className="mt-1 sm:mt-2 bg-blue-900 px-3 sm:px-4 py-0.5 sm:py-1 rounded-full border border-white sm:border-2 text-white font-bold text-xs sm:text-sm tracking-widest uppercase">
           {category.replace(/_/g, ' ')}
         </div>

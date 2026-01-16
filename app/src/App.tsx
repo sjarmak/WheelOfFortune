@@ -4,12 +4,66 @@ import { Board } from './components/Board';
 import { Wheel } from './components/Wheel';
 import { Keyboard } from './components/Keyboard';
 import { PackSelector } from './components/PackSelector';
+import { KidModeApp } from './components/KidModeApp';
+import { ModeSelector, ModeIndicator } from './components/ModeSelector';
 import { ALL_PACKS, PuzzlePack } from './engine/packs';
-import { VOWELS, WheelWedge } from './engine/types';
+import { DEFAULT_PUZZLES } from './engine/defaultPack';
+import { VOWELS, WheelWedge, GameMode } from './engine/types';
 import { Settings as SettingsIcon, RotateCcw, X, Eye, EyeOff, Library } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 function App() {
+  // Game mode state (persisted)
+  const [gameMode, setGameMode] = useState<GameMode>(() => {
+    const saved = localStorage.getItem('wof_game_mode');
+    return (saved === 'KID' || saved === 'STANDARD') ? saved : 'STANDARD';
+  });
+  const [showModeSelector, setShowModeSelector] = useState(false);
+
+  // Persist game mode
+  useEffect(() => {
+    localStorage.setItem('wof_game_mode', gameMode);
+  }, [gameMode]);
+
+  // Mode selector overlay (shown on top of either mode)
+  const modeSelectorOverlay = showModeSelector && (
+    <ModeSelector
+      currentMode={gameMode}
+      onSelectMode={(mode) => {
+        setGameMode(mode);
+        setShowModeSelector(false);
+      }}
+      onClose={() => setShowModeSelector(false)}
+    />
+  );
+
+  // If in Kid Mode, render the KidModeApp
+  if (gameMode === 'KID') {
+    return (
+      <>
+        <KidModeApp onModeChange={() => setShowModeSelector(true)} />
+        {modeSelectorOverlay}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <StandardModeApp
+        onModeChange={() => setShowModeSelector(true)}
+        gameMode={gameMode}
+      />
+      {modeSelectorOverlay}
+    </>
+  );
+}
+
+interface StandardModeAppProps {
+  onModeChange: () => void;
+  gameMode: GameMode;
+}
+
+function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
   const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE, (initial) => {
     const saved = localStorage.getItem('wof_state');
     if (saved) {
@@ -17,7 +71,7 @@ function App() {
         const parsed = JSON.parse(saved);
         // Ensure spinCount exists (missing in old saved states)
         const restored = { ...initial, ...parsed, spinCount: parsed.spinCount ?? 0 };
-        
+
         // Validate state consistency: guessedLetters should match revealedPositions
         // If a letter is revealed but not in guessedLetters, the state is corrupt
         if (restored.currentPuzzle && restored.revealedPositions && restored.guessedLetters) {
@@ -28,7 +82,7 @@ function App() {
               .map((i: number) => phrase[i])
           );
           const guessedSet = new Set(restored.guessedLetters);
-          
+
           // Check if revealed letters are missing from guessedLetters
           const missingFromGuessed = [...revealedLetters].filter(l => !guessedSet.has(l));
           if (missingFromGuessed.length > 0) {
@@ -37,7 +91,7 @@ function App() {
             return initial;
           }
         }
-        
+
         return restored;
       } catch {
         return initial;
@@ -46,7 +100,24 @@ function App() {
     return initial;
   });
 
-  const [activePack, setActivePack] = useState<PuzzlePack>(ALL_PACKS[0]);
+  const [activePack, setActivePack] = useState<PuzzlePack>(() => {
+    // Fallback if ALL_PACKS is empty
+    if (ALL_PACKS && ALL_PACKS.length > 0) {
+      return ALL_PACKS[0];
+    }
+    // Fallback pack
+    const fallbackPack: PuzzlePack = {
+      id: 'default',
+      name: 'Default Pack',
+      description: 'Default puzzle pack',
+      source: 'default',
+      puzzleCount: DEFAULT_PUZZLES.length,
+      categories: [],
+      difficultyRange: [0, 1],
+      puzzles: DEFAULT_PUZZLES,
+    };
+    return fallbackPack;
+  });
   const [solveInput, setSolveInput] = useState('');
   const [showSolveModal, setShowSolveModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -199,16 +270,19 @@ function App() {
     <div className="h-screen bg-game-bg flex flex-col text-white pb-safe overflow-hidden">
       {/* Header */}
       <header className="py-2 px-3 sm:py-3 sm:px-4 flex justify-between items-center bg-game-accent shadow-md z-10 flex-shrink-0">
-        <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
-          WHEEL PRACTICE
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+            WHEEL PRACTICE
+          </h1>
+          <ModeIndicator mode={gameMode} onClick={onModeChange} />
+        </div>
         <div className="flex gap-2 sm:gap-4 items-center">
           <div className="flex flex-col items-end text-base sm:text-lg font-mono">
              <span className="text-green-400">${state.player.currentRoundScore}</span>
              <span className="text-yellow-400 text-sm">${state.player.totalScore}</span>
           </div>
-          <button 
-            onClick={() => setShowPackSelector(true)} 
+          <button
+            onClick={() => setShowPackSelector(true)}
             className="p-2 hover:bg-white/10 rounded-full"
             title="Select Pack"
           >
