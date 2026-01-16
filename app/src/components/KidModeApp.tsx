@@ -394,25 +394,16 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
       </div>
 
       {/* Main content - no scrolling */}
-      <div className="flex-1 w-full px-1 sm:px-2 flex flex-col items-center gap-0.5 overflow-hidden">
+      <div className="flex-1 w-full px-1 sm:px-2 flex flex-col items-center gap-1 overflow-hidden">
         {message && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce bg-gradient-to-r from-yellow-400 to-pink-500 text-white px-4 py-1 rounded-full font-bold shadow-xl text-xs sm:text-base">
             {message}
           </div>
         )}
 
-        {/* Hear Words */}
-        <div className="flex-shrink-0">
-          <HearWords
-            phrase={state.currentPuzzle.phrase}
-            revealedPositions={state.revealedPositions}
-            readAloudEnabled={settings.readAloud}
-          />
-        </div>
-
-        {/* Board - smaller */}
-        <div className="flex-shrink-0 bg-black/10 rounded-lg p-1">
-          <div className="max-w-full">
+        {/* Board and HearWords together at top */}
+        <div className="flex-shrink-0 w-full flex flex-col gap-0.5 items-center">
+          <div className="bg-black/10 rounded-lg p-1 w-full max-w-sm">
             <InteractiveBoard
               phrase={state.currentPuzzle.phrase}
               revealedPositions={state.revealedPositions}
@@ -424,10 +415,19 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
               hairColorId={equippedHairColor}
             />
           </div>
+
+          {/* Hear Words - compact and below board */}
+          <div className="text-xs">
+            <HearWords
+              phrase={state.currentPuzzle.phrase}
+              revealedPositions={state.revealedPositions}
+              readAloudEnabled={settings.readAloud}
+            />
+          </div>
         </div>
 
         {/* Game area - centered wheel */}
-        <div className="flex-1 w-full flex flex-col items-center justify-center gap-2 overflow-hidden">
+        <div className="flex-1 w-full flex flex-col items-center justify-center gap-1.5 overflow-hidden">
           {state.turnState === 'ROUND_OVER' ? (
             <button
               onClick={nextRound}
@@ -440,7 +440,7 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
             <>
               {/* Wheel - centered and prominent */}
               <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                <div className="w-40 h-40 sm:w-48 sm:h-48 flex items-center justify-center">
+                <div className="w-36 h-36 sm:w-44 sm:h-44 flex items-center justify-center">
                   <KidWheel
                     onSpinStart={handleSpinStart}
                     onSpinComplete={handleSpinComplete}
