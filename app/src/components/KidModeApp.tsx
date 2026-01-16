@@ -21,8 +21,6 @@ import { WordBuilder } from './WordBuilder';
 import { StarCollection } from './StarCollection';
 import { ModeIndicator } from './ModeSelector';
 import { PackSelector } from './PackSelector';
-import { PictureClue } from './PictureClue';
-import { PhonicsHelper } from './PhonicsHelper';
 import { HearWords } from './HearWords';
 import { WheelLegend } from './WheelLegend';
 import { TreasureShop } from './TreasureShop';
@@ -397,14 +395,14 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
         readAloudEnabled={settings.readAloud}
       />
 
-      <main className="flex-1 w-full px-2 sm:px-4 pb-4 overflow-y-auto relative flex flex-col items-center gap-3">
+      <main className="flex-1 w-full px-2 sm:px-3 relative flex flex-col items-center gap-2 overflow-y-auto">
         {message && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce bg-gradient-to-r from-yellow-400 to-pink-500 text-white px-6 py-2 rounded-full font-bold shadow-xl text-base">
             {message}
           </div>
         )}
 
-        <div className="w-full max-w-5xl flex flex-col gap-3">
+        <div className="w-full max-w-4xl flex flex-col gap-2">
           {/* Hear Words - easy tap to hear */}
           <HearWords
             phrase={state.currentPuzzle.phrase}
@@ -412,7 +410,8 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
             readAloudEnabled={settings.readAloud}
           />
 
-          <div className="bg-black/10 rounded-3xl p-2">
+          {/* Board - compact */}
+          <div className="bg-black/10 rounded-2xl p-1.5">
             <InteractiveBoard
               phrase={state.currentPuzzle.phrase}
               revealedPositions={state.revealedPositions}
@@ -425,135 +424,100 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
             />
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-4 items-start">
-            <div className="flex-1 bg-black/20 rounded-3xl p-4 flex flex-col items-center gap-3 shadow-xl">
-              {state.turnState === 'ROUND_OVER' ? (
-                <button
-                  onClick={nextRound}
-                  className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition-transform"
-                  aria-label="Next puzzle"
-                >
-                  NEXT PUZZLE
-                </button>
-              ) : (
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  {/* Legend on the left (desktop) */}
-                  <div className="hidden sm:block">
-                    <WheelLegend readAloudEnabled={settings.readAloud} />
-                  </div>
+          {/* Wheel + Controls - horizontal layout */}
+          <div className="flex flex-col sm:flex-row gap-2 items-center justify-center w-full">
+            {state.turnState === 'ROUND_OVER' ? (
+              <button
+                onClick={nextRound}
+                className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition-transform"
+                aria-label="Next puzzle"
+              >
+                NEXT PUZZLE
+              </button>
+            ) : (
+              <>
+                {/* Legend (desktop only) */}
+                <div className="hidden sm:block">
+                  <WheelLegend readAloudEnabled={settings.readAloud} />
+                </div>
 
-                  {/* Wheel in the center */}
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-56 h-56 sm:w-72 sm:h-72 flex items-center justify-center">
-                      <KidWheel
-                        onSpinStart={handleSpinStart}
-                        onSpinComplete={handleSpinComplete}
-                        isSpinning={state.turnState === 'SPINNING'}
-                        seed={state.seed + state.spinCount}
-                        canSpin={state.turnState === 'IDLE'}
-                        wheelThemeId={equippedWheelTheme}
-                      />
-                    </div>
-                    <div className="font-bold text-yellow-200 text-base text-center min-h-[1.75rem]">
-                      {state.turnState === 'SPINNING' && '🎡 Spinning...'}
-                      {state.turnState === 'IDLE' && 'Tap the wheel to spin!'}
-                      {state.turnState === 'CHOOSING_LETTER' && '🎯 Pick one of the 3 letters!'}
-                      {state.turnState === 'GUESSING_LETTER' && (
-                        state.kidState.guessesRemaining > 1
-                          ? `🔤 Guess ${state.kidState.guessesRemaining} letters!`
-                          : '🔤 Guess a letter!'
-                      )}
-                      {state.turnState === 'PICKING_VOWEL' && '🌟 Pick a VOWEL (yellow)!'}
-                      {state.turnState === 'PICKING_CONSONANT' && '🌟 Now pick any other letter!'}
-                    </div>
+                {/* Wheel - smaller on mobile */}
+                <div className="flex flex-col items-center gap-1">
+                  <div className="w-40 h-40 sm:w-56 sm:h-56 flex items-center justify-center">
+                    <KidWheel
+                      onSpinStart={handleSpinStart}
+                      onSpinComplete={handleSpinComplete}
+                      isSpinning={state.turnState === 'SPINNING'}
+                      seed={state.seed + state.spinCount}
+                      canSpin={state.turnState === 'IDLE'}
+                      wheelThemeId={equippedWheelTheme}
+                    />
                   </div>
-
-                  {/* Legend below wheel (mobile - horizontal) */}
-                  <div className="sm:hidden">
-                    <WheelLegend readAloudEnabled={settings.readAloud} horizontal />
+                  <div className="font-bold text-yellow-200 text-xs sm:text-base text-center min-h-[1.75rem]">
+                    {state.turnState === 'SPINNING' && '🎡 Spinning...'}
+                    {state.turnState === 'IDLE' && 'Tap the wheel!'}
+                    {state.turnState === 'CHOOSING_LETTER' && '🎯 Pick one!'}
+                    {state.turnState === 'GUESSING_LETTER' && (
+                      state.kidState.guessesRemaining > 1
+                        ? `🔤 Guess ${state.kidState.guessesRemaining}!`
+                        : '🔤 Guess!'
+                    )}
+                    {state.turnState === 'PICKING_VOWEL' && '🌟 VOWEL!'}
+                    {state.turnState === 'PICKING_CONSONANT' && '🌟 Any letter!'}
                   </div>
                 </div>
-              )}
-            </div>
 
-            <aside className="w-full lg:w-80 flex flex-col gap-3">
-              <PictureClue
-                phrase={state.currentPuzzle.phrase}
-                category={state.currentPuzzle.category}
-              />
+                {/* Side panel - minimal on mobile */}
+                <div className="flex flex-col gap-2 w-full sm:w-auto">
+                  {state.turnState === 'CHOOSING_LETTER' && (
+                    <LetterSuggestions
+                      letters={state.kidState.letterSuggestions}
+                      onSelect={handleGuess}
+                      title="Pick one!"
+                      readAloudEnabled={settings.readAloud}
+                      autoSpeak={true}
+                    />
+                  )}
 
-              {state.turnState === 'CHOOSING_LETTER' && (
-                <LetterSuggestions
-                  letters={state.kidState.letterSuggestions}
-                  onSelect={handleGuess}
-                  title="Pick one of these 3!"
-                  readAloudEnabled={settings.readAloud}
-                  autoSpeak={true}
-                />
-              )}
-
-              {(state.turnState === 'IDLE' || state.turnState === 'ROUND_OVER') && (
-                <button
-                  onClick={handleEnterWordBuilder}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg font-bold text-sm shadow-lg hover:scale-105 transition-transform flex items-center gap-2 justify-center"
-                  aria-label="Solve puzzle"
-                >
-                  <PuzzleIcon className="w-4 h-4" />
-                  SOLVE IT
-                </button>
-              )}
-
-              <PhonicsHelper
-                phrase={state.currentPuzzle.phrase}
-                readAloudEnabled={settings.readAloud}
-              />
-            </aside>
+                  {(state.turnState === 'IDLE') && (
+                    <button
+                      onClick={handleEnterWordBuilder}
+                      className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg font-bold text-sm shadow-lg hover:scale-105 transition-transform flex items-center gap-2 justify-center"
+                      aria-label="Solve puzzle"
+                    >
+                      <PuzzleIcon className="w-4 h-4" />
+                      SOLVE
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
-
-        {/* Always show keyboard except during spinning, showing outcome, word builder, or round over */}
-        {!['SPINNING', 'SHOWING_OUTCOME', 'WORD_BUILDER', 'ROUND_OVER'].includes(state.turnState) && (
-          <div className={`w-full max-w-4xl rounded-3xl p-3 ${
-            state.turnState === 'GUESSING_LETTER'
-              ? 'bg-green-500/30 ring-4 ring-green-400'
-              : state.turnState === 'PICKING_VOWEL'
-                ? 'bg-yellow-500/30 ring-4 ring-yellow-400'
-                : state.turnState === 'PICKING_CONSONANT'
-                  ? 'bg-blue-500/30 ring-4 ring-blue-400'
-                  : 'bg-black/30'
-          }`}>
-            {state.turnState === 'GUESSING_LETTER' && state.kidState.guessesRemaining > 0 && (
-              <div className="text-center text-green-300 font-bold text-lg mb-2 animate-bounce">
-                👆 Pick {state.kidState.guessesRemaining === 1 ? 'a letter' : `${state.kidState.guessesRemaining} letters`}!
-              </div>
-            )}
-            {state.turnState === 'PICKING_VOWEL' && (
-              <div className="text-center text-yellow-300 font-bold text-lg mb-2 animate-bounce">
-                🌟 Pick a VOWEL! (A, E, I, O, U - the yellow ones!)
-              </div>
-            )}
-            {state.turnState === 'PICKING_CONSONANT' && (
-              <div className="text-center text-blue-300 font-bold text-lg mb-2 animate-bounce">
-                🌟 Great! Now pick any other letter!
-              </div>
-            )}
-            {state.turnState === 'IDLE' && (
-              <div className="text-center text-white/70 text-sm mb-2">
-                Spin the wheel, or guess a letter below!
-              </div>
-            )}
-            <Keyboard
-              guessedLetters={state.guessedLetters}
-              onGuess={handleGuess}
-              disabled={state.turnState === 'SPINNING'}
-              highlightVowels={true}
-              large={true}
-              vowelsOnly={state.turnState === 'PICKING_VOWEL'}
-              consonantsOnly={state.turnState === 'PICKING_CONSONANT'}
-            />
-          </div>
-        )}
       </main>
+
+      {/* Keyboard - fixed at bottom */}
+      {!['SPINNING', 'SHOWING_OUTCOME', 'WORD_BUILDER', 'ROUND_OVER'].includes(state.turnState) && (
+        <div className={`w-full px-2 py-2 rounded-t-3xl flex-shrink-0 ${
+          state.turnState === 'GUESSING_LETTER'
+            ? 'bg-green-500/30 ring-4 ring-green-400'
+            : state.turnState === 'PICKING_VOWEL'
+              ? 'bg-yellow-500/30 ring-4 ring-yellow-400'
+              : state.turnState === 'PICKING_CONSONANT'
+                ? 'bg-blue-500/30 ring-4 ring-blue-400'
+                : 'bg-black/30'
+        }`}>
+          <Keyboard
+            guessedLetters={state.guessedLetters}
+            onGuess={handleGuess}
+            disabled={state.turnState === 'SPINNING'}
+            highlightVowels={true}
+            large={true}
+            vowelsOnly={state.turnState === 'PICKING_VOWEL'}
+            consonantsOnly={state.turnState === 'PICKING_CONSONANT'}
+          />
+        </div>
+      )}
 
       {/* Outcome Card */}
       {state.turnState === 'SHOWING_OUTCOME' && state.kidState.lastOutcome && (
