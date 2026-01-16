@@ -378,7 +378,29 @@ export function kidGameReducer(
 
         case 'VOWEL_PLUS': {
           // Kid picks a vowel first, then a consonant
-          newKidState.vowelPlusPhase = 'vowel';
+          // But if all vowels are already used, give a hint instead
+          const unrevealedVowels = getUnrevealedVowels(puzzle.phrase, state.guessedLetters);
+          if (unrevealedVowels.length === 0) {
+            // All vowels already guessed - apply hint instead
+            const tempState = { ...newState, kidState: newKidState };
+            const hintType = getCurrentHintType(tempState);
+            if (hintType) {
+              const { newRevealed, newGuessed } = applyHint(
+                hintType,
+                puzzle.phrase,
+                newState.revealedPositions,
+                newState.guessedLetters,
+                state.seed + state.spinCount
+              );
+              newState.revealedPositions = newRevealed;
+              newState.guessedLetters = newGuessed;
+              newKidState.hintMeterUsed = newKidState.hintMeterUsed + 1;
+            }
+            newKidState.vowelPlusPhase = null;
+          } else {
+            // Vowels available - let kid pick one
+            newKidState.vowelPlusPhase = 'vowel';
+          }
           break;
         }
 

@@ -378,17 +378,16 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
         </div>
       </header>
 
-      {/* Main content - board, wheel, and controls */}
-      <div className="flex-1 w-full px-1 sm:px-2 flex gap-2 items-stretch overflow-hidden">
+      {/* Main content - vertical stack layout */}
+      <div className="w-full px-1 sm:px-2 flex flex-col gap-1 overflow-y-auto pb-2">
         {message && (
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 animate-bounce bg-gradient-to-r from-yellow-400 to-pink-500 text-white px-4 py-1 rounded-full font-bold shadow-xl text-xs sm:text-base">
             {message}
           </div>
         )}
 
-        {/* Left panel: Board and HUD */}
-        <div className="flex-shrink-0 flex flex-col gap-1 items-center">
-          {/* Board */}
+        {/* Board at top */}
+        <div className="flex justify-center flex-shrink-0">
           <div className="bg-black/10 rounded-lg p-1">
             <InteractiveBoard
               phrase={state.currentPuzzle.phrase}
@@ -401,25 +400,25 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
               hairColorId={equippedHairColor}
             />
           </div>
-
-          {/* HUD */}
-          <div className="text-[0.7rem] bg-black/20 rounded-lg p-1.5 w-full">
-            <KidModeHUD
-              kidState={state.kidState}
-              category={state.currentPuzzle.category}
-              phrase={state.currentPuzzle.phrase}
-              revealedPositions={state.revealedPositions}
-              isSolved={state.turnState === 'ROUND_OVER'}
-              showNudge={showNudge}
-              onUseHint={handleUseHint}
-              readAloudEnabled={settings.readAloud}
-            />
-          </div>
         </div>
 
-        {/* Right side: Game area - centered wheel */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-1 overflow-hidden">
-          {state.turnState === 'ROUND_OVER' ? (
+        {/* HUD below board */}
+        <div className="text-[0.7rem] bg-black/20 rounded-lg p-1.5">
+          <KidModeHUD
+            kidState={state.kidState}
+            category={state.currentPuzzle.category}
+            phrase={state.currentPuzzle.phrase}
+            revealedPositions={state.revealedPositions}
+            isSolved={state.turnState === 'ROUND_OVER'}
+            showNudge={showNudge}
+            onUseHint={handleUseHint}
+            readAloudEnabled={settings.readAloud}
+          />
+        </div>
+
+        {/* Game area below HUD */}
+        {state.turnState === 'ROUND_OVER' ? (
+          <div className="flex justify-center">
             <button
               onClick={nextRound}
               className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl font-bold text-lg shadow-lg hover:scale-105 transition-transform"
@@ -427,55 +426,55 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
             >
               NEXT PUZZLE
             </button>
-          ) : (
-            <>
-              {/* Wheel - centered and prominent */}
-              <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                <div className="w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center">
-                  <KidWheel
-                    onSpinStart={handleSpinStart}
-                    onSpinComplete={handleSpinComplete}
-                    isSpinning={state.turnState === 'SPINNING'}
-                    seed={state.seed + state.spinCount}
-                    canSpin={state.turnState === 'IDLE'}
-                    wheelThemeId={equippedWheelTheme}
-                  />
-                </div>
-                <div className="font-bold text-yellow-200 text-xs text-center">
-                  {state.turnState === 'SPINNING' && '🎡 Spinning...'}
-                  {state.turnState === 'IDLE' && 'Tap to spin!'}
-                  {state.turnState === 'GUESSING_LETTER' && '🔤 Pick a letter!'}
-                  {state.turnState === 'PICKING_VOWEL' && '🌟 Pick a VOWEL!'}
-                  {state.turnState === 'PICKING_CONSONANT' && '🌟 Pick any letter!'}
-                </div>
+          </div>
+        ) : (
+          <>
+            {/* Wheel */}
+            <div className="flex flex-col items-center gap-0.5 justify-center flex-shrink-0">
+              <div className="w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center">
+                <KidWheel
+                  onSpinStart={handleSpinStart}
+                  onSpinComplete={handleSpinComplete}
+                  isSpinning={state.turnState === 'SPINNING'}
+                  seed={state.seed + state.spinCount}
+                  canSpin={state.turnState === 'IDLE'}
+                  wheelThemeId={equippedWheelTheme}
+                />
               </div>
-
-              {/* Controls below wheel */}
-              <div className="flex gap-2 items-center justify-center flex-wrap flex-shrink-0">
-                {state.turnState === 'CHOOSING_LETTER' && (
-                  <LetterSuggestions
-                    letters={state.kidState.letterSuggestions}
-                    onSelect={handleGuess}
-                    title="Pick one!"
-                    readAloudEnabled={settings.readAloud}
-                    autoSpeak={true}
-                  />
-                )}
-
-                {(state.turnState === 'IDLE') && (
-                  <button
-                    onClick={handleEnterWordBuilder}
-                    className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold text-base shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
-                    aria-label="Solve puzzle"
-                  >
-                    <PuzzleIcon className="w-5 h-5" />
-                    SOLVE
-                  </button>
-                )}
+              <div className="font-bold text-yellow-200 text-xs text-center">
+                {state.turnState === 'SPINNING' && '🎡 Spinning...'}
+                {state.turnState === 'IDLE' && 'Tap to spin!'}
+                {state.turnState === 'GUESSING_LETTER' && '🔤 Pick a letter!'}
+                {state.turnState === 'PICKING_VOWEL' && '🌟 Pick a VOWEL!'}
+                {state.turnState === 'PICKING_CONSONANT' && '🌟 Pick any letter!'}
               </div>
-            </>
-          )}
-        </div>
+            </div>
+
+            {/* Controls below wheel */}
+            <div className="flex gap-2 items-center justify-center flex-wrap flex-shrink-0">
+              {state.turnState === 'CHOOSING_LETTER' && (
+                <LetterSuggestions
+                  letters={state.kidState.letterSuggestions}
+                  onSelect={handleGuess}
+                  title="Pick one!"
+                  readAloudEnabled={settings.readAloud}
+                  autoSpeak={true}
+                />
+              )}
+
+              {(state.turnState === 'IDLE') && (
+                <button
+                  onClick={handleEnterWordBuilder}
+                  className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-bold text-base shadow-lg hover:scale-105 transition-transform flex items-center gap-2"
+                  aria-label="Solve puzzle"
+                >
+                  <PuzzleIcon className="w-5 h-5" />
+                  SOLVE
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Keyboard - fixed at bottom, full width */}

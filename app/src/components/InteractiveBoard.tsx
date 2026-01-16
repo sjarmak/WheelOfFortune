@@ -287,11 +287,11 @@ export const InteractiveBoard: React.FC<InteractiveBoardProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col items-center justify-center p-1 sm:p-2 bg-game-board rounded-lg sm:rounded-xl border-2 sm:border-4 border-yellow-500 shadow-2xl w-full max-w-5xl mx-auto relative overflow-hidden select-none"
+        className="flex flex-col items-center justify-center p-1 sm:p-2 bg-game-board rounded-lg sm:rounded-xl border-2 sm:border-4 border-yellow-500 shadow-2xl w-full max-w-5xl mx-auto relative overflow-visible select-none"
         onMouseLeave={handleSwipeEnd}
       >
-        {/* Vanna positioned in lower right of board */}
-        <div className="absolute bottom-2 right-2 z-40 w-16 h-16 pointer-events-none">
+        {/* Vanna positioned outside board in lower right */}
+        <div className="absolute -bottom-6 -right-6 z-40 w-16 h-16 pointer-events-none">
           <Vanna
             revealedPositions={revealedPositions}
             tileRefs={tileRefsArray}
@@ -302,14 +302,7 @@ export const InteractiveBoard: React.FC<InteractiveBoardProps> = ({
           />
         </div>
 
-        {/* Instructions hint */}
-        {readAloudEnabled && (
-          <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[9px] text-white/60 bg-black/30 px-2 py-0.5 rounded-full">
-            Tap letter to hear • Swipe to hear word
-          </div>
-        )}
-
-        <div className="flex flex-col gap-1 sm:gap-2 w-full mt-3">
+        <div className="flex flex-col gap-1 sm:gap-2 w-full mt-2 sm:mt-3">
           {boardRows.map((row, rowIdx) => (
             <div key={`${puzzleId}-row-${rowIdx}`} className="flex justify-center gap-1 sm:gap-2 flex-wrap">
               {row.map(tile => renderLetter(tile.char, tile.index))}

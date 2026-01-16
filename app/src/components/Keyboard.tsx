@@ -72,13 +72,8 @@ export const Keyboard: React.FC<KeyboardProps> = ({
               </button>
             );
           })}
-        </div>
-      ))}
-      {highlightVowels && (
-        <div className="text-center text-yellow-300 text-xs mt-1 font-medium">
-          ✨ Yellow letters are vowels (A, E, I, O, U)
-        </div>
-      )}
-    </div>
-  );
-};
+          </div>
+          ))}
+          </div>
+          );
+          };

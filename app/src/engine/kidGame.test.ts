@@ -550,3 +550,62 @@ describe('Spin Outcomes Integration', () => {
     expect(state.kidState.letterSuggestions.length).toBe(3);
   });
 });
+
+describe('VOWEL_PLUS Wheel Outcome', () => {
+  const testPuzzle: Puzzle = {
+    id: 'test-vowel-plus',
+    phrase: 'APPLE',
+    category: 'FRUITS',
+    round_type: 'MAIN'
+  };
+
+  it('should set vowelPlusPhase to "vowel" when vowels are available', () => {
+    let state = kidGameReducer(INITIAL_KID_GAME_STATE, {
+      type: 'KID_START_ROUND',
+      puzzle: testPuzzle,
+      seed: 42
+    });
+
+    const vowelPlusOutcome = { type: 'VOWEL_PLUS' as const, value: 2, label: 'VOWEL+' };
+    state = kidGameReducer(state, { type: 'KID_SPIN_RESULT', outcome: vowelPlusOutcome });
+
+    // Should set vowelPlusPhase to 'vowel' to let kid pick
+    expect(state.kidState.vowelPlusPhase).toBe('vowel');
+    expect(state.turnState).toBe('SHOWING_OUTCOME');
+    expect(state.kidState.lastOutcome).toEqual(vowelPlusOutcome);
+
+    // Dismiss outcome to transition to PICKING_VOWEL
+    state = kidGameReducer(state, { type: 'KID_DISMISS_OUTCOME' });
+    expect(state.turnState).toBe('PICKING_VOWEL');
+  });
+
+  it('should apply hint instead when all vowels are already guessed', () => {
+    let state = kidGameReducer(INITIAL_KID_GAME_STATE, {
+      type: 'KID_START_ROUND',
+      puzzle: testPuzzle,
+      seed: 42
+    });
+
+    // Guess all vowels (A, E)
+    state = kidGameReducer(state, { type: 'KID_GUESS_LETTER', letter: 'A' });
+    state = kidGameReducer(state, { type: 'KID_GUESS_LETTER', letter: 'E' });
+
+    expect(state.guessedLetters).toContain('A');
+    expect(state.guessedLetters).toContain('E');
+
+    const revealedBefore = state.revealedPositions.length;
+
+    // Now spin and land on VOWEL_PLUS
+    const vowelPlusOutcome = { type: 'VOWEL_PLUS' as const, value: 2, label: 'VOWEL+' };
+    state = kidGameReducer(state, { type: 'KID_SPIN_RESULT', outcome: vowelPlusOutcome });
+
+    // Should NOT set vowelPlusPhase to 'vowel' - should apply hint instead
+    expect(state.kidState.vowelPlusPhase).toBeNull();
+    // Should have used one hint (first hint in sequence is REVEAL_CONSONANT)
+    expect(state.kidState.hintMeterUsed).toBe(1);
+    // Should have revealed additional letters from hint
+    expect(state.revealedPositions.length).toBeGreaterThan(revealedBefore);
+    // Should be showing outcome
+    expect(state.turnState).toBe('SHOWING_OUTCOME');
+  });
+});
