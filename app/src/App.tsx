@@ -12,6 +12,40 @@ import { VOWELS, WheelWedge, GameMode } from './engine/types';
 import { Settings as SettingsIcon, RotateCcw, X, Eye, EyeOff, Library } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+// Error boundary
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean; error: Error | null}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('React Error:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{width: '100%', height: '100vh', background: '#1a1a2e', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'}}>
+          <div style={{textAlign: 'center'}}>
+            <h1>Error Loading App</h1>
+            <p>{this.state.error?.message}</p>
+            <pre style={{textAlign: 'left', background: '#0f3460', padding: '10px', borderRadius: '5px', overflow: 'auto', maxHeight: '300px', fontSize: '12px'}}>
+              {this.state.error?.stack}
+            </pre>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 function App() {
   // Game mode state (persisted)
   const [gameMode, setGameMode] = useState<GameMode>(() => {
@@ -560,4 +594,10 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
                  );
                  }
 
-                 export default App;
+                 export default function WrappedApp() {
+                   return (
+                     <ErrorBoundary>
+                       <App />
+                     </ErrorBoundary>
+                   );
+                 }
