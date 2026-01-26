@@ -33,7 +33,7 @@ export type GameAction =
   | { type: "GUESS_LETTER"; letter: string; cost: number }
   | { type: "BUY_VOWEL" }
   | { type: "SOLVE_ATTEMPT"; phrase: string }
-  | { type: "TOSS_UP_TICK" }
+  | { type: "TOSS_UP_TICK"; dtMs: number }
   | { type: "ADD_TO_ROUND_SCORE"; points: number }
   | { type: "CLEAR_ROUND_SCORE" }
   | { type: "RESET_GAME" }
@@ -71,6 +71,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
 
+      const turnStateForMode =
+        puzzle.round_type === "TOSSUP"
+          ? "TOSSUP_REVEALING"
+          : puzzle.round_type === "BONUS"
+            ? "BONUS_PICKING"
+            : "IDLE";
+
       return {
         ...state,
         currentPuzzle: puzzle,
@@ -78,7 +85,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           puzzle.round_type === "BONUS" ? ["R", "S", "T", "L", "N", "E"] : [],
         revealedPositions: revealed,
         spinResult: null,
-        turnState: "IDLE",
+        turnState: turnStateForMode,
         mustSpin: false,
         tossUpRevealOrder: shuffledReveal,
         tossUpIndex: 0,
@@ -175,12 +182,72 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case "TOSS_UP_TICK": {
-      if (state.tossUpIndex >= state.tossUpRevealOrder.length) return state;
-      const nextPos = state.tossUpRevealOrder[state.tossUpIndex];
+      const { dtMs } = action;
+
+      if (
+        state.turnState !== "TOSSUP_REVEALING" &&
+        state.turnState !== "TOSSUP_LOCKED_OUT"
+      ) {
+        return state;
+      }
+
+      // Handle lockout countdown
+      if (state.turnState === "TOSSUP_LOCKED_OUT") {
+        const remainingLockout = state.tossUpLockoutMs - dtMs;
+        if (remainingLockout > 0) {
+          return {
+            ...state,
+            tossUpLockoutMs: remainingLockout,
+          };
+        }
+        // Lockout expired — resume revealing with leftover time
+        const leftoverMs = -remainingLockout;
+        // Recurse with remaining time as a TOSSUP_REVEALING tick
+        return gameReducer(
+          {
+            ...state,
+            turnState: "TOSSUP_REVEALING",
+            tossUpLockoutMs: 0,
+          },
+          { type: "TOSS_UP_TICK", dtMs: leftoverMs },
+        );
+      }
+
+      // TOSSUP_REVEALING: accumulate elapsed time and reveal letters
+      let elapsed = state.tossUpElapsedMs + dtMs;
+      let index = state.tossUpIndex;
+      const newRevealed = [...state.revealedPositions];
+
+      while (
+        elapsed >= state.tossUpRevealIntervalMs &&
+        index < state.tossUpRevealOrder.length
+      ) {
+        newRevealed.push(state.tossUpRevealOrder[index]);
+        index++;
+        elapsed -= state.tossUpRevealIntervalMs;
+      }
+
+      // All letters revealed — round over as loss
+      if (index >= state.tossUpRevealOrder.length) {
+        const allPositions = Array.from(
+          { length: state.currentPuzzle!.phrase.length },
+          (_, i) => i,
+        );
+        return {
+          ...state,
+          revealedPositions: allPositions,
+          tossUpIndex: state.tossUpRevealOrder.length,
+          tossUpElapsedMs: 0,
+          turnState: "ROUND_OVER",
+          roundResult: "loss",
+        };
+      }
+
       return {
         ...state,
-        revealedPositions: [...state.revealedPositions, nextPos],
-        tossUpIndex: state.tossUpIndex + 1,
+        revealedPositions: newRevealed,
+        tossUpIndex: index,
+        tossUpElapsedMs: elapsed,
       };
     }
 
