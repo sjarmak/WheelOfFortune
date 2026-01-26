@@ -255,3 +255,180 @@ describe("RESET_GAME unchanged", () => {
     expect(result.turnState).toBe("IDLE");
   });
 });
+
+describe("Standard MAIN round flow regression", () => {
+  const puzzle = makePuzzle({ phrase: "HELLO WORLD" });
+  const valueWedge = {
+    id: "v500",
+    type: "VALUE" as const,
+    value: 500,
+    label: "$500",
+    color: "#00FF00",
+  };
+  const bankruptWedge = {
+    id: "bankrupt",
+    type: "BANKRUPT" as const,
+    value: 0,
+    label: "BANKRUPT",
+    color: "#000000",
+  };
+  const loseTurnWedge = {
+    id: "lose",
+    type: "LOSE_TURN" as const,
+    value: 0,
+    label: "LOSE A TURN",
+    color: "#FFFFFF",
+  };
+
+  it("full round: start -> spin -> guess consonant -> buy vowel -> solve", () => {
+    // 1. START_ROUND with MAIN puzzle sets turnState to IDLE
+    let s = gameReducer(INITIAL_STATE, {
+      type: "START_ROUND",
+      puzzle,
+      seed: 42,
+    });
+    expect(s.turnState).toBe("IDLE");
+    expect(s.currentPuzzle).toEqual(puzzle);
+    expect(s.guessedLetters).toEqual([]);
+    expect(s.revealedPositions).toEqual([]);
+    expect(s.roundCount).toBe(1);
+    expect(s.spinCount).toBe(0);
+    expect(s.player.currentRoundScore).toBe(0);
+    expect(s.roundResult).toBeNull();
+
+    // 2. SPIN_WHEEL transitions to SPINNING
+    s = gameReducer(s, { type: "SPIN_WHEEL" });
+    expect(s.turnState).toBe("SPINNING");
+    expect(s.spinCount).toBe(1);
+
+    // 3. SPIN_RESULT with VALUE wedge transitions to GUESSING_CONSONANT
+    s = gameReducer(s, { type: "SPIN_RESULT", wedge: valueWedge });
+    expect(s.turnState).toBe("GUESSING_CONSONANT");
+    expect(s.spinResult).toBe(500);
+
+    // 4. GUESS_LETTER: correct consonant 'L' (positions 2,3,9 in "HELLO WORLD")
+    s = gameReducer(s, { type: "GUESS_LETTER", letter: "L", cost: 0 });
+    expect(s.guessedLetters).toContain("L");
+    expect(s.revealedPositions).toContain(2);
+    expect(s.revealedPositions).toContain(3);
+    expect(s.revealedPositions).toContain(9);
+    expect(s.player.currentRoundScore).toBe(500 * 3); // 3 L's × $500
+    expect(s.turnState).toBe("IDLE");
+    expect(s.spinResult).toBe(500); // preserved after correct guess
+
+    // 5. BUY_VOWEL transitions to BUYING_VOWEL
+    s = gameReducer(s, { type: "BUY_VOWEL" });
+    expect(s.turnState).toBe("BUYING_VOWEL");
+
+    // 6. GUESS_LETTER: buy vowel 'O' (positions 4,7 in "HELLO WORLD")
+    s = gameReducer(s, { type: "GUESS_LETTER", letter: "O", cost: 250 });
+    expect(s.guessedLetters).toContain("O");
+    expect(s.revealedPositions).toContain(4);
+    expect(s.revealedPositions).toContain(7);
+    expect(s.player.currentRoundScore).toBe(1500 - 250); // 1500 - vowel cost
+    expect(s.turnState).toBe("IDLE");
+
+    // 7. SOLVE_ATTEMPT: correct solve
+    s = gameReducer(s, { type: "SOLVE_ATTEMPT", phrase: "HELLO WORLD" });
+    expect(s.turnState).toBe("ROUND_OVER");
+    expect(s.revealedPositions.length).toBe(puzzle.phrase.length);
+    expect(s.player.totalScore).toBe(1250); // round score added to total
+
+    // Verify new mode fields are present but unaffected
+    expect(s.tossUpElapsedMs).toBe(0);
+    expect(s.tossUpIndex).toBe(0);
+    expect(s.bonusTimerMs).toBe(20000);
+    expect(s.bonusPicks).toEqual([]);
+  });
+
+  it("BANKRUPT clears round score and sets mustSpin", () => {
+    let s = gameReducer(INITIAL_STATE, { type: "START_ROUND", puzzle });
+    s = gameReducer(s, { type: "SPIN_WHEEL" });
+    s = gameReducer(s, { type: "SPIN_RESULT", wedge: valueWedge });
+    s = gameReducer(s, { type: "GUESS_LETTER", letter: "L", cost: 0 });
+    expect(s.player.currentRoundScore).toBe(1500);
+
+    s = gameReducer(s, { type: "SPIN_WHEEL" });
+    s = gameReducer(s, { type: "SPIN_RESULT", wedge: bankruptWedge });
+
+    expect(s.spinResult).toBe("BANKRUPT");
+    expect(s.player.currentRoundScore).toBe(0);
+    expect(s.mustSpin).toBe(true);
+    expect(s.turnState).toBe("IDLE");
+  });
+
+  it("LOSE_TURN sets mustSpin without clearing score", () => {
+    let s = gameReducer(INITIAL_STATE, { type: "START_ROUND", puzzle });
+    s = gameReducer(s, { type: "SPIN_WHEEL" });
+    s = gameReducer(s, { type: "SPIN_RESULT", wedge: valueWedge });
+    s = gameReducer(s, { type: "GUESS_LETTER", letter: "L", cost: 0 });
+    const scoreBefore = s.player.currentRoundScore;
+
+    s = gameReducer(s, { type: "SPIN_WHEEL" });
+    s = gameReducer(s, { type: "SPIN_RESULT", wedge: loseTurnWedge });
+
+    expect(s.spinResult).toBe("LOSE_TURN");
+    expect(s.player.currentRoundScore).toBe(scoreBefore);
+    expect(s.mustSpin).toBe(true);
+    expect(s.turnState).toBe("IDLE");
+  });
+
+  it("wrong consonant guess clears spinResult and sets mustSpin", () => {
+    let s = gameReducer(INITIAL_STATE, { type: "START_ROUND", puzzle });
+    s = gameReducer(s, { type: "SPIN_WHEEL" });
+    s = gameReducer(s, { type: "SPIN_RESULT", wedge: valueWedge });
+
+    // 'Z' is not in "HELLO WORLD"
+    s = gameReducer(s, { type: "GUESS_LETTER", letter: "Z", cost: 0 });
+    expect(s.guessedLetters).toContain("Z");
+    expect(s.spinResult).toBeNull();
+    expect(s.mustSpin).toBe(true);
+    expect(s.turnState).toBe("IDLE");
+  });
+
+  it("wrong SOLVE_ATTEMPT returns state unchanged", () => {
+    let s = gameReducer(INITIAL_STATE, { type: "START_ROUND", puzzle });
+    const beforeSolve = s;
+
+    s = gameReducer(s, { type: "SOLVE_ATTEMPT", phrase: "WRONG ANSWER" });
+    expect(s).toBe(beforeSolve);
+  });
+
+  it("new mode actions are no-ops during standard MAIN flow", () => {
+    let s = gameReducer(INITIAL_STATE, { type: "START_ROUND", puzzle });
+    expect(s.turnState).toBe("IDLE");
+
+    // Toss-up actions should be no-ops in IDLE state
+    const afterTick = gameReducer(s, { type: "TOSS_UP_TICK", dtMs: 1000 });
+    expect(afterTick).toBe(s);
+
+    const afterBuzz = gameReducer(s, { type: "BUZZ_IN" });
+    expect(afterBuzz).toBe(s);
+
+    const afterTossUpSolve = gameReducer(s, {
+      type: "TOSS_UP_SOLVE_ATTEMPT",
+      phrase: "HELLO WORLD",
+    });
+    expect(afterTossUpSolve).toBe(s);
+
+    // Bonus actions should be no-ops in IDLE state
+    const afterBonusChoose = gameReducer(s, {
+      type: "BONUS_CHOOSE_LETTERS",
+      consonants: ["B", "C", "D"],
+      vowel: "A",
+    });
+    expect(afterBonusChoose).toBe(s);
+
+    const afterBonusTick = gameReducer(s, {
+      type: "BONUS_TICK",
+      dtMs: 1000,
+    });
+    expect(afterBonusTick).toBe(s);
+
+    const afterBonusSolve = gameReducer(s, {
+      type: "BONUS_SOLVE_ATTEMPT",
+      phrase: "HELLO WORLD",
+    });
+    expect(afterBonusSolve).toBe(s);
+  });
+});
