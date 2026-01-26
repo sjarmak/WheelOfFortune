@@ -10,6 +10,8 @@
 - Navigation is state-based (`activeScreen` useState in StandardModeApp) — no routing library. Icons from `lucide-react-native` (ChevronLeft, Play, BookOpen, BarChart3)
 - ALL_PACKS from `packs.ts` provides all available packs as `PuzzlePack[]`. Includes original, seasons 1-20, seasons 40-42, individual season packs, difficulty sub-packs, and random quick-game packs
 - PackBrowser accepts `packs`, `activePackId`, and `onSelectPack` props — parent controls pack selection behavior and navigation
+- `SharedValue` type: import as named import from `react-native-reanimated`, NOT `Animated.SharedValue`
+- Reanimated frame cycling: `withRepeat(withTiming(FRAME_COUNT, { duration, easing: Easing.linear }), -1, false)` + `Math.floor(value) % FRAME_COUNT` for discrete frames
 
 # Ralph Progress Log
 Started: Mon Jan 26 08:38:47 EST 2026
@@ -203,4 +205,49 @@ Started: Mon Jan 26 08:38:47 EST 2026
 - **Learnings for future iterations:**
   - US-008 implemented in-game settings controls as part of puzzle selection integration — check prior stories before implementing to avoid duplicate work
   - Settings modal structure: stat rows at top, then round-level controls (Reset Round, Random Puzzle, Browse Puzzles), divider, then destructive Reset All Progress at bottom
+---
+
+## 2026-01-26 09:40 - US-012
+- Added confetti animation that triggers on successful puzzle solve
+- Imported `react-native-confetti-cannon` (already in package.json) and `Dimensions` from RN
+- Added `confettiRef` (useRef) to imperatively control the cannon, `showCelebration` state, and `prevTurnStateRef` to track turn state transitions
+- `useEffect` watches `state.turnState`: when it transitions to `ROUND_OVER` (from any other state), fires confetti and sets celebration flag
+- Confetti renders as absolute-fill overlay with `pointerEvents="none"` so it doesn't block interaction
+- Confetti params: count=100, origin at top-center of screen, fadeOut enabled, fallSpeed=3000, explosionSpeed=350
+- `onAnimationEnd` callback clears the celebration state
+- Files changed:
+  - `ios/src/components/StandardModeApp.tsx` (modified) — confetti import, ref, state, effect, overlay render, style
+  - `prd.json` (modified) — US-012 passes: true
+- **Learnings for future iterations:**
+  - ROUND_OVER is ONLY set by successful `SOLVE_ATTEMPT` — no need to distinguish successful vs failed solve; if turnState is ROUND_OVER, the solve was correct
+  - `ConfettiCannon` requires `autoStart={false}` + `ref.current.start()` for imperative control
+  - `prevTurnStateRef` pattern: use a ref to track previous value of a state variable to detect transitions in useEffect
+  - `showCelebration` state is also available for US-014 (Vanna integration) — both confetti and Vanna can key off this flag
+  - `Dimensions.get('window').width / 2` gives screen center X for confetti origin
+---
+
+## 2026-01-26 09:44 - US-013
+- Rebuilt Vanna component with proper 4-frame walk cycle, dance bounce, and sparkles
+- Extracted pure animation logic to `ios/src/engine/vannaAnimation.ts` for testability
+- Component uses `isDancing` boolean prop (replaced old `isPuzzleSolved`/`dressColorId`/`hairColorId` props)
+- 4-frame WALK_FRAMES cycle matching web: Frame 0 (left leg -2, right arm +1), Frame 1 (neutral), Frame 2 (right leg -2, left arm +1), Frame 3 (neutral)
+- Dance mode: vertical sine-wave bounce `translateY(sin(frame * PI/2) * 4)`, arms 2x offset, legs 1.5x offset
+- 6 golden sparkle views radiating outward during dance with opacity/scale animation
+- Animation powered by reanimated `useSharedValue` + `useAnimatedStyle` (no setInterval)
+- Fixed KidModeApp.tsx to use new `isDancing` prop
+- Fixed SharedValue import (use named import from 'react-native-reanimated', not `Animated.SharedValue`)
+- Created 51 unit tests covering all pure animation logic
+- Files changed:
+  - `ios/src/components/Vanna.tsx` (rewritten) — 8-bit sprite with walk cycle, bounce, and sparkles
+  - `ios/src/engine/vannaAnimation.ts` (new) — pure animation constants and functions
+  - `ios/src/__tests__/vannaAnimation.test.ts` (new) — 51 unit tests
+  - `ios/src/components/KidModeApp.tsx` (modified) — updated Vanna props
+  - `prd.json` (modified) — US-013 passes: true
+- **Learnings for future iterations:**
+  - Extract animation logic to engine/ modules (no RN dependencies) for vitest testability — component files importing react-native can't be tested with vitest
+  - `SharedValue` type must be imported as named import from `react-native-reanimated`, NOT as `Animated.SharedValue`
+  - `useSharedValue` + `withRepeat(withTiming(...))` is the reanimated equivalent of web's `setInterval` frame cycling
+  - Walk frame progress: animate 0→4 linearly, use `Math.floor(value) % 4` to get discrete frame index
+  - Dance multipliers from web: arms 2x, legs 1.5x (applied in `useAnimatedStyle` closures)
+  - The `isDancing` prop is the only prop needed — US-014 will pass `showCelebration` state as isDancing
 ---

@@ -358,11 +358,7 @@ export function KidModeApp({ onModeChange }: KidModeAppProps): React.JSX.Element
           {isRoundOver && (
             <View style={styles.roundOverSection}>
               <View style={styles.vannaContainer}>
-                <Vanna
-                  isPuzzleSolved={true}
-                  dressColorId={equippedDressColor}
-                  hairColorId={equippedHairColor}
-                />
+                <Vanna isDancing={true} />
               </View>
               <TouchableOpacity onPress={nextRound} activeOpacity={0.8}>
                 <LinearGradient
