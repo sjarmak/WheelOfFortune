@@ -28,6 +28,7 @@ import { StandardWheel } from './StandardWheel';
 import { Keyboard } from './Keyboard';
 import { Modal } from './Modal';
 import { PackBrowser } from './PackBrowser';
+import { StrategyDashboard } from './StrategyDashboard';
 import { colors, typography, spacing, borderRadius, shadows, layout } from '../styles/theme';
 
 const STORAGE_KEY = 'wof_standard_state';
@@ -432,11 +433,7 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
         )}
 
         {activeScreen === 'strategy' && (
-          <View style={styles.placeholderScreen}>
-            <BarChart3 size={48} color={colors.slate[500]} />
-            <Text style={styles.placeholderTitle}>Strategy Dashboard</Text>
-            <Text style={styles.placeholderDesc}>Coming soon</Text>
-          </View>
+          <StrategyDashboard puzzles={activePack.puzzles} />
         )}
 
         {/* Solve Modal */}
