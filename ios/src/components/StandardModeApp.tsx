@@ -34,6 +34,12 @@ import {
   BookOpen,
   BarChart3,
 } from "lucide-react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
 import ConfettiCannon from "react-native-confetti-cannon";
 
 import { Vanna } from "./Vanna";
@@ -95,6 +101,7 @@ export function StandardModeApp({
   const confettiRef = useRef<ConfettiCannon>(null);
   const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [hideGuessedLetters, setHideGuessedLetters] = useState(false);
+  const keyboardTranslateY = useSharedValue(200);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationReady, setCelebrationReady] = useState(false);
   const prevTurnStateRef = useRef(state.turnState);
@@ -301,6 +308,18 @@ export function StandardModeApp({
     state.turnState === "GUESSING_CONSONANT" ||
     state.turnState === "BUYING_VOWEL";
 
+  // Animate keyboard slide up/down
+  useEffect(() => {
+    keyboardTranslateY.value = withTiming(canGuess ? 0 : 200, {
+      duration: 300,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [canGuess, keyboardTranslateY]);
+
+  const keyboardAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: keyboardTranslateY.value }],
+  }));
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <LinearGradient
@@ -467,7 +486,7 @@ export function StandardModeApp({
               />
             )}
 
-            {/* Round Over — Celebration Sequence */}
+            {/* Round Over */}
             {isRoundOver ? (
               <View style={styles.roundOverSection}>
                 <Text style={styles.solvedText}>PUZZLE SOLVED!</Text>
@@ -489,17 +508,15 @@ export function StandardModeApp({
             ) : (
               <View style={styles.gameArea}>
                 {/* Wheel */}
-                {!isRoundOver && (
-                  <View style={styles.wheelContainer}>
-                    <StandardWheel
-                      onSpinStart={handleSpinStart}
-                      onSpinComplete={handleSpinComplete}
-                      isSpinning={state.turnState === "SPINNING"}
-                      seed={state.seed + state.spinCount}
-                      canSpin={state.turnState === "IDLE"}
-                    />
-                  </View>
-                )}
+                <View style={styles.wheelContainer}>
+                  <StandardWheel
+                    onSpinStart={handleSpinStart}
+                    onSpinComplete={handleSpinComplete}
+                    isSpinning={state.turnState === "SPINNING"}
+                    seed={state.seed + state.spinCount}
+                    canSpin={state.turnState === "IDLE"}
+                  />
+                </View>
 
                 {/* Action Buttons */}
                 {state.turnState === "IDLE" && (
@@ -549,25 +566,26 @@ export function StandardModeApp({
                     {state.turnState === "IDLE" && "SPIN THE WHEEL"}
                   </Text>
                 </View>
-
-                {/* Keyboard */}
-                {canGuess && (
-                  <View style={styles.keyboardSection}>
-                    <Keyboard
-                      guessedLetters={state.guessedLetters}
-                      onGuess={handleGuess}
-                      onAlreadyCalled={(letter) =>
-                        showToast(`${letter} — Already called!`)
-                      }
-                      disabled={!canGuess}
-                      vowelsOnly={state.turnState === "BUYING_VOWEL"}
-                      consonantsOnly={state.turnState === "GUESSING_CONSONANT"}
-                      hideGuessedLetters={hideGuessedLetters}
-                    />
-                  </View>
-                )}
               </View>
             )}
+
+            {/* Keyboard slides up from bottom when guessing */}
+            <Animated.View
+              style={[styles.keyboardOverlay, keyboardAnimatedStyle]}
+              pointerEvents={canGuess ? "auto" : "none"}
+            >
+              <Keyboard
+                guessedLetters={state.guessedLetters}
+                onGuess={handleGuess}
+                onAlreadyCalled={(letter) =>
+                  showToast(`${letter} - Already called!`)
+                }
+                disabled={!canGuess}
+                vowelsOnly={state.turnState === "BUYING_VOWEL"}
+                consonantsOnly={state.turnState === "GUESSING_CONSONANT"}
+                hideGuessedLetters={hideGuessedLetters}
+              />
+            </Animated.View>
           </View>
         )}
 
@@ -898,7 +916,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     maxWidth: 400,
     flexShrink: 1,
-    maxHeight: 260,
   },
   actionButtons: {
     flexDirection: "row",
@@ -928,9 +945,16 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.sm,
   },
-  keyboardSection: {
-    marginTop: "auto",
+  keyboardOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.slate[900],
+    borderTopWidth: 1,
+    borderTopColor: colors.slate[700],
     paddingBottom: spacing[2],
+    paddingTop: spacing[1],
   },
   solveInput: {
     backgroundColor: colors.slate[800],
