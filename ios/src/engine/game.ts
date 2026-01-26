@@ -160,7 +160,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         guessedLetters: [...state.guessedLetters, upper],
         revealedPositions: newRevealed,
-        player: { ...state.player, currentRoundScore: newScore },
+        player: {
+          ...state.player,
+          currentRoundScore: newScore,
+          freePlay: isCorrect ? state.player.freePlay : false,
+        },
         turnState: "IDLE",
         spinResult: isCorrect ? state.spinResult : null,
         mustSpin: !isCorrect,
