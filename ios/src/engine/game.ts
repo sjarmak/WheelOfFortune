@@ -1,4 +1,4 @@
-import { GameState, Puzzle, VOWELS, WheelWedge } from "./types";
+import { GameState, Puzzle, VOWELS, CONSONANTS, WheelWedge } from "./types";
 import { SeededRNG } from "./rng";
 
 export const INITIAL_STATE: GameState = {
@@ -41,7 +41,12 @@ export type GameAction =
   | { type: "RESET_GAME" }
   | { type: "RESET_ROUND" }
   | { type: "RANDOM_PUZZLE"; puzzles: Puzzle[] }
-  | { type: "SELECT_PUZZLE"; puzzle: Puzzle };
+  | { type: "SELECT_PUZZLE"; puzzle: Puzzle }
+  | {
+      type: "BONUS_CHOOSE_LETTERS";
+      consonants: [string, string, string];
+      vowel: string;
+    };
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   // Use a temporary RNG instance based on current state seed + roundCount to keep deterministic flow if needed
@@ -286,6 +291,67 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         turnState: "TOSSUP_LOCKED_OUT",
         tossUpLockoutMs: state.tossUpLockoutDurationMs,
+      };
+    }
+
+    case "BONUS_CHOOSE_LETTERS": {
+      if (state.turnState !== "BONUS_PICKING") {
+        return state;
+      }
+
+      const { consonants, vowel } = action;
+      const RSTLNE = ["R", "S", "T", "L", "N", "E"];
+
+      // Validate exactly 3 consonants
+      if (consonants.length !== 3) {
+        return state;
+      }
+
+      // Validate all consonants are valid and distinct
+      const upperConsonants = consonants.map((c) => c.toUpperCase());
+      const uniqueConsonants = new Set(upperConsonants);
+      if (uniqueConsonants.size !== 3) {
+        return state;
+      }
+      for (const c of upperConsonants) {
+        if (!CONSONANTS.includes(c)) {
+          return state;
+        }
+        if (RSTLNE.includes(c)) {
+          return state;
+        }
+      }
+
+      // Validate vowel
+      const upperVowel = vowel.toUpperCase();
+      if (!VOWELS.includes(upperVowel)) {
+        return state;
+      }
+      if (RSTLNE.includes(upperVowel)) {
+        return state;
+      }
+
+      // All valid — reveal positions for chosen letters
+      const chosenLetters = [...upperConsonants, upperVowel];
+      const newGuessed = [...state.guessedLetters, ...chosenLetters];
+      const newRevealed = [...state.revealedPositions];
+      const phrase = state.currentPuzzle!.phrase;
+
+      for (let i = 0; i < phrase.length; i++) {
+        if (
+          chosenLetters.includes(phrase[i].toUpperCase()) &&
+          !newRevealed.includes(i)
+        ) {
+          newRevealed.push(i);
+        }
+      }
+
+      return {
+        ...state,
+        guessedLetters: newGuessed,
+        revealedPositions: newRevealed,
+        bonusPicks: chosenLetters,
+        turnState: "BONUS_SOLVE_TIMER",
       };
     }
 
