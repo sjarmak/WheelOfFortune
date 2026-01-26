@@ -15,7 +15,12 @@ import {
 } from 'react-native';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
 
-import { analyzePuzzlePack, LetterFrequency } from '../engine/strategyAnalytics';
+import {
+  analyzePuzzlePack,
+  LetterFrequency,
+  WheelAnalysis,
+  CategoryAnalysis,
+} from '../engine/strategyAnalytics';
 import { Puzzle, VOWELS, CONSONANTS } from '../engine/types';
 import { colors, typography, spacing, borderRadius } from '../styles/theme';
 
@@ -277,12 +282,254 @@ function OptimalStrategyTab({
   );
 }
 
-function PlaceholderTab({ title }: { title: string }): React.JSX.Element {
+function WheelAnalysisTab({ wheelAnalysis }: { wheelAnalysis: WheelAnalysis }): React.JSX.Element {
+  const outcomes = [
+    {
+      label: 'Cash',
+      probability: wheelAnalysis.cashProbability,
+      color: colors.green[500],
+      icon: '$',
+    },
+    {
+      label: 'Bankrupt',
+      probability: wheelAnalysis.bankruptProbability,
+      color: colors.red[500],
+      icon: 'X',
+    },
+    {
+      label: 'Lose a Turn',
+      probability: wheelAnalysis.loseTurnProbability,
+      color: colors.orange[500],
+      icon: '!',
+    },
+    {
+      label: 'Free Play',
+      probability: wheelAnalysis.freePlayProbability,
+      color: colors.blue[500],
+      icon: '*',
+    },
+  ];
+
   return (
-    <View style={styles.placeholderTab}>
-      <Text style={styles.placeholderTitle}>{title}</Text>
-      <Text style={styles.placeholderDesc}>Coming soon</Text>
-    </View>
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+      {/* Expected Value */}
+      <View style={styles.evCard}>
+        <Text style={styles.evLabel}>Expected Value Per Spin</Text>
+        <Text style={styles.evValue}>${Math.round(wheelAnalysis.expectedValue)}</Text>
+        <Text style={styles.evDesc}>
+          Average cash earned per spin across all wedges
+        </Text>
+      </View>
+
+      {/* Outcome Probabilities */}
+      <Text style={styles.sectionTitle}>Outcome Probabilities</Text>
+      <Text style={styles.sectionDesc}>
+        Chance of landing on each outcome type
+      </Text>
+      <View style={styles.outcomeGrid}>
+        {outcomes.map((outcome) => (
+          <View key={outcome.label} style={styles.outcomeCard}>
+            <View style={[styles.outcomeIcon, { backgroundColor: outcome.color }]}>
+              <Text style={styles.outcomeIconText}>{outcome.icon}</Text>
+            </View>
+            <Text style={styles.outcomeLabel}>{outcome.label}</Text>
+            <Text style={[styles.outcomePercent, { color: outcome.color }]}>
+              {outcome.probability.toFixed(1)}%
+            </Text>
+            <View style={styles.outcomeBarContainer}>
+              <View
+                style={[
+                  styles.outcomeBar,
+                  {
+                    width: `${outcome.probability}%`,
+                    backgroundColor: outcome.color,
+                  },
+                ]}
+              />
+            </View>
+          </View>
+        ))}
+      </View>
+
+      {/* Average Cash Value */}
+      <View style={styles.avgCashCard}>
+        <Text style={styles.avgCashLabel}>Average Cash Value</Text>
+        <Text style={styles.avgCashValue}>
+          ${Math.round(wheelAnalysis.avgCashValue)}
+        </Text>
+        <Text style={styles.avgCashDesc}>
+          Average dollar amount when landing on a cash wedge
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+function CategoryInsightsTab({
+  categoryBreakdown,
+}: {
+  categoryBreakdown: CategoryAnalysis[];
+}): React.JSX.Element {
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    categoryBreakdown.length > 0 ? categoryBreakdown[0].category : ''
+  );
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const selectedAnalysis = categoryBreakdown.find(
+    (c) => c.category === selectedCategory
+  );
+
+  const topLetters = selectedAnalysis
+    ? selectedAnalysis.letterFrequencies.slice(0, 15)
+    : [];
+
+  const maxRate =
+    topLetters.length > 0
+      ? Math.max(...topLetters.map((f) => f.occurrenceRate))
+      : 1;
+
+  return (
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+      {/* Category Picker */}
+      <Text style={styles.sectionTitle}>Category Analysis</Text>
+      <Text style={styles.sectionDesc}>
+        Letter frequencies and patterns for a specific category
+      </Text>
+
+      <TouchableOpacity
+        style={styles.dropdownButton}
+        onPress={() => setShowDropdown(!showDropdown)}
+      >
+        <Text style={styles.dropdownButtonText}>
+          {selectedCategory || 'Select Category'}
+        </Text>
+        <Text style={styles.dropdownArrow}>{showDropdown ? '▲' : '▼'}</Text>
+      </TouchableOpacity>
+
+      {showDropdown && (
+        <View style={styles.dropdownList}>
+          {categoryBreakdown.map((cat) => (
+            <TouchableOpacity
+              key={cat.category}
+              style={[
+                styles.dropdownItem,
+                cat.category === selectedCategory && styles.dropdownItemActive,
+              ]}
+              onPress={() => {
+                setSelectedCategory(cat.category);
+                setShowDropdown(false);
+              }}
+            >
+              <Text
+                style={[
+                  styles.dropdownItemText,
+                  cat.category === selectedCategory &&
+                    styles.dropdownItemTextActive,
+                ]}
+              >
+                {cat.category}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {selectedAnalysis && (
+        <>
+          {/* Vowel Ratio */}
+          <View style={styles.vowelRatioCard}>
+            <Text style={styles.vowelRatioLabel}>Vowel Ratio</Text>
+            <Text style={styles.vowelRatioValue}>
+              {(selectedAnalysis.vowelRatio * 100).toFixed(1)}%
+            </Text>
+            <View style={styles.vowelRatioBarContainer}>
+              <View
+                style={[
+                  styles.vowelRatioBarVowel,
+                  { flex: selectedAnalysis.vowelRatio },
+                ]}
+              />
+              <View
+                style={[
+                  styles.vowelRatioBarConsonant,
+                  { flex: 1 - selectedAnalysis.vowelRatio },
+                ]}
+              />
+            </View>
+            <View style={styles.vowelRatioLabels}>
+              <Text style={styles.vowelRatioLabelText}>
+                Vowels {(selectedAnalysis.vowelRatio * 100).toFixed(0)}%
+              </Text>
+              <Text style={styles.vowelRatioLabelText}>
+                Consonants{' '}
+                {((1 - selectedAnalysis.vowelRatio) * 100).toFixed(0)}%
+              </Text>
+            </View>
+          </View>
+
+          {/* Top 15 Letters */}
+          <Text style={styles.sectionTitle}>
+            Top 15 Letters — {selectedCategory}
+          </Text>
+          <Text style={styles.sectionDesc}>
+            Most frequent letters in this category
+          </Text>
+          {topLetters.map((freq, index) => {
+            const isVowel = VOWELS.includes(freq.letter);
+            return (
+              <View key={freq.letter} style={styles.categoryLetterRow}>
+                <Text style={styles.categoryLetterRank}>#{index + 1}</Text>
+                <View
+                  style={[
+                    styles.categoryLetterBadge,
+                    {
+                      backgroundColor: isVowel
+                        ? colors.blue[500]
+                        : colors.purple[500],
+                    },
+                  ]}
+                >
+                  <Text style={styles.categoryLetterBadgeText}>
+                    {freq.letter}
+                  </Text>
+                </View>
+                <View style={styles.categoryLetterBarContainer}>
+                  <View
+                    style={[
+                      styles.categoryLetterBar,
+                      {
+                        width: `${(freq.occurrenceRate / maxRate) * 100}%`,
+                        backgroundColor: getFrequencyColor(freq.occurrenceRate),
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.categoryLetterPercent}>
+                  {freq.occurrenceRate.toFixed(1)}%
+                </Text>
+              </View>
+            );
+          })}
+
+          {/* Common Patterns */}
+          {selectedAnalysis.commonPatterns.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Common Patterns</Text>
+              <Text style={styles.sectionDesc}>
+                Bigrams and trigrams appearing in 20%+ of puzzles
+              </Text>
+              <View style={styles.patternsContainer}>
+                {selectedAnalysis.commonPatterns.map((pattern) => (
+                  <View key={pattern} style={styles.patternChip}>
+                    <Text style={styles.patternChipText}>{pattern}</Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
+        </>
+      )}
+    </ScrollView>
   );
 }
 
@@ -335,10 +582,10 @@ export function StrategyDashboard({ puzzles }: StrategyDashboardProps): React.JS
         />
       )}
       {activeTab === 'wheel' && (
-        <PlaceholderTab title="Wheel Analysis" />
+        <WheelAnalysisTab wheelAnalysis={analytics.wheelAnalysis} />
       )}
       {activeTab === 'categories' && (
-        <PlaceholderTab title="Category Insights" />
+        <CategoryInsightsTab categoryBreakdown={analytics.categoryBreakdown} />
       )}
     </View>
   );
@@ -564,19 +811,257 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     textAlign: 'center',
   },
-  placeholderTab: {
-    flex: 1,
+  // Wheel Analysis Tab
+  evCard: {
+    backgroundColor: 'rgba(250, 204, 21, 0.1)',
+    borderWidth: 1,
+    borderColor: colors.yellow[400],
+    borderRadius: borderRadius.lg,
+    padding: spacing[4],
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing[3],
+    gap: spacing[2],
+    marginTop: spacing[4],
+    marginBottom: spacing[4],
   },
-  placeholderTitle: {
+  evLabel: {
+    color: colors.yellow[400],
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  evValue: {
     color: colors.white,
-    fontSize: typography.sizes['2xl'],
+    fontSize: typography.sizes['4xl'],
     fontWeight: typography.weights.bold,
   },
-  placeholderDesc: {
+  evDesc: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.sm,
+    textAlign: 'center',
+  },
+  outcomeGrid: {
+    gap: spacing[3],
+    marginBottom: spacing[4],
+  },
+  outcomeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: borderRadius.base,
+    padding: spacing[3],
+    gap: spacing[2],
+  },
+  outcomeIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  outcomeIconText: {
+    color: colors.white,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
+  },
+  outcomeLabel: {
+    color: colors.white,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.medium,
+    width: 80,
+  },
+  outcomePercent: {
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
+    width: 52,
+    textAlign: 'right',
+  },
+  outcomeBarContainer: {
+    flex: 1,
+    height: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  outcomeBar: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  avgCashCard: {
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    borderWidth: 1,
+    borderColor: colors.green[500],
+    borderRadius: borderRadius.lg,
+    padding: spacing[4],
+    alignItems: 'center',
+    gap: spacing[2],
+    marginBottom: spacing[8],
+  },
+  avgCashLabel: {
+    color: colors.green[500],
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  avgCashValue: {
+    color: colors.white,
+    fontSize: typography.sizes['4xl'],
+    fontWeight: typography.weights.bold,
+  },
+  avgCashDesc: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.sm,
+    textAlign: 'center',
+  },
+
+  // Category Insights Tab
+  dropdownButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: borderRadius.base,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2.5],
+    marginBottom: spacing[2],
+  },
+  dropdownButtonText: {
+    color: colors.white,
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.medium,
+  },
+  dropdownArrow: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.sm,
+  },
+  dropdownList: {
+    backgroundColor: colors.slate[800],
+    borderRadius: borderRadius.base,
+    borderWidth: 1,
+    borderColor: colors.slate[700],
+    marginBottom: spacing[3],
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2.5],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.slate[700],
+  },
+  dropdownItemActive: {
+    backgroundColor: 'rgba(250, 204, 21, 0.15)',
+  },
+  dropdownItemText: {
     color: colors.slate[400],
     fontSize: typography.sizes.base,
+  },
+  dropdownItemTextActive: {
+    color: colors.yellow[400],
+    fontWeight: typography.weights.bold,
+  },
+  vowelRatioCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: borderRadius.lg,
+    padding: spacing[4],
+    alignItems: 'center',
+    gap: spacing[2],
+    marginBottom: spacing[4],
+  },
+  vowelRatioLabel: {
+    color: colors.white,
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  vowelRatioValue: {
+    color: colors.blue[400],
+    fontSize: typography.sizes['3xl'],
+    fontWeight: typography.weights.bold,
+  },
+  vowelRatioBarContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    height: 12,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  vowelRatioBarVowel: {
+    backgroundColor: colors.blue[500],
+    height: '100%',
+  },
+  vowelRatioBarConsonant: {
+    backgroundColor: colors.purple[500],
+    height: '100%',
+  },
+  vowelRatioLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  vowelRatioLabelText: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.xs,
+  },
+  categoryLetterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing[1.5],
+    gap: spacing[2],
+  },
+  categoryLetterRank: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.sm,
+    width: 28,
+  },
+  categoryLetterBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryLetterBadgeText: {
+    color: colors.white,
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+  },
+  categoryLetterBarContainer: {
+    flex: 1,
+    height: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  categoryLetterBar: {
+    height: '100%',
+    borderRadius: 5,
+  },
+  categoryLetterPercent: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.sm,
+    width: 48,
+    textAlign: 'right',
+  },
+  patternsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing[2],
+    marginBottom: spacing[8],
+  },
+  patternChip: {
+    backgroundColor: 'rgba(250, 204, 21, 0.15)',
+    borderWidth: 1,
+    borderColor: colors.yellow[400],
+    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1.5],
+  },
+  patternChipText: {
+    color: colors.yellow[400],
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    letterSpacing: 1,
   },
 });
