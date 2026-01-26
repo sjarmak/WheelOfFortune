@@ -9,54 +9,52 @@ import { Dimensions, Platform, StyleSheet } from 'react-native';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Color palette (matches web app's Tailwind colors)
+// Color palette - Modern dark theme with gold accents
 export const colors = {
-  // Background gradients
+  // Background gradients - subtle dark navy
   gradient: {
-    start: '#581c87', // purple-900
-    middle: '#9d174d', // pink-800
-    end: '#c2410c', // orange-700
+    start: '#0a0e1a', // dark navy base
+    middle: '#0f1525', // slightly lighter navy
+    end: '#141b2e', // even lighter navy
   },
 
-  // Primary colors
-  purple: {
-    500: '#a855f7',
-    600: '#9333ea',
-    700: '#7e22ce',
-    800: '#6b21a8',
-    900: '#581c87',
+  // Primary accent - gold/amber (Wheel of Fortune theme)
+  gold: {
+    300: '#f4d03f',
+    400: '#e8c547',
+    500: '#d4a843', // primary gold accent
+    600: '#c0983a',
+    700: '#a8822f',
   },
-  pink: {
-    300: '#f9a8d4',
-    400: '#f472b6',
-    500: '#ec4899',
-    600: '#db2777',
-    800: '#9d174d',
-  },
-  orange: {
-    500: '#f97316',
-    600: '#ea580c',
-    700: '#c2410c',
+  // Legacy amber/yellow for compatibility
+  amber: {
+    400: '#d4a843',
+    500: '#c0983a',
   },
   yellow: {
-    200: '#fef08a',
-    300: '#fde047',
-    400: '#facc15',
-    500: '#eab308',
+    200: '#f4d03f',
+    300: '#e8c547',
+    400: '#d4a843',
+    500: '#c0983a',
   },
+
+  // Secondary accent - muted teal/blue
+  blue: {
+    400: '#3b82c4', // muted teal-blue
+    500: '#2e6ba3',
+    600: '#255a8a',
+  },
+  teal: {
+    400: '#3b82c4',
+    500: '#2e6ba3',
+    600: '#255a8a',
+  },
+
+  // Status colors (kept for functionality)
   green: {
     400: '#4ade80',
     500: '#22c55e',
     600: '#16a34a',
-  },
-  blue: {
-    400: '#60a5fa',
-    500: '#3b82f6',
-    600: '#2563eb',
-  },
-  amber: {
-    400: '#fbbf24',
-    500: '#f59e0b',
   },
   red: {
     400: '#f87171',
@@ -64,15 +62,36 @@ export const colors = {
     600: '#dc2626',
     900: '#7f1d1d',
   },
+  orange: {
+    500: '#f97316',
+    600: '#ea580c',
+    700: '#c2410c',
+  },
 
-  // Neutrals
+  // Legacy colors for compatibility (mapped to new palette)
+  purple: {
+    500: '#3b82c4', // map to teal-blue
+    600: '#2e6ba3',
+    700: '#255a8a',
+    800: '#1e293b',
+    900: '#0a0e1a',
+  },
+  pink: {
+    300: '#d4a843', // map to gold
+    400: '#c0983a',
+    500: '#a8822f',
+    600: '#8f6d26',
+    800: '#0f1525',
+  },
+
+  // Neutrals - dark navy theme
   slate: {
     400: '#94a3b8',
     500: '#64748b',
     600: '#475569',
     700: '#334155',
-    800: '#1e293b',
-    900: '#0f172a',
+    800: '#1e293b', // dark surface
+    900: '#0a0e1a', // darkest navy (base)
   },
 
   // Base
@@ -234,7 +253,7 @@ export const commonStyles = StyleSheet.create({
   // Full screen container
   screen: {
     flex: 1,
-    backgroundColor: colors.gradient.start,
+    backgroundColor: colors.slate[900], // dark navy base
   },
 
   // Centered container

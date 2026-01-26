@@ -48,10 +48,14 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
   },
   default: {
-    backgroundColor: colors.overlay.medium,
+    backgroundColor: colors.slate[800],
+    borderWidth: 1,
+    borderColor: colors.slate[700],
   },
   elevated: {
     backgroundColor: colors.slate[800],
+    borderWidth: 1,
+    borderColor: colors.slate[700],
     ...shadows.lg,
   },
   outlined: {

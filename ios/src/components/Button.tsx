@@ -34,8 +34,8 @@ interface ButtonProps {
 }
 
 const gradients: Record<ButtonVariant, [string, string]> = {
-  primary: [colors.blue[500], colors.purple[600]],
-  secondary: [colors.slate[600], colors.slate[700]],
+  primary: [colors.gold[500], colors.gold[500]], // solid gold
+  secondary: [colors.slate[800], colors.slate[800]], // dark surface
   success: [colors.green[500], colors.green[600]],
   danger: [colors.red[500], colors.red[600]],
   ghost: ['transparent', 'transparent'],
@@ -70,6 +70,10 @@ export function Button({
   const sizeConfig = sizeStyles[size];
   const isGhost = variant === 'ghost';
 
+  const isPrimary = variant === 'primary';
+  const isSecondary = variant === 'secondary';
+  const textColor = isPrimary ? colors.slate[900] : colors.white;
+
   return (
     <TouchableOpacity
       onPress={handlePress}
@@ -79,6 +83,7 @@ export function Button({
         styles.container,
         fullWidth && styles.fullWidth,
         disabled && styles.disabled,
+        isSecondary && styles.secondaryBorder,
         style,
       ]}
     >
@@ -96,12 +101,12 @@ export function Button({
         ]}
       >
         {loading ? (
-          <ActivityIndicator color={colors.white} size="small" />
+          <ActivityIndicator color={textColor} size="small" />
         ) : (
           <Text
             style={[
               styles.text,
-              { fontSize: sizeConfig.fontSize },
+              { fontSize: sizeConfig.fontSize, color: textColor },
               isGhost && styles.ghostText,
               textStyle,
             ]}
@@ -135,9 +140,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.overlay.light,
   },
   text: {
-    color: colors.white,
     fontWeight: typography.weights.bold,
     textAlign: 'center',
+  },
+  secondaryBorder: {
+    borderWidth: 1,
+    borderColor: colors.slate[600],
   },
   ghostText: {
     color: colors.white,

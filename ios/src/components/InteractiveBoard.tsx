@@ -6,8 +6,14 @@
  * - Animated letter reveals with Vanna
  */
 
-import React, { useCallback, useState, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, LayoutChangeEvent } from 'react-native';
+import React, { useCallback, useState, useMemo, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  LayoutChangeEvent,
+} from "react-native";
 import Animated, {
   useAnimatedStyle,
   withTiming,
@@ -15,11 +21,18 @@ import Animated, {
   FadeIn,
   FadeOut,
   ZoomIn,
-} from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
-import { getLetterSound } from '../engine/phonics';
-import { speak, cancelSpeech } from '../engine/tts';
-import { colors, typography, spacing, borderRadius, shadows, layout } from '../styles/theme';
+} from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
+import { getLetterSound } from "../engine/phonics";
+import { speak, cancelSpeech } from "../engine/tts";
+import {
+  colors,
+  typography,
+  spacing,
+  borderRadius,
+  shadows,
+  layout,
+} from "../styles/theme";
 
 interface InteractiveBoardProps {
   phrase: string;
@@ -53,7 +66,7 @@ export function InteractiveBoard({
   // Build word lookup: for each character index, what word is it in?
   const wordLookup = useMemo(() => {
     const lookup: Map<number, WordInfo> = new Map();
-    const words = phrase.split(' ');
+    const words = phrase.split(" ");
     let charIndex = 0;
 
     for (const word of words) {
@@ -77,7 +90,10 @@ export function InteractiveBoard({
     let wordBuffer: Tile[] = [];
 
     const trimTrailingSpaces = () => {
-      while (currentRow.length > 0 && currentRow[currentRow.length - 1].char === ' ') {
+      while (
+        currentRow.length > 0 &&
+        currentRow[currentRow.length - 1].char === " "
+      ) {
         currentRow.pop();
         currentCount--;
       }
@@ -86,7 +102,10 @@ export function InteractiveBoard({
     const pushWordBuffer = () => {
       if (wordBuffer.length === 0) return;
 
-      if (currentCount > 0 && currentCount + wordBuffer.length > MAX_COLS_PER_ROW) {
+      if (
+        currentCount > 0 &&
+        currentCount + wordBuffer.length > MAX_COLS_PER_ROW
+      ) {
         trimTrailingSpaces();
         rows.push(currentRow);
         currentRow = [];
@@ -95,7 +114,10 @@ export function InteractiveBoard({
 
       while (wordBuffer.length > 0) {
         const available = MAX_COLS_PER_ROW - currentCount;
-        const take = available <= 0 ? wordBuffer.length : Math.min(wordBuffer.length, available);
+        const take =
+          available <= 0
+            ? wordBuffer.length
+            : Math.min(wordBuffer.length, available);
         const chunk = wordBuffer.splice(0, take);
         currentRow.push(...chunk);
         currentCount += chunk.length;
@@ -111,7 +133,7 @@ export function InteractiveBoard({
 
     for (let index = 0; index < phrase.length; index++) {
       const char = phrase[index];
-      if (char === ' ') {
+      if (char === " ") {
         pushWordBuffer();
         if (currentCount === 0) {
           continue;
@@ -122,7 +144,7 @@ export function InteractiveBoard({
           currentRow = [];
           currentCount = 0;
         }
-        currentRow.push({ char: ' ', index });
+        currentRow.push({ char: " ", index });
         currentCount += 1;
       } else {
         wordBuffer.push({ char, index });
@@ -145,12 +167,14 @@ export function InteractiveBoard({
   // Update visible positions when revealed positions change
   React.useEffect(() => {
     // Animate letters appearing one by one with delay
-    const newPositions = revealedPositions.filter(p => !visiblePositions.includes(p));
+    const newPositions = revealedPositions.filter(
+      (p) => !visiblePositions.includes(p),
+    );
 
     newPositions.forEach((pos, idx) => {
       setTimeout(() => {
-        setVisiblePositions(prev =>
-          prev.includes(pos) ? prev : [...prev, pos]
+        setVisiblePositions((prev) =>
+          prev.includes(pos) ? prev : [...prev, pos],
         );
       }, idx * 100);
     });
@@ -162,24 +186,27 @@ export function InteractiveBoard({
   }, [puzzleId, phrase]);
 
   // Handle letter tap - speak the phonetic sound
-  const handleLetterTap = useCallback((char: string, globalIndex: number) => {
-    if (!readAloudEnabled) return;
-    if (!visiblePositions.includes(globalIndex)) return;
+  const handleLetterTap = useCallback(
+    (char: string, globalIndex: number) => {
+      if (!readAloudEnabled) return;
+      if (!visiblePositions.includes(globalIndex)) return;
 
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    const wordInfo = wordLookup.get(globalIndex);
-    if (!wordInfo) return;
+      const wordInfo = wordLookup.get(globalIndex);
+      if (!wordInfo) return;
 
-    const posInWord = globalIndex - wordInfo.startIndex;
-    const sound = getLetterSound(char, wordInfo.word, posInWord);
+      const posInWord = globalIndex - wordInfo.startIndex;
+      const sound = getLetterSound(char, wordInfo.word, posInWord);
 
-    if (sound === 'silent') {
-      speak(`Silent ${char}`, { rate: 0.85 });
-    } else {
-      speak(sound, { rate: 0.85 });
-    }
-  }, [readAloudEnabled, visiblePositions, wordLookup]);
+      if (sound === "silent") {
+        speak(`Silent ${char}`, { rate: 0.85 });
+      } else {
+        speak(sound, { rate: 0.85 });
+      }
+    },
+    [readAloudEnabled, visiblePositions, wordLookup],
+  );
 
   // Calculate tile size based on board width
   const handleBoardLayout = useCallback((event: LayoutChangeEvent) => {
@@ -189,7 +216,10 @@ export function InteractiveBoard({
     const availableWidth = width - padding - gap;
     const tileWidth = Math.floor(availableWidth / MAX_COLS_PER_ROW);
     const tileHeight = Math.floor(tileWidth * 1.3);
-    setTileSize({ width: Math.max(24, tileWidth), height: Math.max(32, tileHeight) });
+    setTileSize({
+      width: Math.max(24, tileWidth),
+      height: Math.max(32, tileHeight),
+    });
   }, []);
 
   const renderLetter = (char: string, globalIndex: number) => {
@@ -197,8 +227,13 @@ export function InteractiveBoard({
     const isLetter = /[A-Z]/.test(char);
     const isPunctuation = /[^A-Z ]/.test(char);
 
-    if (char === ' ') {
-      return <View key={globalIndex} style={[styles.spaceTile, { width: tileSize.width * 0.6 }]} />;
+    if (char === " ") {
+      return (
+        <View
+          key={globalIndex}
+          style={[styles.spaceTile, { width: tileSize.width * 0.6 }]}
+        />
+      );
     }
 
     const tileStyle = [
@@ -230,9 +265,7 @@ export function InteractiveBoard({
             entering={ZoomIn.duration(300)}
             style={styles.letterContainer}
           >
-            <Animated.View
-              entering={FadeIn.delay(100).duration(200)}
-            >
+            <Animated.View entering={FadeIn.delay(100).duration(200)}>
               <Text style={styles.letter}>{char}</Text>
             </Animated.View>
           </Animated.View>
@@ -250,15 +283,13 @@ export function InteractiveBoard({
       <View style={styles.board}>
         {boardRows.map((row, rowIdx) => (
           <View key={`${puzzleId}-row-${rowIdx}`} style={styles.row}>
-            {row.map(tile => renderLetter(tile.char, tile.index))}
+            {row.map((tile) => renderLetter(tile.char, tile.index))}
           </View>
         ))}
       </View>
 
       <View style={styles.categoryBadge}>
-        <Text style={styles.categoryText}>
-          {category.replace(/_/g, ' ')}
-        </Text>
+        <Text style={styles.categoryText}>{category.replace(/_/g, " ")}</Text>
       </View>
     </Animated.View>
   );
@@ -266,70 +297,74 @@ export function InteractiveBoard({
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing[2],
-    backgroundColor: '#1a365d', // game board blue
-    borderRadius: borderRadius.lg,
-    borderWidth: 3,
-    borderColor: colors.yellow[400],
-    width: '100%',
-    ...shadows.xl,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: spacing[3],
+    backgroundColor: "#1a365d", // game board blue
+    borderRadius: borderRadius.xl,
+    borderWidth: 2,
+    borderColor: colors.gold[500],
+    width: "100%",
+    ...shadows.lg,
   },
   board: {
     gap: spacing[1],
     marginTop: spacing[2],
-    alignItems: 'center',
+    alignItems: "center",
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: spacing[1],
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   tile: {
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: colors.slate[400],
+    borderRadius: borderRadius.sm,
+    alignItems: "center",
+    justifyContent: "center",
     ...shadows.sm,
   },
   spaceTile: {
     height: 36,
   },
   letterContainer: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.white,
   },
   letter: {
-    fontSize: layout.isSmallScreen ? typography.sizes.lg : typography.sizes['2xl'],
+    fontSize: layout.isSmallScreen
+      ? typography.sizes.lg
+      : typography.sizes["2xl"],
     fontWeight: typography.weights.bold,
     color: colors.black,
   },
   punctuation: {
-    fontSize: layout.isSmallScreen ? typography.sizes.lg : typography.sizes['2xl'],
+    fontSize: layout.isSmallScreen
+      ? typography.sizes.lg
+      : typography.sizes["2xl"],
     fontWeight: typography.weights.bold,
     color: colors.black,
   },
   categoryBadge: {
     marginTop: spacing[2],
-    backgroundColor: '#1e3a5f',
+    backgroundColor: colors.slate[800],
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: colors.white,
+    borderColor: colors.slate[600],
   },
   categoryText: {
     color: colors.white,
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.xs,
     letterSpacing: 2,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
 });

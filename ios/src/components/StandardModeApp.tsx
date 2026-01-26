@@ -718,7 +718,9 @@ export function StandardModeApp(): React.JSX.Element {
   return (
     <SafeAreaView style={styles.safeArea}>
       <LinearGradient
-        colors={[colors.slate[900], "#1a1a2e", colors.slate[800]]}
+        colors={[colors.gradient.start, colors.gradient.middle]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         style={styles.container}
       >
         {/* Header */}
@@ -807,80 +809,65 @@ export function StandardModeApp(): React.JSX.Element {
                 style={styles.navCard}
                 onPress={() => startMode("MAIN")}
               >
-                <LinearGradient
-                  colors={[colors.green[500], colors.green[600]]}
-                  style={styles.navCardGradient}
-                >
-                  <Play size={40} color={colors.white} />
+                <View style={styles.navCardContent}>
+                  <Play size={40} color={colors.gold[500]} />
                   <Text style={styles.navCardTitle}>Standard Game</Text>
                   <Text style={styles.navCardDesc}>
                     Spin the wheel, guess letters, solve the puzzle
                   </Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.navCard}
                 onPress={() => startMode("TOSSUP")}
               >
-                <LinearGradient
-                  colors={[colors.orange[500], colors.orange[600]]}
-                  style={styles.navCardGradient}
-                >
-                  <Zap size={40} color={colors.white} />
+                <View style={styles.navCardContent}>
+                  <Zap size={40} color={colors.gold[500]} />
                   <Text style={styles.navCardTitle}>Toss-Up</Text>
                   <Text style={styles.navCardDesc}>
                     Letters reveal one by one — buzz in to solve!
                   </Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.navCard}
                 onPress={() => startMode("BONUS")}
               >
-                <LinearGradient
-                  colors={[colors.purple[500], colors.purple[600]]}
-                  style={styles.navCardGradient}
-                >
-                  <Trophy size={40} color={colors.white} />
+                <View style={styles.navCardContent}>
+                  <Trophy size={40} color={colors.gold[500]} />
                   <Text style={styles.navCardTitle}>Bonus Round</Text>
                   <Text style={styles.navCardDesc}>
                     Pick your letters, solve before time runs out
                   </Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.navCard}
                 onPress={() => setActiveScreen("packBrowser")}
               >
-                <LinearGradient
-                  colors={[colors.blue[500], colors.blue[600]]}
-                  style={styles.navCardGradient}
-                >
-                  <BookOpen size={40} color={colors.white} />
+                <View style={styles.navCardContent}>
+                  <BookOpen size={40} color={colors.blue[400]} />
                   <Text style={styles.navCardTitle}>Puzzle Packs</Text>
                   <Text style={styles.navCardDesc}>
                     Browse and select puzzle packs
                   </Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.navCard}
                 onPress={() => setActiveScreen("strategy")}
               >
-                <LinearGradient
-                  colors={[colors.slate[600], colors.slate[700]]}
-                  style={styles.navCardGradient}
-                >
-                  <BarChart3 size={40} color={colors.white} />
+                <View style={styles.navCardContent}>
+                  <BarChart3 size={40} color={colors.blue[400]} />
                   <Text style={styles.navCardTitle}>Strategy</Text>
                   <Text style={styles.navCardDesc}>
                     Analyze letter frequencies and patterns
                   </Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -903,16 +890,13 @@ export function StandardModeApp(): React.JSX.Element {
                 style={styles.navCard}
                 onPress={startShuffleAll}
               >
-                <LinearGradient
-                  colors={[colors.yellow[500], colors.orange[500]]}
-                  style={styles.navCardGradient}
-                >
-                  <Shuffle size={32} color={colors.white} />
+                <View style={styles.navCardContent}>
+                  <Shuffle size={32} color={colors.gold[500]} />
                   <Text style={styles.navCardTitle}>Shuffle All</Text>
                   <Text style={styles.navCardDesc}>
                     Random puzzle from all packs
                   </Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
 
               {/* Pack cards */}
@@ -922,25 +906,25 @@ export function StandardModeApp(): React.JSX.Element {
                   selectedRoundMode,
                 ).length;
                 if (eligibleCount === 0) return null;
+                const isActive = activePack.id === pack.id;
                 return (
                   <TouchableOpacity
                     key={pack.id}
                     style={[
                       styles.navCard,
-                      activePack.id === pack.id && styles.packSelectActive,
+                      isActive && styles.packSelectActive,
                     ]}
                     onPress={() => startGameWithPack(pack)}
                   >
-                    <LinearGradient
-                      colors={[colors.slate[600], colors.slate[700]]}
-                      style={styles.navCardGradient}
-                    >
-                      <BookOpen size={24} color={colors.slate[400]} />
-                      <Text style={styles.navCardTitle}>{pack.name}</Text>
+                    <View style={styles.navCardContent}>
+                      <BookOpen size={24} color={isActive ? colors.gold[500] : colors.slate[400]} />
+                      <Text style={[styles.navCardTitle, isActive && styles.navCardTitleActive]}>
+                        {pack.name}
+                      </Text>
                       <Text style={styles.navCardDesc}>
                         {eligibleCount} puzzle{eligibleCount !== 1 ? "s" : ""}
                       </Text>
-                    </LinearGradient>
+                    </View>
                   </TouchableOpacity>
                 );
               })}
@@ -1009,13 +993,10 @@ export function StandardModeApp(): React.JSX.Element {
                 )}
                 {celebrationReady && (
                   <TouchableOpacity onPress={nextRound}>
-                    <LinearGradient
-                      colors={[colors.green[500], colors.green[600]]}
-                      style={styles.nextButton}
-                    >
-                      <RotateCcw size={20} color={colors.white} />
+                    <View style={styles.nextButton}>
+                      <RotateCcw size={20} color={colors.slate[900]} />
                       <Text style={styles.nextButtonText}>Next Puzzle</Text>
-                    </LinearGradient>
+                    </View>
                   </TouchableOpacity>
                 )}
               </View>
@@ -1032,13 +1013,10 @@ export function StandardModeApp(): React.JSX.Element {
                 {/* Buzz In Button */}
                 {state.turnState === "TOSSUP_REVEALING" && (
                   <TouchableOpacity onPress={handleBuzzIn}>
-                    <LinearGradient
-                      colors={[colors.orange[500], colors.orange[600]]}
-                      style={styles.buzzInButton}
-                    >
-                      <Zap size={28} color={colors.white} />
+                    <View style={styles.buzzInButton}>
+                      <Zap size={28} color={colors.slate[900]} />
                       <Text style={styles.buzzInButtonText}>BUZZ IN</Text>
-                    </LinearGradient>
+                    </View>
                   </TouchableOpacity>
                 )}
 
@@ -1093,13 +1071,11 @@ export function StandardModeApp(): React.JSX.Element {
                   onPress={handleBonusConfirm}
                   disabled={!bonusPicksReady}
                 >
-                  <LinearGradient
-                    colors={
-                      bonusPicksReady
-                        ? [colors.purple[500], colors.purple[600]]
-                        : [colors.slate[600], colors.slate[700]]
-                    }
-                    style={styles.bonusConfirmButton}
+                  <View
+                    style={[
+                      styles.bonusConfirmButton,
+                      !bonusPicksReady && styles.bonusConfirmButtonDisabled,
+                    ]}
                   >
                     <Text
                       style={[
@@ -1109,7 +1085,7 @@ export function StandardModeApp(): React.JSX.Element {
                     >
                       CONFIRM LETTERS
                     </Text>
-                  </LinearGradient>
+                  </View>
                 </TouchableOpacity>
               </View>
             ) : isBonusSolving ? (
@@ -1151,12 +1127,9 @@ export function StandardModeApp(): React.JSX.Element {
                     returnKeyType="go"
                   />
                   <TouchableOpacity onPress={handleBonusSolve}>
-                    <LinearGradient
-                      colors={[colors.purple[500], colors.purple[600]]}
-                      style={styles.bonusSolveButton}
-                    >
+                    <View style={styles.bonusSolveButton}>
                       <Text style={styles.bonusSolveButtonText}>SOLVE</Text>
-                    </LinearGradient>
+                    </View>
                   </TouchableOpacity>
                 </Animated.View>
               </View>
@@ -1183,25 +1156,20 @@ export function StandardModeApp(): React.JSX.Element {
                 {state.turnState === "IDLE" && (
                   <View style={styles.actionButtons}>
                     <TouchableOpacity onPress={() => setShowSolveModal(true)}>
-                      <LinearGradient
-                        colors={[colors.blue[500], colors.blue[600]]}
-                        style={styles.actionButton}
-                      >
+                      <View style={styles.actionButton}>
                         <Text style={styles.actionButtonText}>SOLVE</Text>
-                      </LinearGradient>
+                      </View>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                       onPress={handleBuyVowel}
                       disabled={!canBuyVowel}
                     >
-                      <LinearGradient
-                        colors={
-                          canBuyVowel
-                            ? [colors.purple[500], colors.purple[600]]
-                            : [colors.slate[600], colors.slate[700]]
-                        }
-                        style={styles.actionButton}
+                      <View
+                        style={[
+                          styles.actionButton,
+                          !canBuyVowel && styles.actionButtonDisabled,
+                        ]}
                       >
                         <Text
                           style={[
@@ -1211,7 +1179,7 @@ export function StandardModeApp(): React.JSX.Element {
                         >
                           {vowelsLeft ? `VOWEL $${VOWEL_COST}` : "NO VOWELS"}
                         </Text>
-                      </LinearGradient>
+                      </View>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -1245,14 +1213,11 @@ export function StandardModeApp(): React.JSX.Element {
                   </View>
                   {state.turnState === "GUESSING_CONSONANT" && canBuyVowel && (
                     <TouchableOpacity onPress={handleBuyVowel}>
-                      <LinearGradient
-                        colors={[colors.purple[500], colors.purple[600]]}
-                        style={styles.bannerVowelButton}
-                      >
+                      <View style={styles.bannerVowelButton}>
                         <Text style={styles.bannerVowelButtonText}>
                           BUY VOWEL ${VOWEL_COST}
                         </Text>
-                      </LinearGradient>
+                      </View>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -1323,12 +1288,9 @@ export function StandardModeApp(): React.JSX.Element {
               <Text style={styles.cancelButton}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleSolve}>
-              <LinearGradient
-                colors={[colors.blue[500], colors.blue[600]]}
-                style={styles.solveButton}
-              >
+              <View style={styles.solveButton}>
                 <Text style={styles.solveButtonText}>SOLVE</Text>
-              </LinearGradient>
+              </View>
             </TouchableOpacity>
           </View>
         </Modal>
@@ -1361,12 +1323,9 @@ export function StandardModeApp(): React.JSX.Element {
               <Text style={styles.cancelButton}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleTossUpSolve}>
-              <LinearGradient
-                colors={[colors.orange[500], colors.orange[600]]}
-                style={styles.solveButton}
-              >
+              <View style={styles.solveButton}>
                 <Text style={styles.solveButtonText}>SOLVE</Text>
-              </LinearGradient>
+              </View>
             </TouchableOpacity>
           </View>
         </Modal>
@@ -1451,7 +1410,7 @@ export function StandardModeApp(): React.JSX.Element {
                 onValueChange={setHideGuessedLetters}
                 trackColor={{
                   false: colors.slate[600],
-                  true: colors.green[500],
+                  true: colors.gold[500],
                 }}
                 thumbColor={colors.white}
               />
@@ -1467,7 +1426,7 @@ export function StandardModeApp(): React.JSX.Element {
               }}
               style={styles.resetButton}
             >
-              <RotateCcw size={16} color={colors.yellow[300]} />
+              <RotateCcw size={16} color={colors.gold[500]} />
               <Text style={styles.resetButtonText}>Reset Round</Text>
             </TouchableOpacity>
 
@@ -1482,7 +1441,7 @@ export function StandardModeApp(): React.JSX.Element {
               }}
               style={styles.resetButton}
             >
-              <RotateCcw size={16} color={colors.yellow[300]} />
+              <RotateCcw size={16} color={colors.gold[500]} />
               <Text style={styles.resetButtonText}>Random Puzzle</Text>
             </TouchableOpacity>
 
@@ -1543,7 +1502,7 @@ const styles = StyleSheet.create({
     padding: spacing[1],
   },
   modeText: {
-    color: colors.yellow[400],
+    color: colors.gold[500],
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.xs,
     letterSpacing: 1,
@@ -1561,7 +1520,7 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.lg,
   },
   totalValue: {
-    color: colors.yellow[400],
+    color: colors.gold[500],
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.lg,
   },
@@ -1590,7 +1549,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     gap: spacing[1],
     marginBottom: spacing[2],
-    backgroundColor: "rgba(30, 41, 59, 0.8)",
+    backgroundColor: colors.slate[800],
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[1],
     borderRadius: borderRadius.full,
@@ -1618,7 +1577,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
   },
   winningsText: {
-    color: colors.yellow[400],
+    color: colors.gold[500],
     fontSize: typography.sizes.xl,
     fontWeight: typography.weights.bold,
   },
@@ -1629,10 +1588,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[6],
     paddingVertical: spacing[3],
     borderRadius: borderRadius["2xl"],
+    backgroundColor: colors.gold[500],
     ...shadows.lg,
   },
   nextButtonText: {
-    color: colors.white,
+    color: colors.slate[900],
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.lg,
   },
@@ -1661,7 +1621,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   keyboardBannerText: {
-    color: colors.yellow[300],
+    color: colors.gold[500],
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.sm,
     letterSpacing: 1,
@@ -1675,9 +1635,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
     borderRadius: borderRadius.lg,
+    backgroundColor: colors.gold[500],
   },
   bannerVowelButtonText: {
-    color: colors.white,
+    color: colors.slate[900],
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.xs,
   },
@@ -1693,7 +1654,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.slate[700],
   },
   bottomStatusText: {
-    color: colors.yellow[300],
+    color: colors.gold[500],
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.lg,
     letterSpacing: 2,
@@ -1709,10 +1670,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
     borderRadius: borderRadius.lg,
+    backgroundColor: colors.gold[500],
     ...shadows.md,
   },
+  actionButtonDisabled: {
+    backgroundColor: colors.slate[700],
+    opacity: 0.5,
+  },
   actionButtonText: {
-    color: colors.white,
+    color: colors.slate[900],
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.sm,
   },
@@ -1757,9 +1723,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[6],
     paddingVertical: spacing[2],
     borderRadius: borderRadius.base,
+    backgroundColor: colors.gold[500],
   },
   solveButtonText: {
-    color: colors.white,
+    color: colors.slate[900],
     fontWeight: typography.weights.bold,
   },
   settingsContent: {
@@ -1790,7 +1757,7 @@ const styles = StyleSheet.create({
     marginTop: spacing[4],
   },
   resetButtonText: {
-    color: colors.yellow[300],
+    color: colors.gold[500],
     fontWeight: typography.weights.bold,
   },
   browseButton: {
@@ -1847,7 +1814,7 @@ const styles = StyleSheet.create({
     padding: spacing[1],
   },
   headerTitle: {
-    color: colors.yellow[400],
+    color: colors.gold[500],
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.xs,
     letterSpacing: 1,
@@ -1862,7 +1829,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   homeTitle: {
-    color: colors.yellow[400],
+    color: colors.gold[500],
     fontSize: typography.sizes["4xl"],
     fontWeight: typography.weights.bold,
     letterSpacing: 2,
@@ -1879,10 +1846,12 @@ const styles = StyleSheet.create({
   },
   navCard: {
     borderRadius: borderRadius.xl,
-    overflow: "hidden",
-    ...shadows.lg,
+    backgroundColor: colors.slate[800],
+    borderWidth: 1,
+    borderColor: colors.slate[700],
+    ...shadows.md,
   },
-  navCardGradient: {
+  navCardContent: {
     padding: spacing[5],
     alignItems: "center",
     gap: spacing[2],
@@ -1906,7 +1875,11 @@ const styles = StyleSheet.create({
   },
   packSelectActive: {
     borderWidth: 2,
-    borderColor: colors.yellow[500],
+    borderColor: colors.gold[500],
+    backgroundColor: `rgba(212, 168, 67, 0.1)`,
+  },
+  navCardTitleActive: {
+    color: colors.gold[500],
   },
   placeholderScreen: {
     flex: 1,
@@ -1939,7 +1912,7 @@ const styles = StyleSheet.create({
     gap: spacing[1],
   },
   tossUpBannerTitle: {
-    color: colors.orange[500],
+    color: colors.gold[500],
     fontSize: typography.sizes.xl,
     fontWeight: typography.weights.bold,
     letterSpacing: 3,
@@ -1955,10 +1928,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[8],
     paddingVertical: spacing[4],
     borderRadius: borderRadius["2xl"],
+    backgroundColor: colors.gold[500],
     ...shadows.lg,
   },
   buzzInButtonText: {
-    color: colors.white,
+    color: colors.slate[900],
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes["2xl"],
     letterSpacing: 2,
@@ -1982,7 +1956,7 @@ const styles = StyleSheet.create({
     gap: spacing[1],
   },
   bonusBannerTitle: {
-    color: colors.purple[500],
+    color: colors.gold[500],
     fontSize: typography.sizes.xl,
     fontWeight: typography.weights.bold,
     letterSpacing: 3,
@@ -2008,7 +1982,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.medium,
   },
   bonusPickStatusHint: {
-    color: colors.purple[500],
+    color: colors.gold[500],
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     marginTop: spacing[1],
@@ -2018,10 +1992,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[3],
     marginHorizontal: spacing[4],
     borderRadius: borderRadius.lg,
+    backgroundColor: colors.gold[500],
     ...shadows.md,
   },
+  bonusConfirmButtonDisabled: {
+    backgroundColor: colors.slate[700],
+    opacity: 0.5,
+  },
   bonusConfirmButtonText: {
-    color: colors.white,
+    color: colors.slate[900],
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.lg,
     letterSpacing: 1,
@@ -2073,10 +2052,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[5],
     paddingVertical: spacing[3],
     borderRadius: borderRadius.base,
+    backgroundColor: colors.gold[500],
     ...shadows.md,
   },
   bonusSolveButtonText: {
-    color: colors.white,
+    color: colors.slate[900],
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.lg,
   },

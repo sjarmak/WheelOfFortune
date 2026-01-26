@@ -115,8 +115,7 @@ function Key({
         activeOpacity={0.8}
         style={[styles.keyBase, keySize, animatedStyle]}
       >
-        <LinearGradient
-          colors={[colors.yellow[300], colors.orange[500]]}
+        <View
           style={[styles.keyGradient, keySize, styles.highlighted]}
         >
           <Text
@@ -128,7 +127,7 @@ function Key({
           >
             {char}
           </Text>
-        </LinearGradient>
+        </View>
       </AnimatedTouchable>
     );
   }
@@ -290,24 +289,31 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   keyAvailable: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.slate[700],
+    borderWidth: 1,
+    borderColor: colors.slate[600],
     ...shadows.sm,
   },
   keyGuessed: {
-    backgroundColor: colors.slate[700],
-    opacity: 0.5,
+    backgroundColor: colors.slate[800],
+    opacity: 0.4,
+    borderWidth: 1,
+    borderColor: colors.slate[700],
   },
   keyDisabled: {
-    backgroundColor: colors.slate[800],
-    opacity: 0.5,
+    backgroundColor: colors.slate[900],
+    opacity: 0.3,
+    borderWidth: 1,
+    borderColor: colors.slate[800],
   },
   keySelected: {
-    backgroundColor: colors.green[500],
+    backgroundColor: colors.gold[500],
     ...shadows.md,
   },
   highlighted: {
+    backgroundColor: colors.gold[500],
     borderWidth: 2,
-    borderColor: colors.yellow[200],
+    borderColor: colors.gold[400],
     ...shadows.lg,
   },
   keyText: {
@@ -318,7 +324,7 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.lg,
   },
   keyTextAvailable: {
-    color: colors.slate[900],
+    color: colors.white,
   },
   keyTextGuessed: {
     color: colors.slate[500],
@@ -331,6 +337,6 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
   },
   highlightedText: {
-    color: colors.black,
+    color: colors.slate[900],
   },
 });
