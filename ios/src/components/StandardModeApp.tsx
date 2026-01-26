@@ -27,6 +27,7 @@ import { InteractiveBoard } from './InteractiveBoard';
 import { StandardWheel } from './StandardWheel';
 import { Keyboard } from './Keyboard';
 import { Modal } from './Modal';
+import { PackBrowser } from './PackBrowser';
 import { colors, typography, spacing, borderRadius, shadows, layout } from '../styles/theme';
 
 const STORAGE_KEY = 'wof_standard_state';
@@ -410,11 +411,15 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
         )}
 
         {activeScreen === 'packBrowser' && (
-          <View style={styles.placeholderScreen}>
-            <BookOpen size={48} color={colors.slate[500]} />
-            <Text style={styles.placeholderTitle}>Puzzle Packs</Text>
-            <Text style={styles.placeholderDesc}>Coming soon</Text>
-          </View>
+          <PackBrowser
+            packs={ALL_PACKS}
+            activePackId={activePack.id}
+            onSelectPack={(pack) => {
+              setActivePack(pack);
+              nextRound();
+              setActiveScreen('game');
+            }}
+          />
         )}
 
         {activeScreen === 'strategy' && (
