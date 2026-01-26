@@ -4,36 +4,45 @@
  * Virtual keyboard for letter selection.
  */
 
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
 import Animated, {
   useAnimatedStyle,
   withRepeat,
   withTiming,
   useSharedValue,
   withSequence,
-} from 'react-native-reanimated';
-import { colors, typography, spacing, borderRadius, shadows, layout } from '../styles/theme';
+} from "react-native-reanimated";
+import {
+  colors,
+  typography,
+  spacing,
+  borderRadius,
+  shadows,
+  layout,
+} from "../styles/theme";
 
 interface KeyboardProps {
   guessedLetters: string[];
   onGuess: (letter: string) => void;
+  onAlreadyCalled?: (letter: string) => void;
   disabled: boolean;
   vowelsOnly?: boolean;
   consonantsOnly?: boolean;
   highlightVowels?: boolean;
+  hideGuessedLetters?: boolean;
   large?: boolean;
 }
 
 const ROWS = [
-  ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-  ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
+  ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+  ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+  ["Z", "X", "C", "V", "B", "N", "M"],
 ];
 
-const VOWELS = ['A', 'E', 'I', 'O', 'U'];
+const VOWELS = ["A", "E", "I", "O", "U"];
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
@@ -65,10 +74,10 @@ function Key({
       scale.value = withRepeat(
         withSequence(
           withTiming(1.05, { duration: 500 }),
-          withTiming(1, { duration: 500 })
+          withTiming(1, { duration: 500 }),
         ),
         -1,
-        true
+        true,
       );
     } else {
       scale.value = withTiming(1, { duration: 150 });
@@ -87,8 +96,14 @@ function Key({
   };
 
   const keySize = large
-    ? { width: layout.isSmallScreen ? 32 : 40, height: layout.isSmallScreen ? 40 : 48 }
-    : { width: layout.isSmallScreen ? 28 : 32, height: layout.isSmallScreen ? 36 : 42 };
+    ? {
+        width: layout.isSmallScreen ? 32 : 40,
+        height: layout.isSmallScreen ? 40 : 48,
+      }
+    : {
+        width: layout.isSmallScreen ? 28 : 32,
+        height: layout.isSmallScreen ? 36 : 42,
+      };
 
   if (vowelHighlight) {
     return (
@@ -101,7 +116,13 @@ function Key({
           colors={[colors.yellow[300], colors.orange[500]]}
           style={[styles.keyGradient, keySize, styles.highlighted]}
         >
-          <Text style={[styles.keyText, large && styles.keyTextLarge, styles.highlightedText]}>
+          <Text
+            style={[
+              styles.keyText,
+              large && styles.keyTextLarge,
+              styles.highlightedText,
+            ]}
+          >
             {char}
           </Text>
         </LinearGradient>
@@ -117,7 +138,11 @@ function Key({
       style={[
         styles.keyBase,
         keySize,
-        isGuessed ? styles.keyGuessed : isAllowed ? styles.keyAvailable : styles.keyDisabled,
+        isGuessed
+          ? styles.keyGuessed
+          : isAllowed
+            ? styles.keyAvailable
+            : styles.keyDisabled,
         animatedStyle,
       ]}
     >
@@ -125,7 +150,11 @@ function Key({
         style={[
           styles.keyText,
           large && styles.keyTextLarge,
-          isGuessed ? styles.keyTextGuessed : isAllowed ? styles.keyTextAvailable : styles.keyTextDisabled,
+          isGuessed
+            ? styles.keyTextGuessed
+            : isAllowed
+              ? styles.keyTextAvailable
+              : styles.keyTextDisabled,
         ]}
       >
         {char}
@@ -137,14 +166,21 @@ function Key({
 export function Keyboard({
   guessedLetters,
   onGuess,
+  onAlreadyCalled,
   disabled,
   vowelsOnly = false,
   consonantsOnly = false,
   highlightVowels = false,
+  hideGuessedLetters = false,
   large = false,
 }: KeyboardProps): React.JSX.Element {
   return (
-    <View style={[styles.container, large ? styles.containerLarge : styles.containerCompact]}>
+    <View
+      style={[
+        styles.container,
+        large ? styles.containerLarge : styles.containerCompact,
+      ]}
+    >
       {ROWS.map((row, i) => (
         <View
           key={i}
@@ -154,22 +190,35 @@ export function Keyboard({
             const isGuessed = guessedLetters.includes(char);
             const isVowel = VOWELS.includes(char);
 
-            let isAllowed = !isGuessed && !disabled;
+            // In hide mode, guessed letters look available but trigger onAlreadyCalled
+            const visuallyGuessed = hideGuessedLetters ? false : isGuessed;
+
+            let isAllowed = !disabled;
+            if (!hideGuessedLetters && isGuessed) isAllowed = false;
             if (vowelsOnly && !isVowel) isAllowed = false;
             if (consonantsOnly && isVowel) isAllowed = false;
 
-            const vowelHighlight = highlightVowels && isVowel && !isGuessed && !disabled;
+            const vowelHighlight =
+              highlightVowels && isVowel && !isGuessed && !disabled;
+
+            const handlePress = () => {
+              if (hideGuessedLetters && isGuessed && onAlreadyCalled) {
+                onAlreadyCalled(char);
+              } else {
+                onGuess(char);
+              }
+            };
 
             return (
               <Key
                 key={char}
                 char={char}
-                isGuessed={isGuessed}
+                isGuessed={visuallyGuessed}
                 isVowel={isVowel}
                 isAllowed={isAllowed}
                 vowelHighlight={vowelHighlight}
                 large={large}
-                onPress={() => onGuess(char)}
+                onPress={handlePress}
               />
             );
           })}
@@ -181,7 +230,7 @@ export function Keyboard({
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    width: "100%",
     paddingHorizontal: spacing[2],
     paddingVertical: spacing[1],
   },
@@ -192,8 +241,8 @@ const styles = StyleSheet.create({
     gap: spacing[1],
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
   },
   rowLarge: {
     gap: spacing[2],
@@ -203,13 +252,13 @@ const styles = StyleSheet.create({
   },
   keyBase: {
     borderRadius: borderRadius.base,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   keyGradient: {
     borderRadius: borderRadius.base,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   keyAvailable: {
     backgroundColor: colors.white,

@@ -16,6 +16,7 @@ import {
   View,
   Text,
   StyleSheet,
+  Switch,
   TouchableOpacity,
   TextInput,
   Dimensions,
@@ -93,6 +94,7 @@ export function StandardModeApp({
   const solveInputRef = useRef<TextInput>(null);
   const confettiRef = useRef<ConfettiCannon>(null);
   const [puzzleIndex, setPuzzleIndex] = useState(0);
+  const [hideGuessedLetters, setHideGuessedLetters] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationReady, setCelebrationReady] = useState(false);
   const prevTurnStateRef = useRef(state.turnState);
@@ -321,7 +323,12 @@ export function StandardModeApp({
           )}
 
           {activeScreen !== "home" && (
-            <Text style={styles.headerTitle}>WHEEL PRACTICE</Text>
+            <TouchableOpacity
+              onPress={() => setActiveScreen("home")}
+              style={styles.headerTitleButton}
+            >
+              <Text style={styles.headerTitle}>WHEEL PRACTICE</Text>
+            </TouchableOpacity>
           )}
 
           {activeScreen === "game" ? (
@@ -549,9 +556,13 @@ export function StandardModeApp({
                     <Keyboard
                       guessedLetters={state.guessedLetters}
                       onGuess={handleGuess}
+                      onAlreadyCalled={(letter) =>
+                        showToast(`${letter} — Already called!`)
+                      }
                       disabled={!canGuess}
                       vowelsOnly={state.turnState === "BUYING_VOWEL"}
                       consonantsOnly={state.turnState === "GUESSING_CONSONANT"}
+                      hideGuessedLetters={hideGuessedLetters}
                     />
                   </View>
                 )}
@@ -677,6 +688,28 @@ export function StandardModeApp({
               <Text style={styles.statLabel}>Pack</Text>
               <Text style={styles.statValue}>{activePack.name}</Text>
             </View>
+
+            <View style={styles.settingsDivider} />
+
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleInfo}>
+                <Text style={styles.toggleLabel}>Hide Called Letters</Text>
+                <Text style={styles.toggleDesc}>
+                  Letters stay visible after guessing — test your memory
+                </Text>
+              </View>
+              <Switch
+                value={hideGuessedLetters}
+                onValueChange={setHideGuessedLetters}
+                trackColor={{
+                  false: colors.slate[600],
+                  true: colors.green[500],
+                }}
+                thumbColor={colors.white}
+              />
+            </View>
+
+            <View style={styles.settingsDivider} />
 
             <TouchableOpacity
               onPress={() => {
@@ -864,6 +897,8 @@ const styles = StyleSheet.create({
     width: "95%",
     alignSelf: "center",
     maxWidth: 400,
+    flexShrink: 1,
+    maxHeight: 260,
   },
   actionButtons: {
     flexDirection: "row",
@@ -972,6 +1007,25 @@ const styles = StyleSheet.create({
     color: colors.blue[400],
     fontWeight: typography.weights.bold,
   },
+  toggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing[3],
+  },
+  toggleInfo: {
+    flex: 1,
+  },
+  toggleLabel: {
+    color: colors.white,
+    fontWeight: typography.weights.bold,
+    fontSize: typography.sizes.sm,
+  },
+  toggleDesc: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.xs,
+    marginTop: spacing[0.5],
+  },
   settingsDivider: {
     height: 1,
     backgroundColor: colors.slate[700],
@@ -989,6 +1043,9 @@ const styles = StyleSheet.create({
   resetAllText: {
     color: colors.red[400],
     fontWeight: typography.weights.bold,
+  },
+  headerTitleButton: {
+    padding: spacing[1],
   },
   headerTitle: {
     color: colors.yellow[400],

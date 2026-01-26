@@ -4,22 +4,30 @@
  * Uses the full 24-wedge wheel with BANKRUPT/LOSE_TURN.
  */
 
-import React, { useState, useCallback, useRef } from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
-import Svg, { G, Path, Circle, Defs, Text as SvgText, TextPath, TSpan } from 'react-native-svg';
+import React, { useState, useCallback, useRef } from "react";
+import { View, StyleSheet, Pressable } from "react-native";
+import Svg, {
+  G,
+  Path,
+  Circle,
+  Defs,
+  Text as SvgText,
+  TextPath,
+  TSpan,
+} from "react-native-svg";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   Easing,
   runOnJS,
-} from 'react-native-reanimated';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import * as Haptics from 'expo-haptics';
-import { WHEEL_CONFIG, WheelWedge } from '../engine/types';
-import { SeededRNG } from '../engine/rng';
-import { calculateFinalRotation } from '../engine/wheelSpin';
-import { colors, shadows } from '../styles/theme';
+} from "react-native-reanimated";
+import { GestureDetector, Gesture } from "react-native-gesture-handler";
+import * as Haptics from "expo-haptics";
+import { WHEEL_CONFIG, WheelWedge } from "../engine/types";
+import { SeededRNG } from "../engine/rng";
+import { calculateFinalRotation } from "../engine/wheelSpin";
+import { colors, shadows } from "../styles/theme";
 
 interface StandardWheelProps {
   onSpinStart: () => void;
@@ -45,22 +53,28 @@ export function StandardWheel({
   const rotation = useSharedValue(0);
   const startY = useRef(0);
 
-  const completeSpinCallback = useCallback((wedgeIndex: number) => {
-    setIsAnimating(false);
-    const wedge = WHEEL_CONFIG[wedgeIndex];
-    if (wedge.type === 'BANKRUPT') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    } else if (wedge.type === 'LOSE_TURN') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-    onSpinComplete(wedge);
-  }, [onSpinComplete]);
+  const completeSpinCallback = useCallback(
+    (wedgeIndex: number) => {
+      setIsAnimating(false);
+      const wedge = WHEEL_CONFIG[wedgeIndex];
+      if (wedge.type === "BANKRUPT") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      } else if (wedge.type === "LOSE_TURN") {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      onSpinComplete(wedge);
+    },
+    [onSpinComplete],
+  );
 
-  const clearTickInterval = useCallback((id: ReturnType<typeof setInterval>) => {
-    clearInterval(id);
-  }, []);
+  const clearTickInterval = useCallback(
+    (id: ReturnType<typeof setInterval>) => {
+      clearInterval(id);
+    },
+    [],
+  );
 
   const handleSpin = useCallback(() => {
     if (!canSpin || isAnimating) return;
@@ -81,19 +95,31 @@ export function StandardWheel({
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }, 150);
 
-    rotation.value = withTiming(finalRotation, {
-      duration: SPIN_DURATION,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-    }, (finished) => {
-      if (finished) {
-        runOnJS(clearTickInterval)(tickInterval);
-        runOnJS(completeSpinCallback)(winningIndex);
-      }
-    });
+    rotation.value = withTiming(
+      finalRotation,
+      {
+        duration: SPIN_DURATION,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      },
+      (finished) => {
+        if (finished) {
+          runOnJS(clearTickInterval)(tickInterval);
+          runOnJS(completeSpinCallback)(winningIndex);
+        }
+      },
+    );
 
     // Safety cleanup for tick sounds
     setTimeout(() => clearInterval(tickInterval), SPIN_DURATION + 500);
-  }, [canSpin, isAnimating, onSpinStart, seed, rotation, completeSpinCallback, clearTickInterval]);
+  }, [
+    canSpin,
+    isAnimating,
+    onSpinStart,
+    seed,
+    rotation,
+    completeSpinCallback,
+    clearTickInterval,
+  ]);
 
   // Swipe gesture for spinning
   const swipeGesture = Gesture.Pan()
@@ -115,8 +141,8 @@ export function StandardWheel({
   const wedges = WHEEL_CONFIG.map((wedge, i) => {
     const startAngle = i * WEDGE_ANGLE;
     const endAngle = startAngle + WEDGE_ANGLE;
-    const startRad = (startAngle - 90) * Math.PI / 180;
-    const endRad = (endAngle - 90) * Math.PI / 180;
+    const startRad = ((startAngle - 90) * Math.PI) / 180;
+    const endRad = ((endAngle - 90) * Math.PI) / 180;
 
     const x1 = 100 + 95 * Math.cos(startRad);
     const y1 = 100 + 95 * Math.sin(startRad);
@@ -124,22 +150,25 @@ export function StandardWheel({
     const y2 = 100 + 95 * Math.sin(endRad);
 
     // Radial text path: from outer edge inward along the wedge midline
-    const midRad = (startAngle + WEDGE_ANGLE / 2 - 90 - 5) * Math.PI / 180;
+    const midRad = ((startAngle + WEDGE_ANGLE / 2 - 90 - 5) * Math.PI) / 180;
     const textOuterX = 100 + 91 * Math.cos(midRad);
     const textOuterY = 100 + 91 * Math.sin(midRad);
     const textInnerX = 100 + 23 * Math.cos(midRad);
     const textInnerY = 100 + 23 * Math.sin(midRad);
 
     // Text color based on wedge type
-    const textColor = wedge.type === 'BANKRUPT' ? '#fff' : '#000';
-    const isSpecial = wedge.type === 'BANKRUPT' || wedge.type === 'LOSE_TURN' || wedge.type === 'FREE_PLAY';
+    const textColor = wedge.type === "BANKRUPT" ? "#fff" : "#000";
+    const isSpecial =
+      wedge.type === "BANKRUPT" ||
+      wedge.type === "LOSE_TURN" ||
+      wedge.type === "FREE_PLAY";
 
     // Position text: numbers shifted outward, long text more centered
-    let textOffset = '35%';
-    if (wedge.type === 'LOSE_TURN' || wedge.type === 'FREE_PLAY') {
-      textOffset = '50%';
-    } else if (wedge.type === 'BANKRUPT') {
-      textOffset = '42%';
+    let textOffset = "35%";
+    if (wedge.type === "LOSE_TURN" || wedge.type === "FREE_PLAY") {
+      textOffset = "50%";
+    } else if (wedge.type === "BANKRUPT") {
+      textOffset = "42%";
     }
 
     return {
@@ -186,7 +215,7 @@ export function StandardWheel({
             {wedges.map((wedge) => (
               <SvgText
                 key={`label-${wedge.key}`}
-                fontSize={wedge.isSpecial ? '8' : '14'}
+                fontSize={wedge.isSpecial ? "8" : "14"}
                 fontWeight="900"
                 fill={wedge.textColor}
               >
@@ -194,18 +223,30 @@ export function StandardWheel({
                   href={`#textpath-${wedge.key}`}
                   startOffset={wedge.textOffset}
                 >
-                  <TSpan textAnchor="middle">
-                    {wedge.label}
-                  </TSpan>
+                  <TSpan textAnchor="middle">{wedge.label}</TSpan>
                 </TextPath>
               </SvgText>
             ))}
 
             {/* Gold rim */}
-            <Circle cx="100" cy="100" r="96" fill="none" stroke="#C9A84C" strokeWidth="3" />
+            <Circle
+              cx="100"
+              cy="100"
+              r="96"
+              fill="none"
+              stroke="#C9A84C"
+              strokeWidth="3"
+            />
 
             {/* Center hub */}
-            <Circle cx="100" cy="100" r="20" fill="#888" stroke="#555" strokeWidth="2" />
+            <Circle
+              cx="100"
+              cy="100"
+              r="20"
+              fill="#888"
+              stroke="#555"
+              strokeWidth="2"
+            />
 
             {/* Center button */}
             {!isAnimating && (
@@ -214,7 +255,7 @@ export function StandardWheel({
                   cx="100"
                   cy="100"
                   r="18"
-                  fill={canSpin ? '#1a1a3e' : '#666'}
+                  fill={canSpin ? "#1a1a3e" : "#666"}
                 />
                 <Circle
                   cx="100"
@@ -260,31 +301,33 @@ export function StandardWheel({
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    width: "100%",
+    maxWidth: "100%",
     aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    alignSelf: "center",
   },
   wheelContainer: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     ...shadows.xl,
   },
   svg: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   centerTap: {
-    position: 'absolute',
+    position: "absolute",
     width: 50,
     height: 50,
     borderRadius: 25,
   },
   pointerContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: -8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   pointer: {
     width: 0,
@@ -292,8 +335,8 @@ const styles = StyleSheet.create({
     borderLeftWidth: 12,
     borderRightWidth: 12,
     borderTopWidth: 20,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
     borderTopColor: colors.white,
     ...shadows.lg,
   },

@@ -733,10 +733,12 @@ const styles = StyleSheet.create({
 
   // Category filter chips
   filterChipsScroll: {
-    marginBottom: spacing[2],
+    marginBottom: spacing[3],
+    flexGrow: 0,
   },
   filterChipsContent: {
     paddingHorizontal: spacing[4],
+    paddingVertical: spacing[1],
     gap: spacing[2],
     alignItems: "center",
   },
