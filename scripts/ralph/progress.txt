@@ -23,6 +23,10 @@
 - Solve modal uses Modal component with TextInput and keyboardShouldPersistTaps='handled'
 - `getPuzzlesForMode(puzzles, mode)` exported from `packs.ts` filters puzzles by allowed_modes; puzzles without allowed_modes are treated as eligible for all modes
 - BONUS_EXCLUDED_CATEGORIES in packs.ts uses case-insensitive matching for category exclusion
+- BONUS_CHOOSE_LETTERS validates: 3 distinct consonants (not RSTLNE) + 1 vowel (not E); returns state unchanged on invalid input
+- Only 4 vowels are eligible for bonus picks: A, I, O, U (E is in RSTLNE)
+- BONUS_SOLVE_ATTEMPT returns state unchanged on wrong solve (unlimited retries within timer); TOSS_UP_SOLVE_ATTEMPT triggers lockout on wrong solve
+- BONUS_TICK handler is simple decrement (not a loop like TOSS_UP_TICK) — timer just counts down to 0
 
 # Ralph Progress Log
 Started: Sun Jan 26 2026 — Toss-Up & Bonus Round Modes
@@ -95,4 +99,39 @@ Started: Sun Jan 26 2026 — Toss-Up & Bonus Round Modes
   - The existing helper functions (makeTossUpPuzzle, expectedRevealOrder, startTossUpRound) make simulation tests straightforward — no new helpers needed
   - When lockout expires with exactly 0ms leftover, no additional reveals occur — the recursive reducer call with dtMs=0 is a no-op since 0 < 1000ms interval
   - Typecheck passes, all 264 tests pass (262 existing + 2 new)
+---
+
+## 2026-01-26 - US-006
+- Added BONUS_CHOOSE_LETTERS action to GameAction union: { type: 'BONUS_CHOOSE_LETTERS'; consonants: [string, string, string]; vowel: string }
+- Implemented BONUS_CHOOSE_LETTERS handler in gameReducer:
+  - Only works when turnState is 'BONUS_PICKING'
+  - Validates exactly 3 distinct consonants (must be in CONSONANTS, not in RSTLNE)
+  - Validates exactly 1 vowel (must be in VOWELS, not in RSTLNE — effectively rejects 'E')
+  - Case-insensitive input handling (uppercases before validation)
+  - On valid: adds chosen letters to guessedLetters, reveals all matching positions, sets bonusPicks, transitions to BONUS_SOLVE_TIMER
+  - On invalid: returns state unchanged (referential identity)
+- Created ios/src/__tests__/bonusEngine.test.ts with 20 tests covering:
+  - START_ROUND BONUS behavior (6 tests): turnState, RSTLNE reveal, guessedLetters, timer reset, roundResult, bonusPicks
+  - BONUS_CHOOSE_LETTERS (14 tests): valid picks, letter reveal positions, bonusPicks, RSTLNE rejection (R, T, E), duplicates, non-consonant in consonant slot, non-vowel in vowel slot, invalid chars, no-op guards, case-insensitive input, RSTLNE position preservation
+- Files changed: ios/src/engine/game.ts, ios/src/__tests__/bonusEngine.test.ts
+- **Learnings for future iterations:**
+  - CONSONANTS imported from types.ts alongside VOWELS — both needed for validation
+  - RSTLNE validation catches R,S,T,L,N (consonants) and E (vowel) — the vowel 'E' is the only RSTLNE vowel, so only 4 vowels are eligible picks (A, I, O, U)
+  - Referential identity check (`next === state`) works for verifying no-op returns since reducer returns `state` directly on invalid input
+  - bonusPicks stores the 4 chosen letters (not RSTLNE) — RSTLNE is in guessedLetters from START_ROUND
+  - Typecheck passes, all 284 tests pass (264 existing + 20 new)
+---
+
+## 2026-01-26 - US-007
+- Added BONUS_TICK action: { type: 'BONUS_TICK'; dtMs: number } to GameAction union
+- Added BONUS_SOLVE_ATTEMPT action: { type: 'BONUS_SOLVE_ATTEMPT'; phrase: string } to GameAction union
+- Implemented BONUS_TICK handler: decrements bonusTimerMs by dtMs, expires round as loss when timer reaches 0, reveals all positions on expiry, no-op when not in BONUS_SOLVE_TIMER
+- Implemented BONUS_SOLVE_ATTEMPT handler: correct solve (case-insensitive) → ROUND_OVER + win + all revealed, wrong solve → state unchanged (allows retry), no-op when not in BONUS_SOLVE_TIMER
+- Added 12 new tests to ios/src/__tests__/bonusEngine.test.ts covering: timer decrement, timer expiry, overshoot expiry, no-op guards, accumulated ticks, correct solve, case-insensitive solve, wrong solve retry, multiple retries then win, no-op when wrong turnState
+- Files changed: ios/src/engine/game.ts, ios/src/__tests__/bonusEngine.test.ts
+- **Learnings for future iterations:**
+  - BONUS_SOLVE_ATTEMPT returns `state` (referential identity) on wrong solve — unlike TOSS_UP_SOLVE_ATTEMPT which triggers lockout, bonus allows unlimited retries within timer
+  - BONUS_TICK sets bonusTimerMs to 0 (not negative) on expiry for clean state
+  - enterSolveTimer() helper chains startBonusRound() + BONUS_CHOOSE_LETTERS to quickly reach BONUS_SOLVE_TIMER state in tests
+  - Typecheck passes, all 296 tests pass (284 existing + 12 new)
 ---

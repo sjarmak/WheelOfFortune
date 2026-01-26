@@ -46,7 +46,9 @@ export type GameAction =
       type: "BONUS_CHOOSE_LETTERS";
       consonants: [string, string, string];
       vowel: string;
-    };
+    }
+  | { type: "BONUS_TICK"; dtMs: number }
+  | { type: "BONUS_SOLVE_ATTEMPT"; phrase: string };
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   // Use a temporary RNG instance based on current state seed + roundCount to keep deterministic flow if needed
@@ -353,6 +355,52 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         bonusPicks: chosenLetters,
         turnState: "BONUS_SOLVE_TIMER",
       };
+    }
+
+    case "BONUS_TICK": {
+      if (state.turnState !== "BONUS_SOLVE_TIMER") {
+        return state;
+      }
+      const remaining = state.bonusTimerMs - action.dtMs;
+      if (remaining <= 0) {
+        const allPositions = Array.from(
+          { length: state.currentPuzzle!.phrase.length },
+          (_, i) => i,
+        );
+        return {
+          ...state,
+          bonusTimerMs: 0,
+          turnState: "ROUND_OVER",
+          roundResult: "loss",
+          revealedPositions: allPositions,
+        };
+      }
+      return {
+        ...state,
+        bonusTimerMs: remaining,
+      };
+    }
+
+    case "BONUS_SOLVE_ATTEMPT": {
+      if (state.turnState !== "BONUS_SOLVE_TIMER") {
+        return state;
+      }
+      const correct =
+        action.phrase.toUpperCase() ===
+        state.currentPuzzle?.phrase.toUpperCase();
+      if (correct) {
+        const allPositions = Array.from(
+          { length: state.currentPuzzle!.phrase.length },
+          (_, i) => i,
+        );
+        return {
+          ...state,
+          turnState: "ROUND_OVER",
+          roundResult: "win",
+          revealedPositions: allPositions,
+        };
+      }
+      return state;
     }
 
     case "SOLVE_ATTEMPT": {

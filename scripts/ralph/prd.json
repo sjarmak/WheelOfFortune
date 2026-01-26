@@ -106,7 +106,7 @@
         "Tests pass"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "VOWELS and CONSONANTS constants are in types.ts. START_ROUND already has BONUS logic for RSTLNE reveal — extend it, don't replace."
     },
     {
@@ -123,7 +123,7 @@
         "Tests pass"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Build on the bonusEngine.test.ts created in US-006."
     },
     {
