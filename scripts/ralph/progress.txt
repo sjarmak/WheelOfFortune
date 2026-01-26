@@ -27,6 +27,14 @@
 - Only 4 vowels are eligible for bonus picks: A, I, O, U (E is in RSTLNE)
 - BONUS_SOLVE_ATTEMPT returns state unchanged on wrong solve (unlimited retries within timer); TOSS_UP_SOLVE_ATTEMPT triggers lockout on wrong solve
 - BONUS_TICK handler is simple decrement (not a loop like TOSS_UP_TICK) — timer just counts down to 0
+- Theme `colors.yellow` only has shades 200-500 (no 600) — use `colors.orange[500]/[600]` for gradient pairs
+- `startMode(mode)` in StandardModeApp: sets selectedRoundMode, filters puzzles via getPuzzlesForMode, overrides puzzle round_type, and navigates to game — single callback for mode selection
+- Theme `colors.orange` only has 500/600/700 (no 400) — use 500 for text. `colors.slate` only has 400-900 (no 300)
+- Toss-Up tick interval uses `setInterval` at ~33ms with `Date.now()` delta tracking for accurate dtMs
+- Toss-Up solve modal is separate from standard solve modal — uses TOSS_UP_SOLVE_ATTEMPT action, not SOLVE_ATTEMPT
+- `isTossUpMode` flag (`selectedRoundMode === 'TOSSUP'`) gates all toss-up UI rendering
+- Round over celebration: wins get confetti + Vanna + 3s delay, losses get immediate Next Puzzle button with error haptic
+- TOSSUP_BUZZED state opens solve modal; modal close without submission keeps the buzzed state (reducer doesn't transition back)
 
 # Ralph Progress Log
 Started: Sun Jan 26 2026 — Toss-Up & Bonus Round Modes
@@ -134,4 +142,56 @@ Started: Sun Jan 26 2026 — Toss-Up & Bonus Round Modes
   - BONUS_TICK sets bonusTimerMs to 0 (not negative) on expiry for clean state
   - enterSolveTimer() helper chains startBonusRound() + BONUS_CHOOSE_LETTERS to quickly reach BONUS_SOLVE_TIMER state in tests
   - Typecheck passes, all 296 tests pass (284 existing + 12 new)
+---
+
+## 2026-01-26 - US-008
+- Added 3 end-to-end simulation tests to ios/src/__tests__/bonusEngine.test.ts in a new "Bonus Engine: end-to-end simulation" describe block
+- Simulation 1 (win path): start round → verify RSTLNE positions [1,4,7,12,13,16,17,19,21] revealed → choose C,D,M,A → verify positions [2,3,6,9,10,20] added → tick 10s → correct solve → ROUND_OVER win
+- Simulation 2 (loss path): start round → choose letters → tick 8s+7s+5s (incremental) → timer hits 0 → ROUND_OVER loss → verify further ticks/solves are no-ops
+- Simulation 3 (retry path): start round → choose letters → tick 3s → wrong solve (state unchanged) → tick 5s → another wrong solve (state unchanged) → correct solve → ROUND_OVER win with bonusTimerMs frozen at 12000
+- All tests use puzzle "PRACTICE MAKES PERFECT" with manually computed RSTLNE positions and chosen letter positions
+- Files changed: ios/src/__tests__/bonusEngine.test.ts
+- **Learnings for future iterations:**
+  - "PRACTICE MAKES PERFECT" has R,S,T,E appearing but L,N do not — RSTLNE_POSITIONS = [1,4,7,12,13,16,17,19,21] (9 positions)
+  - bonusTimerMs is frozen at its last value when BONUS_SOLVE_ATTEMPT succeeds (timer is not reset to 0 on win)
+  - BONUS_SOLVE_ATTEMPT and BONUS_TICK are both no-ops after ROUND_OVER — safe to verify post-round stability
+  - Typecheck passes, all 299 tests pass (296 existing + 3 new simulation tests)
+---
+
+## 2026-01-26 - US-009
+- Added `selectedRoundMode: RoundType` state (default 'MAIN') to StandardModeApp
+- Replaced single Play card with 3 mode cards: Standard Game (Play icon, green), Toss-Up (Zap icon, orange), Bonus Round (Trophy icon, purple)
+- Each mode card calls `startMode(mode)` which sets selectedRoundMode, filters puzzles via `getPuzzlesForMode()`, overrides puzzle's `round_type` to the selected mode, and navigates to 'game' screen
+- Updated `nextRound` to use `getPuzzlesForMode` and override `round_type` with `selectedRoundMode`
+- Kept Puzzle Packs and Strategy cards on home screen (blue and slate gradients)
+- Imported `Zap`, `Trophy` from lucide-react-native; `RoundType` from types; `getPuzzlesForMode` from packs
+- Files changed: ios/src/components/StandardModeApp.tsx
+- **Learnings for future iterations:**
+  - `colors.yellow` only has 200-500 shades (no 600) — use `colors.orange` for gradient pairs needing 500+600
+  - `startMode()` pattern: set mode state + filter puzzles + override round_type + navigate in one callback
+  - The `round_type` override on the puzzle object is needed because all puzzles in pack data default to 'MAIN' — the mode selector determines the actual game mode
+  - Typecheck passes, all 299 tests pass (no new tests needed — UI story)
+---
+
+## 2026-01-26 - US-010
+- Implemented Toss-Up UI screen in StandardModeApp.tsx
+- Added toss-up tick interval (setInterval at ~33ms with Date.now() delta tracking)
+- Added Buzz In button with Zap icon, orange gradient, centered below puzzle board
+- Added toss-up solve modal (reuses Modal component pattern with TextInput)
+- Added lockout countdown display showing remaining seconds
+- Added TOSS-UP status banner with context text (Buzz in, Locked out, Correct, Puzzle Revealed)
+- Hid wheel and standard keyboard when in TOSSUP mode
+- Updated round-over section to show win/loss-specific messages for toss-up
+- Win: confetti + Vanna + 3s delay before Next Puzzle; Loss: immediate Next Puzzle with error haptic
+- Wired expo-haptics: Heavy impact on buzz-in, Success/Error notification on solve result
+- Clear tick interval on unmount and when round ends (via turnState dependency in useEffect)
+- Files changed: ios/src/components/StandardModeApp.tsx
+- **Learnings for future iterations:**
+  - Theme `colors.orange` only has 500/600/700 (no 400) — use 500 for text colors
+  - Theme `colors.slate` only has 400-900 (no 300) — use 400 for subtle text
+  - Toss-Up solve modal is separate from standard solve modal (different dispatch action, different styling)
+  - `isTossUpMode` flag gates rendering — avoids mixing standard/toss-up UI logic with complex conditionals
+  - TOSSUP_BUZZED opens the solve modal; if user cancels, state stays TOSSUP_BUZZED (reducer needs BUZZ_IN from TOSSUP_REVEALING)
+  - Round over celebration logic split: `roundResult === 'win'` or `null` (standard mode) shows confetti; `roundResult === 'loss'` shows error haptic + immediate next puzzle
+  - Typecheck passes, all 299 tests pass (no new tests needed — UI story)
 ---

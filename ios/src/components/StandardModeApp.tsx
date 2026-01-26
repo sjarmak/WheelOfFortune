@@ -113,21 +113,39 @@ export function StandardModeApp({
     null,
   );
 
-  // Trigger confetti + Vanna + toast on successful puzzle solve
+  // Toss-Up specific state
+  const [showTossUpSolveModal, setShowTossUpSolveModal] = useState(false);
+  const [tossUpSolveInput, setTossUpSolveInput] = useState("");
+  const tossUpSolveInputRef = useRef<TextInput>(null);
+  const tossUpTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Trigger confetti + Vanna on successful puzzle solve (or loss feedback for toss-up/bonus)
   useEffect(() => {
     const wasNotRoundOver = prevTurnStateRef.current !== "ROUND_OVER";
     const isNowRoundOver = state.turnState === "ROUND_OVER";
 
     if (wasNotRoundOver && isNowRoundOver) {
-      setShowCelebration(true);
-      setCelebrationReady(false);
-      confettiRef.current?.start();
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const isWin = state.roundResult === "win" || state.roundResult === null;
+      if (isWin) {
+        setShowCelebration(true);
+        setCelebrationReady(false);
+        confettiRef.current?.start();
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      // Allow Next Round after 3 seconds
-      celebrationTimerRef.current = setTimeout(() => {
+        // Allow Next Round after 3 seconds for wins
+        celebrationTimerRef.current = setTimeout(() => {
+          setCelebrationReady(true);
+        }, 3000);
+      } else {
+        // Loss — no celebration, show Next Puzzle immediately
+        setShowCelebration(false);
         setCelebrationReady(true);
-      }, 3000);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+
+      // Close toss-up solve modal if open
+      setShowTossUpSolveModal(false);
+      setTossUpSolveInput("");
     }
 
     if (!isNowRoundOver) {
@@ -140,7 +158,7 @@ export function StandardModeApp({
     }
 
     prevTurnStateRef.current = state.turnState;
-  }, [state.turnState]);
+  }, [state.turnState, state.roundResult]);
 
   // Focus the solve input after modal animation completes
   useEffect(() => {
@@ -151,6 +169,46 @@ export function StandardModeApp({
       return () => clearTimeout(timer);
     }
   }, [showSolveModal]);
+
+  // Focus toss-up solve input after modal opens
+  useEffect(() => {
+    if (showTossUpSolveModal) {
+      const timer = setTimeout(() => {
+        tossUpSolveInputRef.current?.focus();
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [showTossUpSolveModal]);
+
+  // Toss-Up tick interval — runs during TOSSUP_REVEALING and TOSSUP_LOCKED_OUT
+  useEffect(() => {
+    const isTossUpActive =
+      selectedRoundMode === "TOSSUP" &&
+      (state.turnState === "TOSSUP_REVEALING" ||
+        state.turnState === "TOSSUP_LOCKED_OUT");
+
+    if (isTossUpActive) {
+      let lastTime = Date.now();
+      tossUpTickRef.current = setInterval(() => {
+        const now = Date.now();
+        const dtMs = now - lastTime;
+        lastTime = now;
+        dispatch({ type: "TOSS_UP_TICK", dtMs });
+      }, 33);
+    } else {
+      if (tossUpTickRef.current) {
+        clearInterval(tossUpTickRef.current);
+        tossUpTickRef.current = null;
+      }
+    }
+
+    return () => {
+      if (tossUpTickRef.current) {
+        clearInterval(tossUpTickRef.current);
+        tossUpTickRef.current = null;
+      }
+    };
+  }, [selectedRoundMode, state.turnState]);
 
   // Load saved state
   useEffect(() => {
@@ -317,6 +375,29 @@ export function StandardModeApp({
     setSolveInput("");
   }, [solveInput, state.currentPuzzle, showToast]);
 
+  // Toss-Up handlers
+  const handleBuzzIn = useCallback(() => {
+    dispatch({ type: "BUZZ_IN" });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    setShowTossUpSolveModal(true);
+  }, []);
+
+  const handleTossUpSolve = useCallback(() => {
+    const correct =
+      tossUpSolveInput.toUpperCase() ===
+      state.currentPuzzle?.phrase.toUpperCase();
+    dispatch({ type: "TOSS_UP_SOLVE_ATTEMPT", phrase: tossUpSolveInput });
+
+    if (correct) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      showToast("Wrong! Locked out...");
+    }
+    setShowTossUpSolveModal(false);
+    setTossUpSolveInput("");
+  }, [tossUpSolveInput, state.currentPuzzle, showToast]);
+
   const handleSelectPuzzle = useCallback((puzzle: Puzzle, pack: PuzzlePack) => {
     setActivePack(pack);
     const idx = pack.puzzles.findIndex((p) => p.id === puzzle.id);
@@ -327,10 +408,28 @@ export function StandardModeApp({
   }, []);
 
   const isRoundOver = state.turnState === "ROUND_OVER";
+  const isTossUpMode = selectedRoundMode === "TOSSUP";
   const canSpin = state.turnState === "IDLE" && !isRoundOver;
   const canGuess =
     state.turnState === "GUESSING_CONSONANT" ||
     state.turnState === "BUYING_VOWEL";
+
+  const lockoutSecondsLeft = Math.ceil(state.tossUpLockoutMs / 1000);
+
+  const tossUpStatusText = useMemo(() => {
+    switch (state.turnState) {
+      case "TOSSUP_REVEALING":
+        return "Buzz in to solve!";
+      case "TOSSUP_BUZZED":
+        return "Solve the puzzle!";
+      case "TOSSUP_LOCKED_OUT":
+        return `Locked out... ${lockoutSecondsLeft}s`;
+      case "ROUND_OVER":
+        return state.roundResult === "win" ? "Correct!" : "Puzzle Revealed";
+      default:
+        return "";
+    }
+  }, [state.turnState, state.roundResult, lockoutSecondsLeft]);
 
   // Animate keyboard slide up/down
   useEffect(() => {
@@ -545,10 +644,33 @@ export function StandardModeApp({
             {/* Round Over */}
             {isRoundOver ? (
               <View style={styles.roundOverSection}>
-                <Text style={styles.solvedText}>PUZZLE SOLVED!</Text>
-                <Text style={styles.winningsText}>
-                  Won: ${state.player.currentRoundScore}
-                </Text>
+                {isTossUpMode ? (
+                  <>
+                    <Text
+                      style={
+                        state.roundResult === "win"
+                          ? styles.solvedText
+                          : styles.lossText
+                      }
+                    >
+                      {state.roundResult === "win"
+                        ? "CORRECT!"
+                        : "PUZZLE REVEALED"}
+                    </Text>
+                    {state.roundResult === "win" && (
+                      <Text style={styles.winningsText}>
+                        Won: ${state.player.currentRoundScore}
+                      </Text>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.solvedText}>PUZZLE SOLVED!</Text>
+                    <Text style={styles.winningsText}>
+                      Won: ${state.player.currentRoundScore}
+                    </Text>
+                  </>
+                )}
                 {celebrationReady && (
                   <TouchableOpacity onPress={nextRound}>
                     <LinearGradient
@@ -559,6 +681,38 @@ export function StandardModeApp({
                       <Text style={styles.nextButtonText}>Next Puzzle</Text>
                     </LinearGradient>
                   </TouchableOpacity>
+                )}
+              </View>
+            ) : isTossUpMode ? (
+              <View style={styles.tossUpArea}>
+                {/* Toss-Up Status Banner */}
+                <View style={styles.tossUpBanner}>
+                  <Text style={styles.tossUpBannerTitle}>TOSS-UP</Text>
+                  <Text style={styles.tossUpBannerStatus}>
+                    {tossUpStatusText}
+                  </Text>
+                </View>
+
+                {/* Buzz In Button */}
+                {state.turnState === "TOSSUP_REVEALING" && (
+                  <TouchableOpacity onPress={handleBuzzIn}>
+                    <LinearGradient
+                      colors={[colors.orange[500], colors.orange[600]]}
+                      style={styles.buzzInButton}
+                    >
+                      <Zap size={28} color={colors.white} />
+                      <Text style={styles.buzzInButtonText}>BUZZ IN</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                )}
+
+                {/* Lockout indicator */}
+                {state.turnState === "TOSSUP_LOCKED_OUT" && (
+                  <View style={styles.lockoutContainer}>
+                    <Text style={styles.lockoutText}>
+                      Locked out... {lockoutSecondsLeft}s
+                    </Text>
+                  </View>
                 )}
               </View>
             ) : (
@@ -572,7 +726,6 @@ export function StandardModeApp({
                     seed={state.seed + state.spinCount}
                     canSpin={state.turnState === "IDLE"}
                   />
-                  {/* No banner on wheel - status shown in bottom bar */}
                 </View>
 
                 {/* Action Buttons */}
@@ -666,6 +819,7 @@ export function StandardModeApp({
               </Animated.View>
             ) : (
               !isRoundOver &&
+              !isTossUpMode &&
               state.turnState !== "SPINNING" && (
                 <View style={styles.bottomStatusBar}>
                   <Text style={styles.bottomStatusText}>SPIN THE WHEEL</Text>
@@ -719,6 +873,44 @@ export function StandardModeApp({
             <TouchableOpacity onPress={handleSolve}>
               <LinearGradient
                 colors={[colors.blue[500], colors.blue[600]]}
+                style={styles.solveButton}
+              >
+                <Text style={styles.solveButtonText}>SOLVE</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+
+        {/* Toss-Up Solve Modal */}
+        <Modal
+          visible={showTossUpSolveModal}
+          onClose={() => {
+            setShowTossUpSolveModal(false);
+            setTossUpSolveInput("");
+          }}
+          title="Solve the Puzzle"
+        >
+          <TextInput
+            ref={tossUpSolveInputRef}
+            style={styles.solveInput}
+            value={tossUpSolveInput}
+            onChangeText={setTossUpSolveInput}
+            placeholder="Type your answer..."
+            placeholderTextColor={colors.slate[400]}
+            autoCapitalize="characters"
+          />
+          <View style={styles.modalButtons}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowTossUpSolveModal(false);
+                setTossUpSolveInput("");
+              }}
+            >
+              <Text style={styles.cancelButton}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleTossUpSolve}>
+              <LinearGradient
+                colors={[colors.orange[500], colors.orange[600]]}
                 style={styles.solveButton}
               >
                 <Text style={styles.solveButtonText}>SOLVE</Text>
@@ -1266,6 +1458,55 @@ const styles = StyleSheet.create({
   placeholderDesc: {
     color: colors.slate[400],
     fontSize: typography.sizes.base,
+  },
+  lossText: {
+    color: colors.red[400],
+    fontSize: typography.sizes["2xl"],
+    fontWeight: typography.weights.bold,
+  },
+  tossUpArea: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing[6],
+  },
+  tossUpBanner: {
+    alignItems: "center",
+    gap: spacing[1],
+  },
+  tossUpBannerTitle: {
+    color: colors.orange[500],
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold,
+    letterSpacing: 3,
+  },
+  tossUpBannerStatus: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.base,
+  },
+  buzzInButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
+    paddingHorizontal: spacing[8],
+    paddingVertical: spacing[4],
+    borderRadius: borderRadius["2xl"],
+    ...shadows.lg,
+  },
+  buzzInButtonText: {
+    color: colors.white,
+    fontWeight: typography.weights.bold,
+    fontSize: typography.sizes["2xl"],
+    letterSpacing: 2,
+  },
+  lockoutContainer: {
+    alignItems: "center",
+    paddingVertical: spacing[4],
+  },
+  lockoutText: {
+    color: colors.red[400],
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
   },
   confettiContainer: {
     ...StyleSheet.absoluteFillObject,
