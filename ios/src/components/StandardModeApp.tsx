@@ -12,12 +12,14 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Settings, RotateCcw, X, ChevronLeft, Play, BookOpen, BarChart3 } from 'lucide-react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 import { gameReducer, INITIAL_STATE } from '../engine/game';
 import { Puzzle, VOWELS, WheelWedge } from '../engine/types';
@@ -65,6 +67,26 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
   const [solveInput, setSolveInput] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const solveInputRef = useRef<TextInput>(null);
+  const confettiRef = useRef<ConfettiCannon>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const prevTurnStateRef = useRef(state.turnState);
+
+  // Trigger confetti on successful puzzle solve
+  useEffect(() => {
+    const wasNotRoundOver = prevTurnStateRef.current !== 'ROUND_OVER';
+    const isNowRoundOver = state.turnState === 'ROUND_OVER';
+
+    if (wasNotRoundOver && isNowRoundOver) {
+      setShowCelebration(true);
+      confettiRef.current?.start();
+    }
+
+    if (!isNowRoundOver) {
+      setShowCelebration(false);
+    }
+
+    prevTurnStateRef.current = state.turnState;
+  }, [state.turnState]);
 
   // Focus the solve input after modal animation completes
   useEffect(() => {
@@ -487,6 +509,22 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
           />
         </Modal>
 
+        {/* Confetti Overlay */}
+        {showCelebration && (
+          <View style={styles.confettiContainer} pointerEvents="none">
+            <ConfettiCannon
+              ref={confettiRef}
+              count={100}
+              origin={{ x: Dimensions.get('window').width / 2, y: -10 }}
+              fadeOut
+              autoStart={false}
+              fallSpeed={3000}
+              explosionSpeed={350}
+              onAnimationEnd={() => setShowCelebration(false)}
+            />
+          </View>
+        )}
+
         {/* Settings Modal */}
         <Modal
           visible={showSettings}
@@ -854,5 +892,9 @@ const styles = StyleSheet.create({
   placeholderDesc: {
     color: colors.slate[400],
     fontSize: typography.sizes.base,
+  },
+  confettiContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
   },
 });
