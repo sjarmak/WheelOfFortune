@@ -47,7 +47,7 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "The iOS engine uses WheelWedge type 'VALUE' instead of web's 'CASH'. Make sure calculateWheelAnalysis uses the iOS WHEEL_CONFIG from ios/src/engine/types.ts. The Puzzle type is already defined in ios/src/engine/types.ts."
     },
     {
@@ -65,7 +65,7 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "Game reducer is at ios/src/engine/game.ts. Existing tests at ios/src/__tests__/game.test.ts. INITIAL_STATE defined at top of game.ts. The Puzzle type is in ios/src/engine/types.ts."
     },
     {

@@ -12,7 +12,7 @@ const testPuzzle: Puzzle = {
   id: 'test-1',
   phrase: 'WHEEL OF FORTUNE',
   category: 'TV SHOW',
-  difficultyRating: 1,
+  difficulty: { score: 0.5, reasons: [] },
   round_type: 'MAIN',
 };
 

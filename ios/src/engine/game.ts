@@ -18,7 +18,7 @@ export const INITIAL_STATE: GameState = {
   spinCount: 0
 };
 
-export type GameAction = 
+export type GameAction =
   | { type: 'START_ROUND'; puzzle: Puzzle; seed?: number }
   | { type: 'SPIN_WHEEL' }
   | { type: 'SPIN_RESULT'; wedge: WheelWedge }
@@ -28,7 +28,10 @@ export type GameAction =
   | { type: 'TOSS_UP_TICK' }
   | { type: 'ADD_TO_ROUND_SCORE'; points: number }
   | { type: 'CLEAR_ROUND_SCORE' }
-  | { type: 'RESET_GAME' };
+  | { type: 'RESET_GAME' }
+  | { type: 'RESET_ROUND' }
+  | { type: 'RANDOM_PUZZLE'; puzzles: Puzzle[] }
+  | { type: 'SELECT_PUZZLE'; puzzle: Puzzle };
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   // Use a temporary RNG instance based on current state seed + roundCount to keep deterministic flow if needed
@@ -193,6 +196,49 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         turnState: 'BUYING_VOWEL'
+      };
+    }
+
+    case 'RESET_ROUND': {
+      return {
+        ...state,
+        guessedLetters: [],
+        revealedPositions: [],
+        spinResult: null,
+        turnState: 'IDLE',
+        player: { ...state.player, currentRoundScore: 0 },
+      };
+    }
+
+    case 'RANDOM_PUZZLE': {
+      const { puzzles } = action;
+      const available = puzzles.filter(
+        (p) => p.id !== state.currentPuzzle?.id
+      );
+      if (available.length === 0) return state;
+      const randomIndex = Math.floor(Math.random() * available.length);
+      const selected = available[randomIndex];
+      return {
+        ...state,
+        currentPuzzle: selected,
+        guessedLetters: [],
+        revealedPositions: [],
+        spinResult: null,
+        turnState: 'IDLE',
+        player: { ...state.player, currentRoundScore: 0 },
+      };
+    }
+
+    case 'SELECT_PUZZLE': {
+      const { puzzle } = action;
+      return {
+        ...state,
+        currentPuzzle: puzzle,
+        guessedLetters: [],
+        revealedPositions: [],
+        spinResult: null,
+        turnState: 'IDLE',
+        player: { ...state.player, currentRoundScore: 0 },
       };
     }
 
