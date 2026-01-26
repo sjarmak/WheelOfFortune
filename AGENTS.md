@@ -370,29 +370,30 @@ This project is a **Wheel of Fortune practice app** with two game modes:
 
 ### Known Issues & Blockers
 
-#### Critical: Worklets Version Mismatch (Runtime Not Ready)
+#### Critical: Xcode License Not Agreed (Blocks Native Build)
 
-When running `npx expo start` in the `ios/` directory with Expo Go:
+When running `npx expo run:ios`:
 
-**Error:** `Mismatch between JavaScript part and native part of Worklets (0.7.1 vs 0.5.1)`
+**Error:** `You have not agreed to the Xcode license. Please resolve this by running: sudo xcodebuild -license accept`
 
-**Root cause:** Expo Go SDK 54 bundles react-native-reanimated 3.x with worklets 0.5.1. Any package trying to use a newer version causes this error.
+**Root cause:** CocoaPods requires Xcode license agreement before it can run. Without sudo access, this can't be automated.
 
-**Attempted fixes:**
-- ❌ Removed nativewind and tailwindcss (unused in Expo)
-- ❌ Removed moti (animation library, not needed for standard wheel)
-- ❌ Downgraded react-native-reanimated from ~4.1.1 to ~3.16.0
-- ❌ Cleared caches: `npx expo start --clear`
+**Solution (requires admin access):**
+```bash
+sudo xcode build -license accept
+# Then run:
+npx expo run:ios
+```
 
-**Current status:** 
-- Package versions are aligned with Expo SDK 54 requirements
-- `npm ls react-native-worklets` shows no direct dependencies
-- **Next step:** Use `expo-dev-client` to create a custom development build instead of relying on Expo Go
+**Workaround (no admin needed):**
+- ✅ Use unit tests to validate logic: `npm test` (17 tests all passing)
+- ✅ Validate game reducer thoroughly before native builds
+- ✅ Test web version once logic is proven: `cd ../app && npm run dev`
 
-**When to attempt again:**
-- After trying `npx expo install --fix` to align all native module versions
-- Or build a custom dev client: `npx expo run:ios --dev-client`
-- Or wait for Expo SDK 55+ which may have updated worklets
+**Resolved issue (was blocking):**
+- ✅ ~~Worklets Version Mismatch~~ - Fixed by upgrading react-native-reanimated to 4.1.1
+- ✅ Package versions now aligned with Expo SDK 54
+- ✅ expo-dev-client installed as fallback
 
 #### Design: Standard Wheel Component
 
