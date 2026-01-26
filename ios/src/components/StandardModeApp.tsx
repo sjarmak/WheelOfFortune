@@ -4,56 +4,79 @@
  * Full wheel of fortune experience for adults.
  */
 
-import React, { useReducer, useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import React, {
+  useReducer,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   TextInput,
   Dimensions,
-} from 'react-native';
-import { SafeAreaView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Settings, RotateCcw, X, ChevronLeft, Play, BookOpen, BarChart3 } from 'lucide-react-native';
-import ConfettiCannon from 'react-native-confetti-cannon';
+} from "react-native";
+import { SafeAreaView } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  Settings,
+  RotateCcw,
+  X,
+  ChevronLeft,
+  Play,
+  BookOpen,
+  BarChart3,
+} from "lucide-react-native";
+import ConfettiCannon from "react-native-confetti-cannon";
 
-import { Vanna } from './Vanna';
-import { gameReducer, INITIAL_STATE } from '../engine/game';
-import { Puzzle, VOWELS, WheelWedge } from '../engine/types';
-import { ALL_PACKS, PuzzlePack } from '../engine/packs';
-import { DEFAULT_PUZZLES } from '../engine/defaultPack';
-import { InteractiveBoard } from './InteractiveBoard';
-import { StandardWheel } from './StandardWheel';
-import { Keyboard } from './Keyboard';
-import { Modal } from './Modal';
-import { PackBrowser } from './PackBrowser';
-import { StrategyDashboard } from './StrategyDashboard';
-import { colors, typography, spacing, borderRadius, shadows, layout } from '../styles/theme';
+import { Vanna } from "./Vanna";
+import { gameReducer, INITIAL_STATE } from "../engine/game";
+import { Puzzle, VOWELS, WheelWedge } from "../engine/types";
+import { ALL_PACKS, PuzzlePack } from "../engine/packs";
+import { DEFAULT_PUZZLES } from "../engine/defaultPack";
+import { InteractiveBoard } from "./InteractiveBoard";
+import { StandardWheel } from "./StandardWheel";
+import { Keyboard } from "./Keyboard";
+import { Modal } from "./Modal";
+import { PackBrowser } from "./PackBrowser";
+import { StrategyDashboard } from "./StrategyDashboard";
+import {
+  colors,
+  typography,
+  spacing,
+  borderRadius,
+  shadows,
+  layout,
+} from "../styles/theme";
 
-const STORAGE_KEY = 'wof_standard_state';
+const STORAGE_KEY = "wof_standard_state";
 const VOWEL_COST = 250;
 
-type ActiveScreen = 'home' | 'game' | 'packBrowser' | 'strategy';
+type ActiveScreen = "home" | "game" | "packBrowser" | "strategy";
 
 interface StandardModeAppProps {
   onModeChange?: () => void;
 }
 
-export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.JSX.Element {
+export function StandardModeApp({
+  onModeChange,
+}: StandardModeAppProps): React.JSX.Element {
   const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
   const [activePack, setActivePack] = useState<PuzzlePack>(() => {
     if (ALL_PACKS && ALL_PACKS.length > 0) {
       return ALL_PACKS[0];
     }
     return {
-      id: 'default',
-      name: 'Default Pack',
-      description: 'Default puzzle pack',
-      source: 'default',
+      id: "default",
+      name: "Default Pack",
+      description: "Default puzzle pack",
+      source: "default",
       puzzleCount: DEFAULT_PUZZLES.length,
       categories: [],
       difficultyRange: [0, 1],
@@ -61,23 +84,26 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
     };
   });
 
-  const [activeScreen, setActiveScreen] = useState<ActiveScreen>('home');
+  const [activeScreen, setActiveScreen] = useState<ActiveScreen>("home");
   const [showSettings, setShowSettings] = useState(false);
   const [showPackBrowserModal, setShowPackBrowserModal] = useState(false);
   const [showSolveModal, setShowSolveModal] = useState(false);
-  const [solveInput, setSolveInput] = useState('');
+  const [solveInput, setSolveInput] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const solveInputRef = useRef<TextInput>(null);
   const confettiRef = useRef<ConfettiCannon>(null);
+  const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationReady, setCelebrationReady] = useState(false);
   const prevTurnStateRef = useRef(state.turnState);
-  const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   // Trigger confetti + Vanna + toast on successful puzzle solve
   useEffect(() => {
-    const wasNotRoundOver = prevTurnStateRef.current !== 'ROUND_OVER';
-    const isNowRoundOver = state.turnState === 'ROUND_OVER';
+    const wasNotRoundOver = prevTurnStateRef.current !== "ROUND_OVER";
+    const isNowRoundOver = state.turnState === "ROUND_OVER";
 
     if (wasNotRoundOver && isNowRoundOver) {
       setShowCelebration(true);
@@ -133,23 +159,35 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
   // Computed values
   const puzzleVowels = useMemo(() => {
     if (!state.currentPuzzle) return [];
-    return [...new Set(state.currentPuzzle.phrase.toUpperCase().match(/[AEIOU]/g) || [])];
+    return [
+      ...new Set(
+        state.currentPuzzle.phrase.toUpperCase().match(/[AEIOU]/g) || [],
+      ),
+    ];
   }, [state.currentPuzzle]);
 
   const puzzleConsonants = useMemo(() => {
     if (!state.currentPuzzle) return [];
-    return [...new Set(state.currentPuzzle.phrase.toUpperCase().match(/[BCDFGHJKLMNPQRSTVWXYZ]/g) || [])];
+    return [
+      ...new Set(
+        state.currentPuzzle.phrase
+          .toUpperCase()
+          .match(/[BCDFGHJKLMNPQRSTVWXYZ]/g) || [],
+      ),
+    ];
   }, [state.currentPuzzle]);
 
   const vowelsLeft = useMemo(() => {
-    return puzzleVowels.some(v => !state.guessedLetters.includes(v));
+    return puzzleVowels.some((v) => !state.guessedLetters.includes(v));
   }, [puzzleVowels, state.guessedLetters]);
 
   const consonantsLeft = useMemo(() => {
-    return puzzleConsonants.some(c => !state.guessedLetters.includes(c));
+    return puzzleConsonants.some((c) => !state.guessedLetters.includes(c));
   }, [puzzleConsonants, state.guessedLetters]);
 
-  const canBuyVowel = vowelsLeft && (state.player.currentRoundScore >= VOWEL_COST || state.player.freePlay);
+  const canBuyVowel =
+    vowelsLeft &&
+    (state.player.currentRoundScore >= VOWEL_COST || state.player.freePlay);
 
   // Toast message
   const showToast = useCallback((msg: string) => {
@@ -158,7 +196,7 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
     setTimeout(() => setMessage(null), 2000);
   }, []);
 
-  // Start new round — also dismisses celebration
+  // Start new round — advances sequentially through the active pack
   const nextRound = useCallback(() => {
     setShowCelebration(false);
     setCelebrationReady(false);
@@ -167,91 +205,113 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
       celebrationTimerRef.current = null;
     }
     const puzzles = activePack.puzzles;
-    const next = puzzles[Math.floor(Math.random() * puzzles.length)];
-    dispatch({ type: 'START_ROUND', puzzle: next });
-  }, [activePack]);
+    const nextIndex = puzzleIndex >= puzzles.length - 1 ? 0 : puzzleIndex + 1;
+    const next = puzzles[nextIndex];
+    setPuzzleIndex(nextIndex);
+    dispatch({ type: "START_ROUND", puzzle: next });
+  }, [activePack, puzzleIndex]);
 
-  // Load puzzle on mount
+  // Load puzzle on mount — start at first puzzle in pack
   useEffect(() => {
     if (!state.currentPuzzle) {
-      nextRound();
+      const first = activePack.puzzles[0];
+      if (first) {
+        setPuzzleIndex(0);
+        dispatch({ type: "START_ROUND", puzzle: first });
+      }
     }
-  }, [state.currentPuzzle, nextRound]);
+  }, []);
 
   // Handlers
   const handleSpinStart = useCallback(() => {
-    dispatch({ type: 'SPIN_WHEEL' });
+    dispatch({ type: "SPIN_WHEEL" });
   }, []);
 
-  const handleSpinComplete = useCallback((wedge: WheelWedge) => {
-    dispatch({ type: 'SPIN_RESULT', wedge });
+  const handleSpinComplete = useCallback(
+    (wedge: WheelWedge) => {
+      dispatch({ type: "SPIN_RESULT", wedge });
 
-    if (wedge.type === 'BANKRUPT') {
-      showToast('BANKRUPT! 💸');
-    } else if (wedge.type === 'LOSE_TURN') {
-      showToast('LOSE A TURN!');
-    } else if (wedge.type === 'FREE_PLAY') {
-      showToast('FREE PLAY! 🎉');
-    }
-  }, [showToast]);
+      if (wedge.type === "BANKRUPT") {
+        showToast("BANKRUPT! 💸");
+      } else if (wedge.type === "LOSE_TURN") {
+        showToast("LOSE A TURN!");
+      } else if (wedge.type === "FREE_PLAY") {
+        showToast("FREE PLAY! 🎉");
+      }
+    },
+    [showToast],
+  );
 
-  const handleGuess = useCallback((letter: string) => {
-    const isVowel = VOWELS.includes(letter);
-    const cost = isVowel ? VOWEL_COST : 0;
-    
-    dispatch({ type: 'GUESS_LETTER', letter, cost });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  const handleGuess = useCallback(
+    (letter: string) => {
+      const isVowel = VOWELS.includes(letter);
+      const cost = isVowel ? VOWEL_COST : 0;
 
-    // Check if letter was in puzzle
-    const upper = letter.toUpperCase();
-    const inPuzzle = state.currentPuzzle?.phrase.toUpperCase().includes(upper);
-    
-    if (!inPuzzle) {
-      showToast(`No ${upper}!`);
-    }
-  }, [state.currentPuzzle, showToast]);
+      dispatch({ type: "GUESS_LETTER", letter, cost });
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+      // Check if letter was in puzzle
+      const upper = letter.toUpperCase();
+      const inPuzzle = state.currentPuzzle?.phrase
+        .toUpperCase()
+        .includes(upper);
+
+      if (!inPuzzle) {
+        showToast(`No ${upper}!`);
+      }
+    },
+    [state.currentPuzzle, showToast],
+  );
 
   const handleBuyVowel = useCallback(() => {
     if (!canBuyVowel) {
-      showToast('Not enough money!');
+      showToast("Not enough money!");
       return;
     }
-    dispatch({ type: 'BUY_VOWEL' });
+    dispatch({ type: "BUY_VOWEL" });
   }, [canBuyVowel, showToast]);
 
   const handleSolve = useCallback(() => {
-    dispatch({ type: 'SOLVE_ATTEMPT', phrase: solveInput });
+    dispatch({ type: "SOLVE_ATTEMPT", phrase: solveInput });
 
-    const correct = solveInput.toUpperCase() === state.currentPuzzle?.phrase.toUpperCase();
+    const correct =
+      solveInput.toUpperCase() === state.currentPuzzle?.phrase.toUpperCase();
     if (!correct) {
-      showToast('Wrong! Try again.');
+      showToast("Wrong! Try again.");
     }
 
     setShowSolveModal(false);
-    setSolveInput('');
+    setSolveInput("");
   }, [solveInput, state.currentPuzzle, showToast]);
 
   const handleSelectPuzzle = useCallback((puzzle: Puzzle, pack: PuzzlePack) => {
     setActivePack(pack);
-    dispatch({ type: 'SELECT_PUZZLE', puzzle });
-    setActiveScreen('game');
+    const idx = pack.puzzles.findIndex((p) => p.id === puzzle.id);
+    setPuzzleIndex(idx >= 0 ? idx : 0);
+    dispatch({ type: "SELECT_PUZZLE", puzzle });
+    setActiveScreen("game");
     setShowPackBrowserModal(false);
   }, []);
 
-  const isRoundOver = state.turnState === 'ROUND_OVER';
-  const canSpin = state.turnState === 'IDLE' && !isRoundOver;
-  const canGuess = state.turnState === 'GUESSING_CONSONANT' || state.turnState === 'BUYING_VOWEL';
+  const isRoundOver = state.turnState === "ROUND_OVER";
+  const canSpin = state.turnState === "IDLE" && !isRoundOver;
+  const canGuess =
+    state.turnState === "GUESSING_CONSONANT" ||
+    state.turnState === "BUYING_VOWEL";
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <LinearGradient
-        colors={[colors.slate[900], '#1a1a2e', colors.slate[800]]}
+        colors={[colors.slate[900], "#1a1a2e", colors.slate[800]]}
         style={styles.container}
       >
         {/* Header */}
         <View style={styles.header}>
-          {activeScreen !== 'home' ? (
-            <TouchableOpacity onPress={() => setActiveScreen('home')} style={styles.iconButton}>
+          {activeScreen !== "home" ? (
+            <TouchableOpacity
+              onPress={() => setActiveScreen("home")}
+              style={styles.iconButton}
+            >
               <ChevronLeft size={24} color={colors.white} />
             </TouchableOpacity>
           ) : (
@@ -260,36 +320,48 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
             </TouchableOpacity>
           )}
 
-          {activeScreen !== 'home' && (
+          {activeScreen !== "home" && (
             <Text style={styles.headerTitle}>WHEEL PRACTICE</Text>
           )}
 
-          {activeScreen === 'game' ? (
+          {activeScreen === "game" ? (
             <>
               <View style={styles.scoreContainer}>
                 <Text style={styles.scoreLabel}>ROUND</Text>
-                <Text style={styles.scoreValue}>${state.player.currentRoundScore}</Text>
+                <Text style={styles.scoreValue}>
+                  ${state.player.currentRoundScore}
+                </Text>
               </View>
 
               <View style={styles.scoreContainer}>
                 <Text style={styles.scoreLabel}>TOTAL</Text>
-                <Text style={styles.totalValue}>${state.player.totalScore}</Text>
+                <Text style={styles.totalValue}>
+                  ${state.player.totalScore}
+                </Text>
               </View>
 
-              <TouchableOpacity onPress={() => setShowSettings(true)} style={styles.iconButton}>
+              <TouchableOpacity
+                onPress={() => setShowSettings(true)}
+                style={styles.iconButton}
+              >
                 <Settings size={24} color={colors.white} />
               </TouchableOpacity>
             </>
-          ) : activeScreen !== 'home' ? (
+          ) : activeScreen !== "home" ? (
             <View style={styles.headerSpacer} />
           ) : (
             <>
               <View style={styles.scoreContainer}>
                 <Text style={styles.scoreLabel}>TOTAL</Text>
-                <Text style={styles.totalValue}>${state.player.totalScore}</Text>
+                <Text style={styles.totalValue}>
+                  ${state.player.totalScore}
+                </Text>
               </View>
 
-              <TouchableOpacity onPress={() => setShowSettings(true)} style={styles.iconButton}>
+              <TouchableOpacity
+                onPress={() => setShowSettings(true)}
+                style={styles.iconButton}
+              >
                 <Settings size={24} color={colors.white} />
               </TouchableOpacity>
             </>
@@ -304,7 +376,7 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
         )}
 
         {/* Main Content */}
-        {activeScreen === 'home' && (
+        {activeScreen === "home" && (
           <View style={styles.homeContainer}>
             <Text style={styles.homeTitle}>WHEEL PRACTICE</Text>
             <Text style={styles.homeSubtitle}>Choose an activity</Text>
@@ -312,7 +384,7 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
             <View style={styles.navCards}>
               <TouchableOpacity
                 style={styles.navCard}
-                onPress={() => setActiveScreen('game')}
+                onPress={() => setActiveScreen("game")}
               >
                 <LinearGradient
                   colors={[colors.green[500], colors.green[600]]}
@@ -320,13 +392,15 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
                 >
                   <Play size={40} color={colors.white} />
                   <Text style={styles.navCardTitle}>Play</Text>
-                  <Text style={styles.navCardDesc}>Spin the wheel and solve puzzles</Text>
+                  <Text style={styles.navCardDesc}>
+                    Spin the wheel and solve puzzles
+                  </Text>
                 </LinearGradient>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.navCard}
-                onPress={() => setActiveScreen('packBrowser')}
+                onPress={() => setActiveScreen("packBrowser")}
               >
                 <LinearGradient
                   colors={[colors.blue[500], colors.blue[600]]}
@@ -334,13 +408,15 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
                 >
                   <BookOpen size={40} color={colors.white} />
                   <Text style={styles.navCardTitle}>Puzzle Packs</Text>
-                  <Text style={styles.navCardDesc}>Browse and select puzzle packs</Text>
+                  <Text style={styles.navCardDesc}>
+                    Browse and select puzzle packs
+                  </Text>
                 </LinearGradient>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.navCard}
-                onPress={() => setActiveScreen('strategy')}
+                onPress={() => setActiveScreen("strategy")}
               >
                 <LinearGradient
                   colors={[colors.purple[500], colors.purple[600]]}
@@ -348,19 +424,30 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
                 >
                   <BarChart3 size={40} color={colors.white} />
                   <Text style={styles.navCardTitle}>Strategy</Text>
-                  <Text style={styles.navCardDesc}>Analyze letter frequencies and patterns</Text>
+                  <Text style={styles.navCardDesc}>
+                    Analyze letter frequencies and patterns
+                  </Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
           </View>
         )}
 
-        {activeScreen === 'game' && (
-          <ScrollView
-            style={styles.content}
-            contentContainerStyle={styles.contentContainer}
-            showsVerticalScrollIndicator={false}
-          >
+        {activeScreen === "game" && (
+          <View style={styles.gameScreenContainer}>
+            {/* Active Pack Indicator */}
+            <View style={styles.packIndicator}>
+              <BookOpen size={12} color={colors.slate[400]} />
+              <Text style={styles.packIndicatorText} numberOfLines={1}>
+                {activePack.name}
+              </Text>
+              {puzzleIndex >= 0 && (
+                <Text style={styles.packIndicatorCount}>
+                  {puzzleIndex + 1}/{activePack.puzzles.length}
+                </Text>
+              )}
+            </View>
+
             {/* Puzzle Board */}
             {state.currentPuzzle && (
               <InteractiveBoard
@@ -397,18 +484,18 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
                 {/* Wheel */}
                 {!isRoundOver && (
                   <View style={styles.wheelContainer}>
-                     <StandardWheel
-                       onSpinStart={handleSpinStart}
-                       onSpinComplete={handleSpinComplete}
-                       isSpinning={state.turnState === 'SPINNING'}
-                       seed={state.seed + state.spinCount}
-                       canSpin={state.turnState === 'IDLE'}
-                     />
-                   </View>
+                    <StandardWheel
+                      onSpinStart={handleSpinStart}
+                      onSpinComplete={handleSpinComplete}
+                      isSpinning={state.turnState === "SPINNING"}
+                      seed={state.seed + state.spinCount}
+                      canSpin={state.turnState === "IDLE"}
+                    />
+                  </View>
                 )}
 
                 {/* Action Buttons */}
-                {state.turnState === 'IDLE' && (
+                {state.turnState === "IDLE" && (
                   <View style={styles.actionButtons}>
                     <TouchableOpacity onPress={() => setShowSolveModal(true)}>
                       <LinearGradient
@@ -424,11 +511,20 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
                       disabled={!canBuyVowel}
                     >
                       <LinearGradient
-                        colors={canBuyVowel ? [colors.purple[500], colors.purple[600]] : [colors.slate[600], colors.slate[700]]}
+                        colors={
+                          canBuyVowel
+                            ? [colors.purple[500], colors.purple[600]]
+                            : [colors.slate[600], colors.slate[700]]
+                        }
                         style={styles.actionButton}
                       >
-                        <Text style={[styles.actionButtonText, !canBuyVowel && styles.disabledText]}>
-                          {vowelsLeft ? `VOWEL $${VOWEL_COST}` : 'NO VOWELS'}
+                        <Text
+                          style={[
+                            styles.actionButtonText,
+                            !canBuyVowel && styles.disabledText,
+                          ]}
+                        >
+                          {vowelsLeft ? `VOWEL $${VOWEL_COST}` : "NO VOWELS"}
                         </Text>
                       </LinearGradient>
                     </TouchableOpacity>
@@ -438,10 +534,12 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
                 {/* Status */}
                 <View style={styles.statusContainer}>
                   <Text style={styles.statusText}>
-                    {state.turnState === 'SPINNING' && 'SPINNING...'}
-                    {state.turnState === 'GUESSING_CONSONANT' && `GUESS A CONSONANT ($${state.spinResult})`}
-                    {state.turnState === 'BUYING_VOWEL' && `SELECT A VOWEL ($${VOWEL_COST})`}
-                    {state.turnState === 'IDLE' && 'SPIN THE WHEEL'}
+                    {state.turnState === "SPINNING" && "SPINNING..."}
+                    {state.turnState === "GUESSING_CONSONANT" &&
+                      `GUESS A CONSONANT ($${state.spinResult})`}
+                    {state.turnState === "BUYING_VOWEL" &&
+                      `SELECT A VOWEL ($${VOWEL_COST})`}
+                    {state.turnState === "IDLE" && "SPIN THE WHEEL"}
                   </Text>
                 </View>
 
@@ -452,30 +550,35 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
                       guessedLetters={state.guessedLetters}
                       onGuess={handleGuess}
                       disabled={!canGuess}
-                      vowelsOnly={state.turnState === 'BUYING_VOWEL'}
-                      consonantsOnly={state.turnState === 'GUESSING_CONSONANT'}
+                      vowelsOnly={state.turnState === "BUYING_VOWEL"}
+                      consonantsOnly={state.turnState === "GUESSING_CONSONANT"}
                     />
                   </View>
                 )}
               </View>
             )}
-          </ScrollView>
+          </View>
         )}
 
-        {activeScreen === 'packBrowser' && (
+        {activeScreen === "packBrowser" && (
           <PackBrowser
             packs={ALL_PACKS}
             activePackId={activePack.id}
             onSelectPack={(pack) => {
               setActivePack(pack);
-              nextRound();
-              setActiveScreen('game');
+              setPuzzleIndex(-1);
+              setActiveScreen("game");
+              const first = pack.puzzles[0];
+              if (first) {
+                setPuzzleIndex(0);
+                dispatch({ type: "START_ROUND", puzzle: first });
+              }
             }}
             onSelectPuzzle={handleSelectPuzzle}
           />
         )}
 
-        {activeScreen === 'strategy' && (
+        {activeScreen === "strategy" && (
           <StrategyDashboard puzzles={activePack.puzzles} />
         )}
 
@@ -521,9 +624,14 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
             activePackId={activePack.id}
             onSelectPack={(pack) => {
               setActivePack(pack);
-              nextRound();
-              setActiveScreen('game');
+              setPuzzleIndex(-1);
+              setActiveScreen("game");
               setShowPackBrowserModal(false);
+              const first = pack.puzzles[0];
+              if (first) {
+                setPuzzleIndex(0);
+                dispatch({ type: "START_ROUND", puzzle: first });
+              }
             }}
             onSelectPuzzle={handleSelectPuzzle}
             asModal
@@ -536,7 +644,7 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
             <ConfettiCannon
               ref={confettiRef}
               count={100}
-              origin={{ x: Dimensions.get('window').width / 2, y: -10 }}
+              origin={{ x: Dimensions.get("window").width / 2, y: -10 }}
               fadeOut
               autoStart={false}
               fallSpeed={3000}
@@ -572,9 +680,9 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
 
             <TouchableOpacity
               onPress={() => {
-                dispatch({ type: 'RESET_ROUND' });
+                dispatch({ type: "RESET_ROUND" });
                 setShowSettings(false);
-                showToast('Puzzle reset');
+                showToast("Puzzle reset");
               }}
               style={styles.resetButton}
             >
@@ -584,9 +692,12 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
 
             <TouchableOpacity
               onPress={() => {
-                dispatch({ type: 'RANDOM_PUZZLE', puzzles: activePack.puzzles });
+                dispatch({
+                  type: "RANDOM_PUZZLE",
+                  puzzles: activePack.puzzles,
+                });
                 setShowSettings(false);
-                showToast('New puzzle loaded');
+                showToast("New puzzle loaded");
               }}
               style={styles.resetButton}
             >
@@ -609,8 +720,13 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
 
             <TouchableOpacity
               onPress={() => {
-                dispatch({ type: 'RESET_GAME' });
-                nextRound();
+                dispatch({ type: "RESET_GAME" });
+                setPuzzleIndex(-1);
+                const first = activePack.puzzles[0];
+                if (first) {
+                  setPuzzleIndex(0);
+                  dispatch({ type: "START_ROUND", puzzle: first });
+                }
                 setShowSettings(false);
               }}
               style={styles.resetAllButton}
@@ -634,9 +750,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
     borderBottomWidth: 1,
@@ -652,7 +768,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   scoreContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   scoreLabel: {
     color: colors.slate[400],
@@ -669,11 +785,11 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.lg,
   },
   toast: {
-    position: 'absolute',
+    position: "absolute",
     top: 100,
-    alignSelf: 'center',
+    alignSelf: "center",
     zIndex: 50,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[2],
     borderRadius: borderRadius.full,
@@ -683,21 +799,41 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.sm,
   },
-  content: {
+  gameScreenContainer: {
     flex: 1,
-  },
-  contentContainer: {
     padding: spacing[3],
-    paddingBottom: spacing[8],
+  },
+  packIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    gap: spacing[1],
+    marginBottom: spacing[2],
+    backgroundColor: "rgba(30, 41, 59, 0.8)",
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1],
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.slate[700],
+  },
+  packIndicatorText: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.medium,
+    flexShrink: 1,
+  },
+  packIndicatorCount: {
+    color: colors.slate[500],
+    fontSize: typography.sizes.xs,
   },
   roundOverSection: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: spacing[4],
     marginTop: spacing[6],
   },
   solvedText: {
     color: colors.green[400],
-    fontSize: typography.sizes['2xl'],
+    fontSize: typography.sizes["2xl"],
     fontWeight: typography.weights.bold,
   },
   winningsText: {
@@ -706,12 +842,12 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
   },
   nextButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing[2],
     paddingHorizontal: spacing[6],
     paddingVertical: spacing[3],
-    borderRadius: borderRadius['2xl'],
+    borderRadius: borderRadius["2xl"],
     ...shadows.lg,
   },
   nextButtonText: {
@@ -720,17 +856,18 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.lg,
   },
   gameArea: {
-    gap: spacing[4],
-    marginTop: spacing[4],
+    flex: 1,
+    gap: spacing[2],
+    marginTop: spacing[2],
   },
   wheelContainer: {
-    width: '95%',
-    alignSelf: 'center',
+    width: "95%",
+    alignSelf: "center",
     maxWidth: 400,
   },
   actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: spacing[3],
   },
   actionButton: {
@@ -748,7 +885,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   statusContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing[2],
   },
   statusText: {
@@ -757,8 +894,8 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
   },
   keyboardSection: {
-    marginTop: spacing[2],
-    paddingBottom: spacing[16],
+    marginTop: "auto",
+    paddingBottom: spacing[2],
   },
   solveInput: {
     backgroundColor: colors.slate[800],
@@ -769,12 +906,12 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xl,
     color: colors.white,
     fontWeight: typography.weights.bold,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
     gap: spacing[4],
     marginTop: spacing[4],
   },
@@ -795,8 +932,8 @@ const styles = StyleSheet.create({
     gap: spacing[4],
   },
   statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: spacing[2],
     borderBottomWidth: 1,
     borderBottomColor: colors.slate[700],
@@ -809,11 +946,11 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
   },
   resetButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing[2],
-    backgroundColor: 'rgba(161, 98, 7, 0.3)',
+    backgroundColor: "rgba(161, 98, 7, 0.3)",
     paddingVertical: spacing[3],
     borderRadius: borderRadius.base,
     marginTop: spacing[4],
@@ -823,11 +960,11 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
   },
   browseButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing[2],
-    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+    backgroundColor: "rgba(37, 99, 235, 0.2)",
     paddingVertical: spacing[3],
     borderRadius: borderRadius.base,
   },
@@ -841,11 +978,11 @@ const styles = StyleSheet.create({
     marginVertical: spacing[2],
   },
   resetAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing[2],
-    backgroundColor: 'rgba(127, 29, 29, 0.3)',
+    backgroundColor: "rgba(127, 29, 29, 0.3)",
     paddingVertical: spacing[3],
     borderRadius: borderRadius.base,
   },
@@ -866,11 +1003,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing[4],
     paddingTop: spacing[8],
-    alignItems: 'center',
+    alignItems: "center",
   },
   homeTitle: {
     color: colors.yellow[400],
-    fontSize: typography.sizes['4xl'],
+    fontSize: typography.sizes["4xl"],
     fontWeight: typography.weights.bold,
     letterSpacing: 2,
     marginBottom: spacing[1],
@@ -881,17 +1018,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing[8],
   },
   navCards: {
-    width: '100%',
+    width: "100%",
     gap: spacing[4],
   },
   navCard: {
     borderRadius: borderRadius.xl,
-    overflow: 'hidden',
+    overflow: "hidden",
     ...shadows.lg,
   },
   navCardGradient: {
     padding: spacing[5],
-    alignItems: 'center',
+    alignItems: "center",
     gap: spacing[2],
   },
   navCardTitle: {
@@ -900,18 +1037,18 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
   },
   navCardDesc: {
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: "rgba(255, 255, 255, 0.8)",
     fontSize: typography.sizes.sm,
   },
   placeholderScreen: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing[3],
   },
   placeholderTitle: {
     color: colors.white,
-    fontSize: typography.sizes['2xl'],
+    fontSize: typography.sizes["2xl"],
     fontWeight: typography.weights.bold,
   },
   placeholderDesc: {
@@ -923,9 +1060,9 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   vannaOverlay: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 40,
-    alignSelf: 'center',
+    alignSelf: "center",
     zIndex: 101,
   },
 });

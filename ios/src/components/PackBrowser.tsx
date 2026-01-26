@@ -6,7 +6,7 @@
  * 2. Puzzle list — shows puzzles within a selected pack with filtering
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -15,12 +15,24 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-} from 'react-native';
-import { BookOpen, Hash, Layers, ChevronLeft, Search } from 'lucide-react-native';
+} from "react-native";
+import {
+  BookOpen,
+  Hash,
+  Layers,
+  ChevronLeft,
+  Search,
+} from "lucide-react-native";
 
-import { PuzzlePack } from '../engine/packs';
-import { Puzzle } from '../engine/types';
-import { colors, typography, spacing, borderRadius, shadows } from '../styles/theme';
+import { PuzzlePack } from "../engine/packs";
+import { Puzzle } from "../engine/types";
+import {
+  colors,
+  typography,
+  spacing,
+  borderRadius,
+  shadows,
+} from "../styles/theme";
 
 interface PackBrowserProps {
   packs: PuzzlePack[];
@@ -30,7 +42,7 @@ interface PackBrowserProps {
   asModal?: boolean;
 }
 
-type DifficultyLevel = 'all' | 'easy' | 'medium' | 'hard';
+type DifficultyLevel = "all" | "easy" | "medium" | "hard";
 
 const CATEGORY_COLORS: Record<string, string> = {
   PHRASE: colors.blue[500],
@@ -50,16 +62,16 @@ function getCategoryColor(category: string): string {
 
 function formatCategoryLabel(category: string): string {
   return category
-    .replace(/_/g, ' ')
-    .split(' ')
-    .map(word => word.charAt(0) + word.slice(1).toLowerCase())
-    .join(' ');
+    .replace(/_/g, " ")
+    .split(" ")
+    .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
 function getDifficultyLabel(score: number): string {
-  if (score < 0.33) return 'Easy';
-  if (score <= 0.66) return 'Medium';
-  return 'Hard';
+  if (score < 0.33) return "Easy";
+  if (score <= 0.66) return "Medium";
+  return "Hard";
 }
 
 function getDifficultyColor(score: number): string {
@@ -71,13 +83,13 @@ function getDifficultyColor(score: number): string {
 function maskPhrase(phrase: string): string {
   return phrase
     .toUpperCase()
-    .split('')
-    .map(ch => {
-      if (/[A-Z]/.test(ch)) return '_';
-      if (ch === ' ') return '  ';
+    .split("")
+    .map((ch) => {
+      if (/[A-Z]/.test(ch)) return "_";
+      if (ch === " ") return "  ";
       return ch;
     })
-    .join(' ');
+    .join(" ");
 }
 
 function getWordCount(phrase: string): number {
@@ -85,23 +97,29 @@ function getWordCount(phrase: string): number {
 }
 
 function matchesDifficulty(puzzle: Puzzle, level: DifficultyLevel): boolean {
-  if (level === 'all') return true;
+  if (level === "all") return true;
   const score = puzzle.difficulty?.score ?? 0.5;
-  if (level === 'easy') return score < 0.33;
-  if (level === 'medium') return score >= 0.33 && score <= 0.66;
+  if (level === "easy") return score < 0.33;
+  if (level === "medium") return score >= 0.33 && score <= 0.66;
   return score > 0.66;
 }
 
 // ─── Category Chip ───────────────────────────────────────────────────
 
-function CategoryChip({ category, count }: { category: string; count?: number }) {
+function CategoryChip({
+  category,
+  count,
+}: {
+  category: string;
+  count?: number;
+}) {
   const chipColor = getCategoryColor(category);
 
   return (
     <View style={[styles.categoryChip, { borderColor: chipColor }]}>
       <Text style={[styles.categoryChipText, { color: chipColor }]}>
         {formatCategoryLabel(category)}
-        {count != null ? ` (${count})` : ''}
+        {count != null ? ` (${count})` : ""}
       </Text>
     </View>
   );
@@ -128,7 +146,10 @@ function PackCard({
     >
       <View style={styles.packCardHeader}>
         <View style={styles.packIconContainer}>
-          <BookOpen size={24} color={isActive ? colors.yellow[400] : colors.white} />
+          <BookOpen
+            size={24}
+            color={isActive ? colors.yellow[400] : colors.white}
+          />
         </View>
         <View style={styles.packCardInfo}>
           <Text style={[styles.packName, isActive && styles.packNameActive]}>
@@ -141,9 +162,7 @@ function PackCard({
       <View style={styles.packStats}>
         <View style={styles.statBadge}>
           <Hash size={12} color={colors.slate[400]} />
-          <Text style={styles.statBadgeText}>
-            {pack.puzzleCount} puzzles
-          </Text>
+          <Text style={styles.statBadgeText}>{pack.puzzleCount} puzzles</Text>
         </View>
         <View style={styles.statBadge}>
           <Layers size={12} color={colors.slate[400]} />
@@ -168,7 +187,9 @@ function PackCard({
   );
 }
 
-function computeCategoryCounts(pack: PuzzlePack): Array<{ category: string; count: number }> {
+function computeCategoryCounts(
+  pack: PuzzlePack,
+): Array<{ category: string; count: number }> {
   const counts = new Map<string, number>();
   for (const puzzle of pack.puzzles) {
     const current = counts.get(puzzle.category) ?? 0;
@@ -201,20 +222,20 @@ function CategoryFilterChips({
       <TouchableOpacity
         style={[
           styles.filterChip,
-          selected === 'all' && styles.filterChipActive,
+          selected === "all" && styles.filterChipActive,
         ]}
-        onPress={() => onSelect('all')}
+        onPress={() => onSelect("all")}
       >
         <Text
           style={[
             styles.filterChipLabel,
-            selected === 'all' && styles.filterChipLabelActive,
+            selected === "all" && styles.filterChipLabelActive,
           ]}
         >
           All
         </Text>
       </TouchableOpacity>
-      {categories.map(cat => (
+      {categories.map((cat) => (
         <TouchableOpacity
           key={cat}
           style={[
@@ -241,10 +262,10 @@ function CategoryFilterChips({
 // ─── Difficulty Segmented Control ───────────────────────────────────
 
 const DIFFICULTY_OPTIONS: Array<{ key: DifficultyLevel; label: string }> = [
-  { key: 'all', label: 'All' },
-  { key: 'easy', label: 'Easy' },
-  { key: 'medium', label: 'Medium' },
-  { key: 'hard', label: 'Hard' },
+  { key: "all", label: "All" },
+  { key: "easy", label: "Easy" },
+  { key: "medium", label: "Medium" },
+  { key: "hard", label: "Hard" },
 ];
 
 function DifficultySegmentedControl({
@@ -256,7 +277,7 @@ function DifficultySegmentedControl({
 }) {
   return (
     <View style={styles.segmentedControl}>
-      {DIFFICULTY_OPTIONS.map(opt => (
+      {DIFFICULTY_OPTIONS.map((opt) => (
         <TouchableOpacity
           key={opt.key}
           style={[
@@ -302,19 +323,29 @@ function PuzzleRow({
       activeOpacity={0.7}
     >
       <View style={styles.puzzleRowTop}>
-        <View style={[styles.puzzleCategoryBadge, { backgroundColor: catColor + '22', borderColor: catColor }]}>
+        <View
+          style={[
+            styles.puzzleCategoryBadge,
+            { backgroundColor: catColor + "22", borderColor: catColor },
+          ]}
+        >
           <Text style={[styles.puzzleCategoryText, { color: catColor }]}>
             {formatCategoryLabel(puzzle.category)}
           </Text>
         </View>
         <View style={styles.puzzleMetaRight}>
-          <View style={[styles.puzzleDiffBadge, { backgroundColor: diffColor + '22' }]}>
+          <View
+            style={[
+              styles.puzzleDiffBadge,
+              { backgroundColor: diffColor + "22" },
+            ]}
+          >
             <Text style={[styles.puzzleDiffText, { color: diffColor }]}>
               {diffLabel}
             </Text>
           </View>
           <Text style={styles.puzzleWordCount}>
-            {wordCount} {wordCount === 1 ? 'word' : 'words'}
+            {wordCount} {wordCount === 1 ? "word" : "words"}
           </Text>
         </View>
       </View>
@@ -336,9 +367,10 @@ function PuzzleListView({
   onBack: () => void;
   onSelectPuzzle: (puzzle: Puzzle) => void;
 }) {
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [difficultyFilter, setDifficultyFilter] = useState<DifficultyLevel>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [difficultyFilter, setDifficultyFilter] =
+    useState<DifficultyLevel>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const uniqueCategories = useMemo(() => {
     const counts = new Map<string, number>();
@@ -351,8 +383,8 @@ function PuzzleListView({
   const filteredPuzzles = useMemo(() => {
     const query = searchQuery.trim().toUpperCase();
 
-    return pack.puzzles.filter(puzzle => {
-      if (categoryFilter !== 'all' && puzzle.category !== categoryFilter) {
+    return pack.puzzles.filter((puzzle) => {
+      if (categoryFilter !== "all" && puzzle.category !== categoryFilter) {
         return false;
       }
       if (!matchesDifficulty(puzzle, difficultyFilter)) {
@@ -382,9 +414,12 @@ function PuzzleListView({
           <ChevronLeft size={20} color={colors.white} />
         </TouchableOpacity>
         <View style={styles.puzzleListHeaderInfo}>
-          <Text style={styles.title} numberOfLines={1}>{pack.name}</Text>
+          <Text style={styles.title} numberOfLines={1}>
+            {pack.name}
+          </Text>
           <Text style={styles.subtitle}>
-            {filteredPuzzles.length} {filteredPuzzles.length === 1 ? 'puzzle' : 'puzzles'}
+            {filteredPuzzles.length}{" "}
+            {filteredPuzzles.length === 1 ? "puzzle" : "puzzles"}
           </Text>
         </View>
       </View>
@@ -488,7 +523,13 @@ function Separator() {
 
 // ─── Main Component ─────────────────────────────────────────────────
 
-export function PackBrowser({ packs, activePackId, onSelectPack, onSelectPuzzle, asModal }: PackBrowserProps) {
+export function PackBrowser({
+  packs,
+  activePackId,
+  onSelectPack,
+  onSelectPuzzle,
+  asModal,
+}: PackBrowserProps) {
   const [selectedPack, setSelectedPack] = useState<PuzzlePack | null>(null);
 
   const handleSelectPuzzle = useCallback(
@@ -545,7 +586,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.white,
-    fontSize: typography.sizes['2xl'],
+    fontSize: typography.sizes["2xl"],
     fontWeight: typography.weights.bold,
   },
   subtitle: {
@@ -563,7 +604,7 @@ const styles = StyleSheet.create({
 
   // Pack card
   packCard: {
-    backgroundColor: 'rgba(30, 41, 59, 0.8)',
+    backgroundColor: "rgba(30, 41, 59, 0.8)",
     borderRadius: borderRadius.xl,
     padding: spacing[4],
     borderWidth: 1,
@@ -572,20 +613,20 @@ const styles = StyleSheet.create({
   },
   packCardActive: {
     borderColor: colors.yellow[400],
-    backgroundColor: 'rgba(250, 204, 21, 0.08)',
+    backgroundColor: "rgba(250, 204, 21, 0.08)",
   },
   packCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: spacing[3],
   },
   packIconContainer: {
     width: 44,
     height: 44,
     borderRadius: borderRadius.lg,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   packCardInfo: {
     flex: 1,
@@ -604,13 +645,13 @@ const styles = StyleSheet.create({
     marginTop: spacing[0.5],
   },
   packStats: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing[3],
     marginTop: spacing[3],
   },
   statBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing[1],
   },
   statBadgeText: {
@@ -618,8 +659,8 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
   },
   categoryChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing[1.5],
     marginTop: spacing[3],
   },
@@ -627,14 +668,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing[2],
-    paddingVertical: spacing[0.5],
+    paddingVertical: spacing[1],
   },
   categoryChipText: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.medium,
+    lineHeight: typography.sizes.xs * 1.3,
   },
   activeBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: spacing[3],
     right: spacing[3],
     backgroundColor: colors.yellow[400],
@@ -651,8 +693,8 @@ const styles = StyleSheet.create({
 
   // Puzzle list header
   puzzleListHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: spacing[4],
     marginBottom: spacing[2],
     gap: spacing[2],
@@ -661,9 +703,9 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   puzzleListHeaderInfo: {
     flex: 1,
@@ -671,11 +713,11 @@ const styles = StyleSheet.create({
 
   // Search
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginHorizontal: spacing[4],
     marginBottom: spacing[2],
-    backgroundColor: 'rgba(30, 41, 59, 0.8)',
+    backgroundColor: "rgba(30, 41, 59, 0.8)",
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.slate[700],
@@ -696,22 +738,25 @@ const styles = StyleSheet.create({
   filterChipsContent: {
     paddingHorizontal: spacing[4],
     gap: spacing[2],
+    alignItems: "center",
   },
   filterChip: {
     borderWidth: 1,
     borderColor: colors.slate[600],
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1],
+    paddingVertical: spacing[1.5],
+    alignSelf: "center",
   },
   filterChipActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderColor: colors.yellow[400],
   },
   filterChipLabel: {
     color: colors.slate[400],
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.medium,
+    lineHeight: typography.sizes.sm * 1.3,
   },
   filterChipLabelActive: {
     color: colors.yellow[400],
@@ -723,20 +768,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing[3],
   },
   segmentedControl: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(30, 41, 59, 0.8)',
+    flexDirection: "row",
+    backgroundColor: "rgba(30, 41, 59, 0.8)",
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.slate[700],
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   segmentedOption: {
     flex: 1,
     paddingVertical: spacing[1.5],
-    alignItems: 'center',
+    alignItems: "center",
   },
   segmentedOptionActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
   },
   segmentedLabel: {
     color: colors.slate[400],
@@ -750,16 +795,16 @@ const styles = StyleSheet.create({
 
   // Puzzle row
   puzzleRow: {
-    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    backgroundColor: "rgba(30, 41, 59, 0.6)",
     borderRadius: borderRadius.lg,
     padding: spacing[3],
     borderWidth: 1,
     borderColor: colors.slate[700],
   },
   puzzleRowTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing[2],
   },
   puzzleCategoryBadge: {
@@ -773,8 +818,8 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.medium,
   },
   puzzleMetaRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing[2],
   },
   puzzleDiffBadge: {
@@ -809,7 +854,7 @@ const styles = StyleSheet.create({
   // Empty state
   emptyState: {
     paddingVertical: spacing[10],
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     color: colors.slate[500],
