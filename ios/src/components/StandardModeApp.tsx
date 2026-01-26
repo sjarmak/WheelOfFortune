@@ -33,6 +33,8 @@ import {
   Play,
   BookOpen,
   BarChart3,
+  Zap,
+  Trophy,
 } from "lucide-react-native";
 import Animated, {
   useSharedValue,
@@ -44,8 +46,8 @@ import ConfettiCannon from "react-native-confetti-cannon";
 
 import { Vanna } from "./Vanna";
 import { gameReducer, INITIAL_STATE } from "../engine/game";
-import { Puzzle, VOWELS, WheelWedge } from "../engine/types";
-import { ALL_PACKS, PuzzlePack } from "../engine/packs";
+import { Puzzle, RoundType, VOWELS, WheelWedge } from "../engine/types";
+import { ALL_PACKS, getPuzzlesForMode, PuzzlePack } from "../engine/packs";
 import { DEFAULT_PUZZLES } from "../engine/defaultPack";
 import { InteractiveBoard } from "./InteractiveBoard";
 import { StandardWheel } from "./StandardWheel";
@@ -92,6 +94,8 @@ export function StandardModeApp({
   });
 
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>("home");
+  const [selectedRoundMode, setSelectedRoundMode] =
+    useState<RoundType>("MAIN");
   const [showSettings, setShowSettings] = useState(false);
   const [showPackBrowserModal, setShowPackBrowserModal] = useState(false);
   const [showSolveModal, setShowSolveModal] = useState(false);
@@ -214,12 +218,33 @@ export function StandardModeApp({
       clearTimeout(celebrationTimerRef.current);
       celebrationTimerRef.current = null;
     }
-    const puzzles = activePack.puzzles;
+    const puzzles = getPuzzlesForMode(activePack.puzzles, selectedRoundMode);
     const nextIndex = puzzleIndex >= puzzles.length - 1 ? 0 : puzzleIndex + 1;
     const next = puzzles[nextIndex];
     setPuzzleIndex(nextIndex);
-    dispatch({ type: "START_ROUND", puzzle: next });
-  }, [activePack, puzzleIndex]);
+    dispatch({
+      type: "START_ROUND",
+      puzzle: { ...next, round_type: selectedRoundMode },
+    });
+  }, [activePack, puzzleIndex, selectedRoundMode]);
+
+  // Navigate to game with a specific round mode
+  const startMode = useCallback(
+    (mode: RoundType) => {
+      setSelectedRoundMode(mode);
+      const puzzles = getPuzzlesForMode(activePack.puzzles, mode);
+      const first = puzzles[0];
+      if (first) {
+        setPuzzleIndex(0);
+        dispatch({
+          type: "START_ROUND",
+          puzzle: { ...first, round_type: mode },
+        });
+      }
+      setActiveScreen("game");
+    },
+    [activePack],
+  );
 
   // Load puzzle on mount — start at first puzzle in pack
   useEffect(() => {
@@ -409,16 +434,48 @@ export function StandardModeApp({
             <View style={styles.navCards}>
               <TouchableOpacity
                 style={styles.navCard}
-                onPress={() => setActiveScreen("game")}
+                onPress={() => startMode("MAIN")}
               >
                 <LinearGradient
                   colors={[colors.green[500], colors.green[600]]}
                   style={styles.navCardGradient}
                 >
                   <Play size={40} color={colors.white} />
-                  <Text style={styles.navCardTitle}>Play</Text>
+                  <Text style={styles.navCardTitle}>Standard Game</Text>
                   <Text style={styles.navCardDesc}>
-                    Spin the wheel and solve puzzles
+                    Spin the wheel, guess letters, solve the puzzle
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.navCard}
+                onPress={() => startMode("TOSSUP")}
+              >
+                <LinearGradient
+                  colors={[colors.orange[500], colors.orange[600]]}
+                  style={styles.navCardGradient}
+                >
+                  <Zap size={40} color={colors.white} />
+                  <Text style={styles.navCardTitle}>Toss-Up</Text>
+                  <Text style={styles.navCardDesc}>
+                    Letters reveal one by one — buzz in to solve!
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.navCard}
+                onPress={() => startMode("BONUS")}
+              >
+                <LinearGradient
+                  colors={[colors.purple[500], colors.purple[600]]}
+                  style={styles.navCardGradient}
+                >
+                  <Trophy size={40} color={colors.white} />
+                  <Text style={styles.navCardTitle}>Bonus Round</Text>
+                  <Text style={styles.navCardDesc}>
+                    Pick your letters, solve before time runs out
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -444,7 +501,7 @@ export function StandardModeApp({
                 onPress={() => setActiveScreen("strategy")}
               >
                 <LinearGradient
-                  colors={[colors.purple[500], colors.purple[600]]}
+                  colors={[colors.slate[600], colors.slate[700]]}
                   style={styles.navCardGradient}
                 >
                   <BarChart3 size={40} color={colors.white} />
