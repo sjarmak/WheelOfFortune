@@ -133,7 +133,7 @@
         "Typecheck passes"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "SELECT_PUZZLE action accepts a Puzzle object. Navigation callback needed from PackBrowser to parent (StandardModeApp) to switch activeScreen to 'game'. For modal mode, add a boolean prop like asModal to PackBrowser that adjusts layout."
     },
     {

@@ -20,7 +20,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Settings, RotateCcw, X, ChevronLeft, Play, BookOpen, BarChart3 } from 'lucide-react-native';
 
 import { gameReducer, INITIAL_STATE } from '../engine/game';
-import { VOWELS, WheelWedge } from '../engine/types';
+import { Puzzle, VOWELS, WheelWedge } from '../engine/types';
 import { ALL_PACKS, PuzzlePack } from '../engine/packs';
 import { DEFAULT_PUZZLES } from '../engine/defaultPack';
 import { InteractiveBoard } from './InteractiveBoard';
@@ -59,6 +59,7 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
 
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>('home');
   const [showSettings, setShowSettings] = useState(false);
+  const [showPackBrowserModal, setShowPackBrowserModal] = useState(false);
   const [showSolveModal, setShowSolveModal] = useState(false);
   const [solveInput, setSolveInput] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -187,6 +188,13 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
     setShowSolveModal(false);
     setSolveInput('');
   }, [solveInput, state.currentPuzzle, showToast]);
+
+  const handleSelectPuzzle = useCallback((puzzle: Puzzle, pack: PuzzlePack) => {
+    setActivePack(pack);
+    dispatch({ type: 'SELECT_PUZZLE', puzzle });
+    setActiveScreen('game');
+    setShowPackBrowserModal(false);
+  }, []);
 
   const isRoundOver = state.turnState === 'ROUND_OVER';
   const canSpin = state.turnState === 'IDLE' && !isRoundOver;
@@ -419,6 +427,7 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
               nextRound();
               setActiveScreen('game');
             }}
+            onSelectPuzzle={handleSelectPuzzle}
           />
         )}
 
@@ -460,6 +469,27 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
           </View>
         </Modal>
 
+        {/* Pack Browser Modal */}
+        <Modal
+          visible={showPackBrowserModal}
+          onClose={() => setShowPackBrowserModal(false)}
+          title="Browse Puzzles"
+          maxHeight="85%"
+        >
+          <PackBrowser
+            packs={ALL_PACKS}
+            activePackId={activePack.id}
+            onSelectPack={(pack) => {
+              setActivePack(pack);
+              nextRound();
+              setActiveScreen('game');
+              setShowPackBrowserModal(false);
+            }}
+            onSelectPuzzle={handleSelectPuzzle}
+            asModal
+          />
+        </Modal>
+
         {/* Settings Modal */}
         <Modal
           visible={showSettings}
@@ -482,14 +512,40 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
 
             <TouchableOpacity
               onPress={() => {
-                nextRound();
+                dispatch({ type: 'RESET_ROUND' });
                 setShowSettings(false);
+                showToast('Puzzle reset');
               }}
               style={styles.resetButton}
             >
               <RotateCcw size={16} color={colors.yellow[300]} />
-              <Text style={styles.resetButtonText}>New Puzzle</Text>
+              <Text style={styles.resetButtonText}>Reset Round</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                dispatch({ type: 'RANDOM_PUZZLE', puzzles: activePack.puzzles });
+                setShowSettings(false);
+                showToast('New puzzle loaded');
+              }}
+              style={styles.resetButton}
+            >
+              <RotateCcw size={16} color={colors.yellow[300]} />
+              <Text style={styles.resetButtonText}>Random Puzzle</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                setShowSettings(false);
+                setShowPackBrowserModal(true);
+              }}
+              style={styles.browseButton}
+            >
+              <BookOpen size={16} color={colors.blue[400]} />
+              <Text style={styles.browseButtonText}>Browse Puzzles</Text>
+            </TouchableOpacity>
+
+            <View style={styles.settingsDivider} />
 
             <TouchableOpacity
               onPress={() => {
@@ -705,6 +761,24 @@ const styles = StyleSheet.create({
   resetButtonText: {
     color: colors.yellow[300],
     fontWeight: typography.weights.bold,
+  },
+  browseButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[2],
+    backgroundColor: 'rgba(37, 99, 235, 0.2)',
+    paddingVertical: spacing[3],
+    borderRadius: borderRadius.base,
+  },
+  browseButtonText: {
+    color: colors.blue[400],
+    fontWeight: typography.weights.bold,
+  },
+  settingsDivider: {
+    height: 1,
+    backgroundColor: colors.slate[700],
+    marginVertical: spacing[2],
   },
   resetAllButton: {
     flexDirection: 'row',

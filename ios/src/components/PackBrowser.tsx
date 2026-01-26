@@ -26,6 +26,8 @@ interface PackBrowserProps {
   packs: PuzzlePack[];
   activePackId: string;
   onSelectPack: (pack: PuzzlePack) => void;
+  onSelectPuzzle?: (puzzle: Puzzle, pack: PuzzlePack) => void;
+  asModal?: boolean;
 }
 
 type DifficultyLevel = 'all' | 'easy' | 'medium' | 'hard';
@@ -486,25 +488,42 @@ function Separator() {
 
 // ─── Main Component ─────────────────────────────────────────────────
 
-export function PackBrowser({ packs, activePackId, onSelectPack }: PackBrowserProps) {
+export function PackBrowser({ packs, activePackId, onSelectPack, onSelectPuzzle, asModal }: PackBrowserProps) {
   const [selectedPack, setSelectedPack] = useState<PuzzlePack | null>(null);
+
+  const handleSelectPuzzle = useCallback(
+    (puzzle: Puzzle) => {
+      if (selectedPack && onSelectPuzzle) {
+        onSelectPuzzle(puzzle, selectedPack);
+      } else if (selectedPack) {
+        onSelectPack(selectedPack);
+      }
+    },
+    [selectedPack, onSelectPuzzle, onSelectPack],
+  );
+
+  const containerStyle = asModal ? styles.modalContainer : styles.container;
 
   if (selectedPack) {
     return (
-      <PuzzleListView
-        pack={selectedPack}
-        onBack={() => setSelectedPack(null)}
-        onSelectPuzzle={() => onSelectPack(selectedPack)}
-      />
+      <View style={containerStyle}>
+        <PuzzleListView
+          pack={selectedPack}
+          onBack={() => setSelectedPack(null)}
+          onSelectPuzzle={handleSelectPuzzle}
+        />
+      </View>
     );
   }
 
   return (
-    <PackListView
-      packs={packs}
-      activePackId={activePackId}
-      onSelectPack={setSelectedPack}
-    />
+    <View style={containerStyle}>
+      <PackListView
+        packs={packs}
+        activePackId={activePackId}
+        onSelectPack={setSelectedPack}
+      />
+    </View>
   );
 }
 
@@ -514,6 +533,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: spacing[3],
+  },
+  modalContainer: {
+    flex: 1,
+    paddingTop: spacing[1],
+    maxHeight: 500,
   },
   headerRow: {
     paddingHorizontal: spacing[4],
