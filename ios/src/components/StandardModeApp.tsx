@@ -517,7 +517,8 @@ export function StandardModeApp({
                     canSpin={state.turnState === "IDLE"}
                   />
                   {/* Banner overlay on wheel center */}
-                  {state.turnState !== "SPINNING" && (
+                  {(state.turnState === "GUESSING_CONSONANT" ||
+                    state.turnState === "BUYING_VOWEL") && (
                     <View style={styles.wheelBanner} pointerEvents="none">
                       <LinearGradient
                         colors={["rgba(0,0,0,0.85)", "rgba(0,0,0,0.75)"]}
@@ -525,13 +526,9 @@ export function StandardModeApp({
                       >
                         <Text style={styles.wheelBannerText}>
                           {state.turnState === "GUESSING_CONSONANT" &&
-                            `GUESS A CONSONANT`}
+                            "GUESS A CONSONANT"}
                           {state.turnState === "BUYING_VOWEL" &&
-                            `SELECT A VOWEL`}
-                          {state.turnState === "IDLE" &&
-                            (state.player.freePlay
-                              ? "FREE PLAY"
-                              : "SPIN THE WHEEL")}
+                            "SELECT A VOWEL"}
                         </Text>
                         {state.turnState === "GUESSING_CONSONANT" &&
                           typeof state.spinResult === "number" && (
@@ -544,12 +541,6 @@ export function StandardModeApp({
                             ${VOWEL_COST} each
                           </Text>
                         )}
-                        {state.turnState === "IDLE" &&
-                          state.player.freePlay && (
-                            <Text style={styles.wheelBannerAmount}>
-                              Guess any letter free
-                            </Text>
-                          )}
                       </LinearGradient>
                     </View>
                   )}
