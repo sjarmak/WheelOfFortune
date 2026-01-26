@@ -1,0 +1,244 @@
+{
+  "project": "WheelOfFortune",
+  "branchName": "ralph/ios-improvements",
+  "description": "iOS App Improvements — Fix wheel spin mismatch, add practice packs with strategy dashboard, add confetti + dancing Vanna celebration",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Fix wheel spin visual-to-value mismatch",
+      "description": "As a player, I want the wheel to always land on the wedge matching the reported value so I can trust the spin result. The iOS spin formula in StandardWheel.tsx calculates finalRotation differently from the web version in app/src/components/Wheel.tsx. The web formula computes delta relative to currentAngle = rotation % 360, correctly handling cumulative drift across consecutive spins. The iOS formula does not account for this properly, causing the pointer to visually land on the wrong wedge. Fix the iOS formula to match the web approach and add tests.",
+      "acceptanceCriteria": [
+        "iOS spin formula in ios/src/components/StandardWheel.tsx updated to correctly calculate finalRotation using wedge center offset and cumulative rotation tracking (match web formula pattern from app/src/components/Wheel.tsx)",
+        "For any winningIndex, the final rotation places the pointer at the center of WHEEL_CONFIG[winningIndex]",
+        "Consecutive spins (3+ in a row) maintain visual-value consistency by tracking cumulative rotation properly",
+        "Add test file ios/src/__tests__/wheelSpin.test.ts that verifies: for seeds 1-50, the calculated final rotation angle mod 360 places pointer within the correct wedge angular range",
+        "Test consecutive spin sequences (3 spins) maintain correct mapping",
+        "Tests pass: cd ios && npx vitest run",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Web formula: wedgeCenterOffset = winningIndex * WEDGE_ANGLE + WEDGE_ANGLE / 2; landingAngle = (360 - wedgeCenterOffset) % 360; delta = landingAngle - (rotation % 360); if (delta < 0) delta += 360; spinAmount = 5 * 360 + delta. iOS currently uses: finalRotation = rotation.value + 360*5 + (360 - wedgeRotation) - (WEDGE_ANGLE / 2). The iOS version doesn't normalize against current rotation modulo. WEDGE_ANGLE = 15 degrees (360/24)."
+    },
+    {
+      "id": "US-002",
+      "title": "Rename header from Standard to Wheel Practice",
+      "description": "As a player, I want the app header to say 'Wheel Practice' instead of 'Standard' to better reflect the app's purpose.",
+      "acceptanceCriteria": [
+        "Header text in ios/src/components/StandardModeApp.tsx changed from 'Standard' to 'Wheel Practice'",
+        "No other user-facing references to 'Standard' as a mode label remain in iOS components",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Port strategyAnalytics engine to iOS",
+      "description": "As a developer, I need the strategy analytics engine available in the iOS codebase so the StrategyDashboard can compute letter frequencies, category analysis, wheel analysis, and recommendations from puzzle pack data.",
+      "acceptanceCriteria": [
+        "ios/src/engine/strategyAnalytics.ts created, ported from app/src/engine/strategyAnalytics.ts",
+        "Exports analyzePuzzlePack(puzzles) returning PuzzleCorpusAnalytics",
+        "All 5 core functions ported: calculateLetterFrequencies, calculateCategoryAnalysis, findCommonPatterns, calculateWheelAnalysis, generateRecommendations",
+        "Types defined in same file or ios/src/engine/analyticsTypes.ts: LetterFrequency, CategoryAnalysis, WheelAnalysis, StrategyRecommendation, PuzzleCorpusAnalytics",
+        "Unit tests in ios/src/__tests__/strategyAnalytics.test.ts validate output against known puzzle data from data/packs/original.json",
+        "Tests pass: cd ios && npx vitest run",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "The iOS engine uses WheelWedge type 'VALUE' instead of web's 'CASH'. Make sure calculateWheelAnalysis uses the iOS WHEEL_CONFIG from ios/src/engine/types.ts. The Puzzle type is already defined in ios/src/engine/types.ts."
+    },
+    {
+      "id": "US-004",
+      "title": "Add RESET_ROUND, RANDOM_PUZZLE, SELECT_PUZZLE reducer actions",
+      "description": "As a player, I want to reset the current puzzle, shuffle to a random new puzzle, or select a specific puzzle so I can control what I'm practicing without losing my total score.",
+      "acceptanceCriteria": [
+        "RESET_ROUND action added to gameReducer: clears guessedLetters, revealedPositions, spinResult; resets turnState to IDLE, currentRoundScore to 0; keeps same currentPuzzle and totalScore",
+        "RANDOM_PUZZLE action added: accepts puzzles array in payload, selects random puzzle excluding current, resets round state",
+        "SELECT_PUZZLE action added: accepts a Puzzle object in payload, sets it as currentPuzzle, resets round state",
+        "Action types added to GameAction union type in ios/src/engine/types.ts",
+        "Existing RESET_GAME action unchanged (full reset including total score)",
+        "Unit tests for all 3 new actions in ios/src/__tests__/gameReducer.test.ts (add to existing test file)",
+        "Tests pass: cd ios && npx vitest run",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Game reducer is at ios/src/engine/game.ts. Existing tests at ios/src/__tests__/game.test.ts. INITIAL_STATE defined at top of game.ts. The Puzzle type is in ios/src/engine/types.ts."
+    },
+    {
+      "id": "US-005",
+      "title": "Add state-based home screen navigation",
+      "description": "As a player, I want a main menu to navigate between the game, pack browser, and strategy dashboard so I can access all app features.",
+      "acceptanceCriteria": [
+        "New navigation state in StandardModeApp.tsx with screens: 'home' | 'game' | 'packBrowser' | 'strategy'",
+        "HomeScreen component (inline or separate file) with 3 navigation cards: Play (game icon), Puzzle Packs (library icon), Strategy (chart icon)",
+        "Header shows 'Wheel Practice' on all screens with back button when not on home",
+        "Tapping back returns to home screen",
+        "Game state preserved when navigating away from game screen and back",
+        "No external routing library added (state-based navigation using existing pattern)",
+        "Pack browser and strategy screens render placeholder content for now (will be implemented in later stories)",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "The app currently uses no routing library. Use useState for activeScreen. Use lucide-react-native for icons (already installed). Wrap game content in conditional render based on activeScreen. AsyncStorage can optionally persist the last active screen."
+    },
+    {
+      "id": "US-006",
+      "title": "Build pack list view in pack browser",
+      "description": "As a player, I want to see available puzzle packs with their stats so I can choose which pack to practice from.",
+      "acceptanceCriteria": [
+        "New PackBrowser component at ios/src/components/PackBrowser.tsx",
+        "Loads puzzle packs from data/packs/ directory (currently original.json)",
+        "Displays each pack as a card with: pack name, total puzzle count, category breakdown chips",
+        "Tapping a pack navigates to puzzle list view (internal state within PackBrowser)",
+        "Integrated into navigation system from US-005 (replaces placeholder)",
+        "Uses FlatList for scrollable pack list",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "Pack data schema: { pack_id, name, created_at, stats: { count, categories: { PHRASE: 17, THING: 7, ... } }, puzzles: [...] }. Import pack JSON directly or use require(). Only one pack exists currently (original.json with 54 puzzles) but design for multiple."
+    },
+    {
+      "id": "US-007",
+      "title": "Build puzzle list with category and difficulty filtering",
+      "description": "As a player, I want to browse puzzles within a pack and filter by category or difficulty so I can find specific types of puzzles to practice.",
+      "acceptanceCriteria": [
+        "Puzzle list view within PackBrowser shows all puzzles in selected pack",
+        "Each puzzle row shows: category badge, difficulty indicator (easy/medium/hard based on score), word count, masked phrase (e.g. '_ _ _ _ _ _ _ _   _ _ _ _ _   _ _ _ _ _ _ _')",
+        "Category filter: horizontal scrollable chips for each category (PHRASE, THING, PLACE, etc.) with 'All' default",
+        "Difficulty filter: segmented control with Easy (score < 0.33), Medium (0.33-0.66), Hard (> 0.66), All",
+        "Search bar for keyword search within puzzle phrases",
+        "FlatList for performant scrolling with filtered results",
+        "Shows result count (e.g. '12 puzzles')",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Puzzle schema includes: { id, phrase, category, round_type, normalized: { phrase, word_count, char_count, unique_letter_count, vowel_ratio }, difficulty: { score, reasons } }. Difficulty score is 0-1 float. Filter state managed with useState hooks."
+    },
+    {
+      "id": "US-008",
+      "title": "Add puzzle selection from browser to start game",
+      "description": "As a player, I want to tap a puzzle in the browser to start a new game with that specific puzzle so I can practice exactly what I want.",
+      "acceptanceCriteria": [
+        "Tapping a puzzle row in PackBrowser dispatches SELECT_PUZZLE action (from US-004) with the selected puzzle",
+        "After selection, app navigates to game screen automatically",
+        "Pack browser also available as modal overlay from in-game settings (for quick-switch without leaving game)",
+        "Modal version uses existing Modal component with PackBrowser rendered inside",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "SELECT_PUZZLE action accepts a Puzzle object. Navigation callback needed from PackBrowser to parent (StandardModeApp) to switch activeScreen to 'game'. For modal mode, add a boolean prop like asModal to PackBrowser that adjusts layout."
+    },
+    {
+      "id": "US-009",
+      "title": "Build StrategyDashboard Letter Frequency and Optimal Strategy tabs",
+      "description": "As a player, I want to see letter frequency analysis and optimal strategy recommendations so I can develop better gameplay strategies.",
+      "acceptanceCriteria": [
+        "New StrategyDashboard component at ios/src/components/StrategyDashboard.tsx",
+        "Tab bar at top with 4 tabs (Letter Frequency, Strategy, Wheel, Categories) - only first 2 implemented in this story",
+        "Letter Frequency tab: vertical bar chart of all 26 letters using react-native-svg, color-coded (green >70%, yellow 40-70%, orange 20-40%, red <20%), shows percentage label on each bar",
+        "Optimal Strategy tab: Top 5 consonants grid with frequency bars, Top 5 vowels grid with frequency bars, RSTLNE letters ranked by actual frequency, vowel buy threshold display ($1000)",
+        "Uses analyzePuzzlePack() from ios/src/engine/strategyAnalytics.ts (US-003) to compute data",
+        "Integrated into navigation system from US-005 (replaces placeholder)",
+        "Wheel and Categories tabs show 'Coming soon' placeholder",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "react-native-svg is already installed. Use Rect and Text components for bar charts. Import puzzle data from data/packs/original.json. Tab state managed with useState. ScrollView for each tab content."
+    },
+    {
+      "id": "US-010",
+      "title": "Build StrategyDashboard Wheel Analysis and Category Insights tabs",
+      "description": "As a player, I want to see wheel outcome probabilities and category-specific letter analysis so I can make informed decisions during gameplay.",
+      "acceptanceCriteria": [
+        "Wheel Analysis tab in existing StrategyDashboard: expected value per spin, outcome probability cards (Cash 75%, Bankrupt 8.33%, Lose Turn 4.17%, Free Play 4.17%), average cash value when landing on cash",
+        "Category Insights tab: dropdown/picker to select puzzle category, top 15 letters for selected category with frequency bars, vowel ratio display, common patterns list (bigrams/trigrams appearing in 20%+ of puzzles)",
+        "Replace 'Coming soon' placeholders from US-009 with full implementations",
+        "All 4 tabs fully functional and navigable",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "Wheel analysis data comes from calculateWheelAnalysis() in strategyAnalytics.ts. Category insights come from calculateCategoryAnalysis(). Use Picker or custom dropdown for category selection. Common patterns displayed as chips/badges."
+    },
+    {
+      "id": "US-011",
+      "title": "Add in-game controls for reset, shuffle, and browse",
+      "description": "As a player, I want buttons in the game settings to reset the current puzzle, shuffle to a random new puzzle, or browse puzzles so I can quickly change what I'm practicing.",
+      "acceptanceCriteria": [
+        "Settings modal in StandardModeApp.tsx updated with 3 new control buttons above existing Reset Game button",
+        "Reset Round button: dispatches RESET_ROUND action, closes settings modal, shows toast 'Puzzle reset'",
+        "Random Puzzle button: dispatches RANDOM_PUZZLE action with current pack's puzzles array, closes settings modal, shows toast 'New puzzle loaded'",
+        "Browse Puzzles button: closes settings modal, opens PackBrowser as modal overlay (asModal mode from US-008)",
+        "Existing Reset Game button remains unchanged (full reset with total score)",
+        "Visual separation between round-level controls and full reset (e.g. divider line)",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "Settings modal is already in StandardModeApp.tsx. The puzzles array needs to be available in the component scope - import from data/packs/original.json or wherever packs are loaded. Toast system already exists in the app."
+    },
+    {
+      "id": "US-012",
+      "title": "Add confetti animation on puzzle solve",
+      "description": "As a player, I want to see confetti when I solve a puzzle so the experience feels rewarding and celebratory.",
+      "acceptanceCriteria": [
+        "Confetti triggers when turnState transitions to ROUND_OVER after successful puzzle solve",
+        "Uses react-native-confetti-cannon (already in package.json dependencies)",
+        "Confetti parameters: count ~100, origin from top of screen, falls downward with spread",
+        "Confetti does NOT trigger on round loss (bankrupt out etc.) - only on successful solve",
+        "No confetti on game reset or puzzle skip",
+        "Confetti renders as overlay with pointerEvents='none' so it doesn't block interaction",
+        "Use useRef to control confetti cannon imperatively",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "react-native-confetti-cannon is already in ios/package.json. Import as ConfettiCannon. Use ref.current.start() to trigger. The turnState is available from the game reducer state in StandardModeApp.tsx. Need to distinguish successful solve from other ROUND_OVER reasons - check if the solve attempt was correct."
+    },
+    {
+      "id": "US-013",
+      "title": "Build 8-bit dancing Vanna sprite component",
+      "description": "As a player, I want to see the 8-bit dancing Vanna character from the web version celebrate when I solve a puzzle, adding charm to the experience.",
+      "acceptanceCriteria": [
+        "New Vanna component at ios/src/components/Vanna.tsx",
+        "8-bit pixelated character built with React Native View components (colored rectangles): hair (5 yellow bars #FACC15), face (yellow rectangle with 2 blue eyes), dress (red rectangle #DC2626 with white stripe), arms (flesh-colored bars), legs (flesh-colored bars), shoes (black rectangles)",
+        "4-frame walk animation cycle matching web: Frame 1 (left leg -2, right arm +1), Frame 2 (neutral), Frame 3 (right leg -2, left arm +1), Frame 4 (neutral)",
+        "Dance mode (isDancing prop): vertical sine-wave bounce translateY(sin(frame * PI/2) * 4) applied during walk frames",
+        "6 golden sparkle views radiating outward during dance with opacity animation",
+        "Animation powered by react-native-reanimated shared values and useAnimatedStyle",
+        "Component accepts isDancing boolean prop to control dance state",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": "Reference web implementation at app/src/components/Vanna.tsx. Web uses div elements with inline styles and framer-motion. iOS version should use View components with StyleSheet and react-native-reanimated for animation. Walk frame cycle: setInterval every 250ms cycling through frames 0-3. Sparkles are small View elements with absolute positioning that scale/fade."
+    },
+    {
+      "id": "US-014",
+      "title": "Integrate celebration sequence on puzzle solve",
+      "description": "As a player, I want confetti and dancing Vanna to appear together as a cohesive celebration when I solve the puzzle.",
+      "acceptanceCriteria": [
+        "When turnState === ROUND_OVER after successful solve: confetti fires AND Vanna appears dancing simultaneously",
+        "Vanna positioned at bottom-center of screen as overlay (absolute positioning, does not push content)",
+        "PUZZLE SOLVED! toast notification displays (existing toast system)",
+        "Celebration displays for 3-5 seconds before user can tap Next Round",
+        "Celebration does not block the puzzle board view (overlays on top)",
+        "Pressing Next Round dismisses Vanna and advances to next puzzle",
+        "Celebration does not trigger on failed solve attempts or losses",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "Both confetti (US-012) and Vanna (US-013) must be complete. Wire them together in StandardModeApp.tsx. Use a celebration state flag that enables both. Add a short delay (setTimeout or useEffect with timer) before showing Next Round button. Vanna's isDancing prop tied to the celebration state."
+    }
+  ]
+}

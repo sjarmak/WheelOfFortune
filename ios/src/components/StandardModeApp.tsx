@@ -4,7 +4,7 @@
  * Full wheel of fortune experience for adults.
  */
 
-import React, { useReducer, useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useReducer, useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -59,6 +58,17 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
   const [showSolveModal, setShowSolveModal] = useState(false);
   const [solveInput, setSolveInput] = useState('');
   const [message, setMessage] = useState<string | null>(null);
+  const solveInputRef = useRef<TextInput>(null);
+
+  // Focus the solve input after modal animation completes
+  useEffect(() => {
+    if (showSolveModal) {
+      const timer = setTimeout(() => {
+        solveInputRef.current?.focus();
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [showSolveModal]);
 
   // Load saved state
   useEffect(() => {
@@ -187,7 +197,7 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onModeChange} style={styles.iconButton}>
-            <Text style={styles.modeText}>STANDARD</Text>
+            <Text style={styles.modeText}>WHEEL PRACTICE</Text>
           </TouchableOpacity>
 
           <View style={styles.scoreContainer}>
@@ -323,13 +333,13 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
           title="Solve the Puzzle"
         >
           <TextInput
+            ref={solveInputRef}
             style={styles.solveInput}
             value={solveInput}
             onChangeText={setSolveInput}
             placeholder="Type your answer..."
             placeholderTextColor={colors.slate[400]}
             autoCapitalize="characters"
-            autoFocus
           />
           <View style={styles.modalButtons}>
             <TouchableOpacity onPress={() => setShowSolveModal(false)}>
@@ -494,9 +504,9 @@ const styles = StyleSheet.create({
     marginTop: spacing[4],
   },
   wheelContainer: {
-    width: '80%',
+    width: '95%',
     alignSelf: 'center',
-    maxWidth: 280,
+    maxWidth: 400,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -528,7 +538,7 @@ const styles = StyleSheet.create({
   },
   keyboardSection: {
     marginTop: spacing[2],
-    paddingBottom: spacing[8],
+    paddingBottom: spacing[16],
   },
   solveInput: {
     backgroundColor: colors.slate[800],
