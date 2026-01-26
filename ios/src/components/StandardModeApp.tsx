@@ -151,6 +151,7 @@ export function StandardModeApp(): React.JSX.Element {
     const wasNotRoundOver = prevTurnStateRef.current !== "ROUND_OVER";
     const isNowRoundOver = state.turnState === "ROUND_OVER";
 
+    // Entering ROUND_OVER state
     if (wasNotRoundOver && isNowRoundOver) {
       const isWin = state.roundResult === "win" || state.roundResult === null;
       if (isWin) {
@@ -178,7 +179,9 @@ export function StandardModeApp(): React.JSX.Element {
       setBonusSolveInput("");
     }
 
-    if (!isNowRoundOver) {
+    // Leaving ROUND_OVER state - clear celebration immediately
+    const wasRoundOver = prevTurnStateRef.current === "ROUND_OVER";
+    if (wasRoundOver && !isNowRoundOver) {
       setShowCelebration(false);
       setCelebrationReady(false);
       if (celebrationTimerRef.current) {
@@ -400,15 +403,22 @@ export function StandardModeApp(): React.JSX.Element {
 
   // Start new round — advances sequentially through the active pack
   const nextRound = useCallback(() => {
+    // Clear celebration state immediately to remove Vanna sprite
     setShowCelebration(false);
     setCelebrationReady(false);
-    setBonusSelectedConsonants([]);
-    setBonusSelectedVowel(null);
-    setBonusSolveInput("");
+
+    // Clear timer to prevent late state updates
     if (celebrationTimerRef.current) {
       clearTimeout(celebrationTimerRef.current);
       celebrationTimerRef.current = null;
     }
+
+    // Reset bonus round state
+    setBonusSelectedConsonants([]);
+    setBonusSelectedVowel(null);
+    setBonusSolveInput("");
+
+    // Load next puzzle
     const puzzles = getPuzzlesForMode(activePack.puzzles, selectedRoundMode);
     const nextIndex = puzzleIndex >= puzzles.length - 1 ? 0 : puzzleIndex + 1;
     const next = puzzles[nextIndex];
