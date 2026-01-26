@@ -40,6 +40,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withSequence,
   Easing,
 } from "react-native-reanimated";
 import ConfettiCannon from "react-native-confetti-cannon";
@@ -133,6 +134,13 @@ export function StandardModeApp({
     null,
   );
 
+  // Bonus Round solve phase state
+  const [bonusSolveInput, setBonusSolveInput] = useState("");
+  const bonusSolveInputRef = useRef<TextInput>(null);
+  const bonusTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const bonusShakeX = useSharedValue(0);
+  const prevBonusTimerSecRef = useRef<number | null>(null);
+
   // Trigger confetti + Vanna on successful puzzle solve (or loss feedback for toss-up/bonus)
   useEffect(() => {
     const wasNotRoundOver = prevTurnStateRef.current !== "ROUND_OVER";
@@ -160,6 +168,9 @@ export function StandardModeApp({
       // Close toss-up solve modal if open
       setShowTossUpSolveModal(false);
       setTossUpSolveInput("");
+
+      // Clear bonus solve input
+      setBonusSolveInput("");
     }
 
     if (!isNowRoundOver) {
@@ -223,6 +234,61 @@ export function StandardModeApp({
       }
     };
   }, [selectedRoundMode, state.turnState]);
+
+  // Bonus Round tick interval — runs during BONUS_SOLVE_TIMER
+  useEffect(() => {
+    const isBonusSolveActive =
+      selectedRoundMode === "BONUS" &&
+      state.turnState === "BONUS_SOLVE_TIMER";
+
+    if (isBonusSolveActive) {
+      let lastTime = Date.now();
+      bonusTickRef.current = setInterval(() => {
+        const now = Date.now();
+        const dtMs = now - lastTime;
+        lastTime = now;
+        dispatch({ type: "BONUS_TICK", dtMs });
+      }, 33);
+    } else {
+      if (bonusTickRef.current) {
+        clearInterval(bonusTickRef.current);
+        bonusTickRef.current = null;
+      }
+    }
+
+    return () => {
+      if (bonusTickRef.current) {
+        clearInterval(bonusTickRef.current);
+        bonusTickRef.current = null;
+      }
+    };
+  }, [selectedRoundMode, state.turnState]);
+
+  // Bonus Round last-5-seconds haptic warning
+  useEffect(() => {
+    if (state.turnState !== "BONUS_SOLVE_TIMER") {
+      prevBonusTimerSecRef.current = null;
+      return;
+    }
+
+    const currentSec = Math.ceil(state.bonusTimerMs / 1000);
+    const prevSec = prevBonusTimerSecRef.current;
+    prevBonusTimerSecRef.current = currentSec;
+
+    if (prevSec !== null && currentSec !== prevSec && currentSec <= 5 && currentSec > 0) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    }
+  }, [state.turnState, state.bonusTimerMs]);
+
+  // Focus bonus solve input when entering BONUS_SOLVE_TIMER
+  useEffect(() => {
+    if (state.turnState === "BONUS_SOLVE_TIMER") {
+      const timer = setTimeout(() => {
+        bonusSolveInputRef.current?.focus();
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [state.turnState]);
 
   // Load saved state
   useEffect(() => {
@@ -288,6 +354,7 @@ export function StandardModeApp({
     setCelebrationReady(false);
     setBonusSelectedConsonants([]);
     setBonusSelectedVowel(null);
+    setBonusSolveInput("");
     if (celebrationTimerRef.current) {
       clearTimeout(celebrationTimerRef.current);
       celebrationTimerRef.current = null;
@@ -464,6 +531,34 @@ export function StandardModeApp({
     }
   }, [bonusSelectedConsonants, bonusSelectedVowel]);
 
+  // Bonus Round solve handler
+  const handleBonusSolve = useCallback(() => {
+    if (!bonusSolveInput.trim()) return;
+    const correct =
+      bonusSolveInput.toUpperCase().trim() ===
+      state.currentPuzzle?.phrase.toUpperCase();
+    dispatch({ type: "BONUS_SOLVE_ATTEMPT", phrase: bonusSolveInput });
+
+    if (correct) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      // Shake animation for wrong guess
+      bonusShakeX.value = withSequence(
+        withTiming(10, { duration: 50 }),
+        withTiming(-10, { duration: 50 }),
+        withTiming(10, { duration: 50 }),
+        withTiming(-10, { duration: 50 }),
+        withTiming(0, { duration: 50 }),
+      );
+      setBonusSolveInput("");
+    }
+  }, [bonusSolveInput, state.currentPuzzle, bonusShakeX]);
+
+  const bonusSolveShakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: bonusShakeX.value }],
+  }));
+
   const bonusPicksReady =
     bonusSelectedConsonants.length === 3 && bonusSelectedVowel !== null;
 
@@ -502,12 +597,17 @@ export function StandardModeApp({
   const isTossUpMode = selectedRoundMode === "TOSSUP";
   const isBonusMode = selectedRoundMode === "BONUS";
   const isBonusPicking = isBonusMode && state.turnState === "BONUS_PICKING";
+  const isBonusSolving = isBonusMode && state.turnState === "BONUS_SOLVE_TIMER";
   const canSpin = state.turnState === "IDLE" && !isRoundOver;
   const canGuess =
     state.turnState === "GUESSING_CONSONANT" ||
     state.turnState === "BUYING_VOWEL";
 
   const lockoutSecondsLeft = Math.ceil(state.tossUpLockoutMs / 1000);
+
+  const bonusTimerSeconds = Math.max(0, state.bonusTimerMs / 1000);
+  const bonusTimerDisplay = bonusTimerSeconds.toFixed(1);
+  const bonusTimerIsLow = bonusTimerSeconds <= 5;
 
   const tossUpStatusText = useMemo(() => {
     switch (state.turnState) {
@@ -871,14 +971,58 @@ export function StandardModeApp({
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
-            ) : isBonusMode ? (
+            ) : isBonusSolving ? (
               <View style={styles.bonusSolveArea}>
-                {/* Bonus Round solve phase placeholder — implemented in US-012 */}
+                {/* Bonus Round timed solve phase */}
                 <View style={styles.bonusBanner}>
                   <Text style={styles.bonusBannerTitle}>BONUS ROUND</Text>
                   <Text style={styles.bonusBannerStatus}>
                     Solve the puzzle!
                   </Text>
+                </View>
+
+                {/* Countdown timer */}
+                <View style={styles.bonusTimerContainer}>
+                  <Text
+                    style={[
+                      styles.bonusTimerText,
+                      bonusTimerIsLow && styles.bonusTimerTextLow,
+                    ]}
+                  >
+                    {bonusTimerDisplay}
+                  </Text>
+                  <Text style={styles.bonusTimerLabel}>SECONDS</Text>
+                </View>
+
+                {/* Solve input with shake animation */}
+                <Animated.View
+                  style={[styles.bonusSolveInputRow, bonusSolveShakeStyle]}
+                >
+                  <TextInput
+                    ref={bonusSolveInputRef}
+                    style={styles.bonusSolveInput}
+                    value={bonusSolveInput}
+                    onChangeText={setBonusSolveInput}
+                    placeholder="Type your answer..."
+                    placeholderTextColor={colors.slate[400]}
+                    autoCapitalize="characters"
+                    onSubmitEditing={handleBonusSolve}
+                    returnKeyType="go"
+                  />
+                  <TouchableOpacity onPress={handleBonusSolve}>
+                    <LinearGradient
+                      colors={[colors.purple[500], colors.purple[600]]}
+                      style={styles.bonusSolveButton}
+                    >
+                      <Text style={styles.bonusSolveButtonText}>SOLVE</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
+            ) : isBonusMode ? (
+              <View style={styles.bonusSolveArea}>
+                <View style={styles.bonusBanner}>
+                  <Text style={styles.bonusBannerTitle}>BONUS ROUND</Text>
                 </View>
               </View>
             ) : (
@@ -1733,7 +1877,55 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing[6],
+    gap: spacing[4],
+  },
+  bonusTimerContainer: {
+    alignItems: "center",
+    gap: spacing[1],
+  },
+  bonusTimerText: {
+    color: colors.white,
+    fontSize: typography.sizes["6xl"],
+    fontWeight: typography.weights.bold,
+    fontVariant: ["tabular-nums"],
+  },
+  bonusTimerTextLow: {
+    color: colors.red[400],
+  },
+  bonusTimerLabel: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.xs,
+    letterSpacing: 2,
+  },
+  bonusSolveInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[2],
+    paddingHorizontal: spacing[4],
+    width: "100%",
+  },
+  bonusSolveInput: {
+    flex: 1,
+    backgroundColor: colors.slate[800],
+    borderWidth: 1,
+    borderColor: colors.slate[600],
+    borderRadius: borderRadius.base,
+    padding: spacing[3],
+    fontSize: typography.sizes.lg,
+    color: colors.white,
+    fontWeight: typography.weights.bold,
+    textTransform: "uppercase",
+  },
+  bonusSolveButton: {
+    paddingHorizontal: spacing[5],
+    paddingVertical: spacing[3],
+    borderRadius: borderRadius.base,
+    ...shadows.md,
+  },
+  bonusSolveButtonText: {
+    color: colors.white,
+    fontWeight: typography.weights.bold,
+    fontSize: typography.sizes.lg,
   },
   confettiContainer: {
     ...StyleSheet.absoluteFillObject,
