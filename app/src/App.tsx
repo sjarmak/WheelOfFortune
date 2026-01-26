@@ -425,8 +425,8 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
                </div>
                
                {!hideKeyboard && (
-                 <div className="w-full flex-shrink-0">
-                   <Keyboard 
+                                 <div className="w-full flex-shrink-0 pb-4">
+                                   <Keyboard
                      guessedLetters={state.guessedLetters}
                      onGuess={handleGuess}
                      disabled={state.turnState !== 'GUESSING_CONSONANT' && state.turnState !== 'BUYING_VOWEL'}

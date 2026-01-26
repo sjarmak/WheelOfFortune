@@ -96,7 +96,7 @@ export const KidWheel: React.FC<KidWheelProps> = ({
   }, []);
 
   const animationDuration = reduceMotion ? '0.5s' : '4s';
-  const animationEasing = reduceMotion ? 'ease-out' : 'cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+  const animationEasing = reduceMotion ? 'ease-out' : 'cubic-bezier(0.25, 0.1, 0.25, 1)';
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">

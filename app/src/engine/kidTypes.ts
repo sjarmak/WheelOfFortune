@@ -21,7 +21,8 @@ export type KidWedgeOutcomeType =
   | 'PICK_THREE'      // Pick from 3 suggested letters
   | 'FREE_LETTER'     // Auto-reveal one letter (reward)
   | 'BONUS_STAR'      // Get a bonus star
-  | 'HINT_TOKEN';     // Get a free hint
+  | 'HINT_TOKEN'      // Get a free hint
+  | 'MONEY';          // Win money!
 
 export interface KidWedgeOutcome {
   type: KidWedgeOutcomeType;
@@ -34,21 +35,21 @@ export interface KidWedgeOutcome {
 /** Kid-friendly wheel configuration - lots of guessing opportunities! */
 export const KID_WHEEL_CONFIG: KidWedgeOutcome[] = [
   { type: 'GUESS_ANY',    value: 1, label: 'GUESS!',        color: '#4CAF50', emoji: '🔤' },
-  { type: 'VOWEL_PLUS',   value: 2, label: 'VOWEL+',        color: '#FF6B6B', emoji: '🌟' },
+  { type: 'MONEY',        value: 200, label: '$200',        color: '#2ECC71', emoji: '💰' },
   { type: 'GUESS_ANY',    value: 1, label: 'GUESS!',        color: '#2196F3', emoji: '🔤' },
   { type: 'GUESS_TWO',    value: 2, label: '2 GUESSES',     color: '#00BCD4', emoji: '✌️' },
   { type: 'GUESS_ANY',    value: 1, label: 'GUESS!',        color: '#8BC34A', emoji: '🔤' },
-  { type: 'PICK_THREE',   value: 1, label: 'PICK 3',        color: '#673AB7', emoji: '🎯' },
+  { type: 'MONEY',        value: 300, label: '$300',        color: '#27AE60', emoji: '💵' },
   { type: 'FREE_LETTER',  value: 1, label: 'FREE!',         color: '#FFD700', emoji: '🎁' },
   { type: 'GUESS_ANY',    value: 1, label: 'GUESS!',        color: '#009688', emoji: '🔤' },
   { type: 'VOWEL_PLUS',   value: 2, label: 'VOWEL+',        color: '#E91E63', emoji: '🌟' },
-  { type: 'PICK_THREE',   value: 1, label: 'PICK 3',        color: '#9C27B0', emoji: '🎯' },
+  { type: 'MONEY',        value: 250, label: '$250',        color: '#229954', emoji: '💸' },
   { type: 'GUESS_ANY',    value: 1, label: 'GUESS!',        color: '#4DB6AC', emoji: '🔤' },
   { type: 'BONUS_STAR',   value: 1, label: 'STAR!',         color: '#FFC107', emoji: '⭐' },
-  { type: 'GUESS_ANY',    value: 1, label: 'GUESS!',        color: '#7CB342', emoji: '🔤' },
+  { type: 'PICK_THREE',   value: 1, label: 'PICK 3',        color: '#673AB7', emoji: '🎲' },
   { type: 'HINT_TOKEN',   value: 1, label: 'HINT!',         color: '#3F51B5', emoji: '💡' },
   { type: 'GUESS_ANY',    value: 1, label: 'GUESS!',        color: '#26A69A', emoji: '🔤' },
-  { type: 'PICK_THREE',   value: 1, label: 'PICK 3',        color: '#AB47BC', emoji: '🎯' },
+  { type: 'MONEY',        value: 400, label: '$400',        color: '#1E8449', emoji: '💳' },
 ];
 
 /** Hint meter configuration */

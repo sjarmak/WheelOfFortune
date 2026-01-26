@@ -9,44 +9,25 @@
  */
 
 import React from 'react';
-import { Star, Volume2, Lightbulb, Sparkles, DollarSign } from 'lucide-react';
-import { KidModeState, HINT_METER_MAX, CASH_PER_STAR } from '../engine/kidTypes';
-import { getCurrentHintType, getHintDescription } from '../engine/kidGame';
+import { Volume2 } from 'lucide-react';
 import { speakCategory, speakPuzzle, isTTSAvailable } from '../engine/tts';
 
 interface KidModeHUDProps {
-  kidState: KidModeState;
   category: string;
   phrase: string;
   revealedPositions: number[];
   isSolved: boolean;
-  showNudge: boolean;
-  onUseHint: () => void;
   readAloudEnabled: boolean;
 }
 
 export const KidModeHUD: React.FC<KidModeHUDProps> = ({
-  kidState,
   category,
   phrase,
   revealedPositions,
   isSolved,
-  showNudge,
-  onUseHint,
   readAloudEnabled
 }) => {
   const ttsAvailable = isTTSAvailable();
-  const hintType = kidState.hintMeterUsed < HINT_METER_MAX
-    ? getCurrentHintType({ kidState } as any)
-    : null;
-  const hintDescription = hintType ? getHintDescription(hintType) : null;
-  const totalStars = kidState.stars + kidState.starsThisRound;
-  const totalCash = totalStars * CASH_PER_STAR;
-  const formattedCash = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0
-  }).format(totalCash);
 
   const handleSpeakCategory = () => {
     if (ttsAvailable && readAloudEnabled) {

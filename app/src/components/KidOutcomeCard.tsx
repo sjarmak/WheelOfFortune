@@ -11,7 +11,7 @@
 import React, { useEffect, useState } from 'react';
 import { KidWedgeOutcome } from '../engine/kidTypes';
 import { speakOutcome, isTTSAvailable } from '../engine/tts';
-import { Type, Target, Star, Lightbulb, Gift, Sparkles } from 'lucide-react';
+import { Type, Target, Star, Lightbulb, Gift, Sparkles, DollarSign } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface KidOutcomeCardProps {
@@ -27,7 +27,8 @@ const outcomeMessages: Record<string, string[]> = {
   'PICK_THREE': ['Choose one!', 'Pick from 3!', 'Your choice!'],
   'FREE_LETTER': ['Free letter!', 'Lucky you!', 'Surprise!'],
   'BONUS_STAR': ['Star time!', 'Bonus star!', 'Yay!'],
-  'HINT_TOKEN': ['Free hint!', 'Hint power!', 'Lucky you!']
+  'HINT_TOKEN': ['Free hint!', 'Hint power!', 'Lucky you!'],
+  'MONEY': ['You win cash!', 'Money time!', 'Ka-ching!']
 };
 
 const outcomeIcons: Record<KidWedgeOutcome['type'], LucideIcon> = {
@@ -37,7 +38,8 @@ const outcomeIcons: Record<KidWedgeOutcome['type'], LucideIcon> = {
   PICK_THREE: Target,
   FREE_LETTER: Gift,
   BONUS_STAR: Star,
-  HINT_TOKEN: Lightbulb
+  HINT_TOKEN: Lightbulb,
+  MONEY: DollarSign
 };
 
 export const KidOutcomeCard: React.FC<KidOutcomeCardProps> = ({
@@ -65,10 +67,7 @@ export const KidOutcomeCard: React.FC<KidOutcomeCardProps> = ({
     return () => clearTimeout(timer);
   }, [outcome, readAloudEnabled]);
 
-  useEffect(() => {
-    const timer = setTimeout(onDismiss, 1800);
-    return () => clearTimeout(timer);
-  }, [onDismiss]);
+
 
   // Reduce motion support
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -80,19 +79,16 @@ export const KidOutcomeCard: React.FC<KidOutcomeCardProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+      className="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 p-6 rounded-2xl shadow-2xl text-center w-full cursor-pointer hover:shadow-xl transition-shadow"
       onClick={onDismiss}
-      role="dialog"
-      aria-modal="true"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onDismiss()}
       aria-label={`You got ${outcome.label}`}
     >
-      <div
-        className={`relative bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center transform ${
-          reduceMotion ? '' : 'animate-bounce'
-        }`}
-        style={{ animationDuration: '0.5s', animationIterationCount: '2' }}
-      >
-        {/* Sparkles background */}
+      <div className="relative">
+
+         {/* Sparkles background */}
         {showSparkles && !reduceMotion && (
           <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
             {Array.from({ length: 20 }).map((_, i) => (
@@ -141,10 +137,7 @@ export const KidOutcomeCard: React.FC<KidOutcomeCardProps> = ({
           </div>
         )}
 
-        {/* Tap to continue */}
-        <p className="text-white/70 text-sm mt-4 animate-pulse">
-          Tap anywhere to continue
-        </p>
+
       </div>
     </div>
   );

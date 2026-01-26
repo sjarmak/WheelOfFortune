@@ -30,7 +30,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({
 }) => {
   return (
     <div className={clsx(
-      "flex flex-col w-full mx-auto px-2 sm:px-3 py-1 flex-shrink",
+      "flex flex-col w-full mx-auto px-2 sm:px-3 py-1 flex-shrink overflow-hidden",
       large ? "gap-2" : "gap-1 sm:gap-1.5"
     )}>
       {ROWS.map((row, i) => (
@@ -46,8 +46,8 @@ export const Keyboard: React.FC<KeyboardProps> = ({
             if (vowelsOnly && !isVowel) isAllowed = false;
             if (consonantsOnly && isVowel) isAllowed = false;
 
-            // Vowel highlighting styles
-            const vowelHighlight = highlightVowels && isVowel && !isGuessed;
+            // Vowel highlighting styles - only highlight if keyboard is enabled
+            const vowelHighlight = highlightVowels && isVowel && !isGuessed && !disabled;
 
             return (
               <button

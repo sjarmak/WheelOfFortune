@@ -487,7 +487,7 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
       </div>
 
       {/* Keyboard - always visible but disabled when not guessing */}
-      <div className={`w-full px-1 py-1 flex-shrink-0 overflow-x-auto ${
+      <div className={`w-full px-1 py-1 pb-3 flex-shrink-0 overflow-x-auto ${
         state.turnState === 'GUESSING_LETTER'
           ? 'bg-green-500/30 ring-2 ring-green-400'
           : state.turnState === 'PICKING_VOWEL'

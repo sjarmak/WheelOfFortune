@@ -348,6 +348,95 @@ AI assistants often create planning and design documents during development:
 - ❌ Do NOT duplicate tracking systems
 - ❌ Do NOT clutter repo root with planning documents
 
+## Project Context: Standard Mode iOS Port
+
+### Overview
+
+This project is a **Wheel of Fortune practice app** with two game modes:
+
+- **Kid Mode**: Simplified, kid-friendly version
+- **Standard Mode**: Full adult experience with 24-wedge wheel, BANKRUPT/LOSE_TURN, vowel purchases, and puzzle solving
+
+**Current focus: Port Standard Mode from web to iOS using React Native/Expo**
+
+### Directory Structure
+
+- `app/` - Web version (React, Tailwind CSS) - **reference implementation**
+- `ios/` - React Native/Expo version - **in active development**
+  - `src/engine/` - Shared game logic (reducer, types, RNG, puzzle packs)
+  - `src/components/` - React Native UI components (wheel, keyboard, board, modals)
+  - `src/styles/` - Theme configuration (colors, spacing, typography)
+- `data/` - Puzzle packs and game data
+
+### Known Issues & Blockers
+
+#### Critical: Worklets Version Mismatch (Runtime Not Ready)
+
+When running `npx expo start` in the `ios/` directory with Expo Go:
+
+**Error:** `Mismatch between JavaScript part and native part of Worklets (0.7.1 vs 0.5.1)`
+
+**Root cause:** Expo Go SDK 54 bundles react-native-reanimated 3.x with worklets 0.5.1. Any package trying to use a newer version causes this error.
+
+**Attempted fixes:**
+- ❌ Removed nativewind and tailwindcss (unused in Expo)
+- ❌ Removed moti (animation library, not needed for standard wheel)
+- ❌ Downgraded react-native-reanimated from ~4.1.1 to ~3.16.0
+- ❌ Cleared caches: `npx expo start --clear`
+
+**Current status:** 
+- Package versions are aligned with Expo SDK 54 requirements
+- `npm ls react-native-worklets` shows no direct dependencies
+- **Next step:** Use `expo-dev-client` to create a custom development build instead of relying on Expo Go
+
+**When to attempt again:**
+- After trying `npx expo install --fix` to align all native module versions
+- Or build a custom dev client: `npx expo run:ios --dev-client`
+- Or wait for Expo SDK 55+ which may have updated worklets
+
+#### Design: Standard Wheel Component
+
+[StandardWheel.tsx](file:///Users/sjarmak/WheelOfFortune/ios/src/components/StandardWheel.tsx)
+
+- Uses `react-native-svg` for 24-wedge wheel rendering (no animations, just rotation)
+- Uses `react-native-reanimated` for smooth spin animation (Animated.View)
+- Gesture handling with `react-native-gesture-handler` (swipe to spin)
+- Haptic feedback for spin results and tick sounds during spin
+
+**Important:** The wheel SVG is deterministic (not animated individually). Only the entire wheel container rotates.
+
+### Next Agent Instructions
+
+When working on the iOS Standard Mode port:
+
+1. **Check running status first:**
+   ```bash
+   cd ios && npx expo start --clear
+   ```
+   If you see "runtime not ready" error → See "Known Issues & Blockers" above
+
+2. **If you can't run the app:** Try custom dev client:
+   ```bash
+   npx expo run:ios --dev-client
+   ```
+
+3. **Reference the web version** (`app/src/App.tsx`) for:
+   - Game logic patterns (already ported to `ios/src/engine/game.ts`)
+   - UI/UX flow (you may need to adapt for mobile)
+   - Test examples (web app doesn't have tests yet, but logic is proven)
+
+4. **Focus areas for next work:**
+   - ✅ Game reducer logic (fully ported from web)
+   - ✅ Wheel component (working in isolation)
+   - ❓ Integration testing (can't verify without running app)
+   - ❓ iOS-specific optimizations (once app runs)
+   - ❓ Kid Mode port (lower priority, web version exists)
+
+5. **Testing:** Currently cannot run tests due to runtime issues. Once the app runs:
+   ```bash
+   npm test  # (when test suite is configured)
+   ```
+
 ## Agent Best Practices
 
 ### General Rules

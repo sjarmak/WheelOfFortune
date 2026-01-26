@@ -442,6 +442,21 @@ export function kidGameReducer(
         case 'HINT_TOKEN':
           newKidState.hintTokens += 1;
           break;
+
+        case 'MONEY': {
+          // For money: present 3 letters to choose from (like PICK_THREE)
+          // If they guess correctly, they get money converted to stars
+          const suggestions = getSuggestedLetters(
+            puzzle.phrase,
+            state.guessedLetters,
+            state.revealedPositions,
+            3,
+            state.seed + state.spinCount
+          );
+          newKidState.letterSuggestions = suggestions;
+          newKidState.guessesRemaining = 1;
+          break;
+        }
       }
 
       newKidState.lastOutcome = outcome;
@@ -460,7 +475,7 @@ export function kidGameReducer(
       const outcome = state.kidState.lastOutcome;
 
       // Determine next state based on outcome
-      if (outcome?.type === 'PICK_THREE') {
+      if (outcome?.type === 'PICK_THREE' || outcome?.type === 'MONEY') {
         return {
           ...state,
           turnState: 'CHOOSING_LETTER',
@@ -543,7 +558,14 @@ export function kidGameReducer(
         : state.kidState.actionsWithoutProgress + 1;
 
       // Award star for finding letters
-      const starsEarned = wasInPuzzle ? Math.ceil(lettersRevealed / 2) : 0;
+      let starsEarned = wasInPuzzle ? Math.ceil(lettersRevealed / 2) : 0;
+
+      // If this was a MONEY outcome and they guessed correctly, award the money
+      const lastOutcome = state.kidState.lastOutcome;
+      if (state.turnState === 'CHOOSING_LETTER' && lastOutcome?.type === 'MONEY' && wasInPuzzle) {
+        const moneyAsStars = Math.floor(lastOutcome.value / 100);
+        starsEarned += moneyAsStars;
+      }
 
       // Update suggestions
       const suggestions = getSuggestedLetters(
