@@ -9,8 +9,10 @@ import { ModeSelector, ModeIndicator } from './components/ModeSelector';
 import { ALL_PACKS, PuzzlePack } from './engine/packs';
 import { DEFAULT_PUZZLES } from './engine/defaultPack';
 import { VOWELS, WheelWedge, GameMode } from './engine/types';
-import { Settings as SettingsIcon, RotateCcw, X, Eye, EyeOff, Library } from 'lucide-react';
+import { Settings as SettingsIcon, RotateCcw, X, Eye, EyeOff, Library, TrendingUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { StrategyDashboard } from './components/StrategyDashboard';
+import { analyzePuzzlePack } from './engine/strategyAnalytics';
 
 // Error boundary
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean; error: Error | null}> {
@@ -163,6 +165,7 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
   const [showSolveModal, setShowSolveModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showPackSelector, setShowPackSelector] = useState(false);
+  const [showStrategyDashboard, setShowStrategyDashboard] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [showSunsetEasterEgg, setShowSunsetEasterEgg] = useState(false);
   
@@ -170,6 +173,11 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
   const [vowelCost, setVowelCost] = useState(250);
   const [customSeed, setCustomSeed] = useState<string>('');
   const [hideKeyboard, setHideKeyboard] = useState(false);
+
+  // Analytics - computed when pack changes
+  const packAnalytics = useMemo(() => {
+    return analyzePuzzlePack(activePack.puzzles);
+  }, [activePack]);
 
   // Persistence
   useEffect(() => {
@@ -328,6 +336,13 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
             title="Select Pack"
           >
             <Library size={24} />
+          </button>
+          <button
+            onClick={() => setShowStrategyDashboard(true)}
+            className="p-2 hover:bg-white/10 rounded-full"
+            title="Strategy Insights"
+          >
+            <TrendingUp size={24} />
           </button>
           <button onClick={() => setShowSettings(true)} className="p-2 hover:bg-white/10 rounded-full">
             <SettingsIcon size={24} />
@@ -595,6 +610,15 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
                      currentPackId={activePack.id}
                      onSelectPack={selectPack}
                      onClose={() => setShowPackSelector(false)}
+                   />
+                 )}
+
+                 {/* Strategy Dashboard Modal */}
+                 {showStrategyDashboard && (
+                   <StrategyDashboard
+                     analytics={packAnalytics}
+                     currentCategory={state.currentPuzzle?.category}
+                     onClose={() => setShowStrategyDashboard(false)}
                    />
                  )}
                  </div>

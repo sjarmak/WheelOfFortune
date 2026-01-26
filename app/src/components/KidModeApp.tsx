@@ -29,7 +29,6 @@ import { PuzzlePack, ALL_PACKS, getPackById } from '../engine/packs';
 import {
   kidGameReducer,
   INITIAL_KID_GAME_STATE,
-  shouldShowHintNudge,
   getKidBankBalance,
   checkForNewAchievements
 } from '../engine/kidGame';
@@ -47,9 +46,12 @@ import {
   DollarSign,
   ShoppingBag,
   Package,
-  Music
+  Music,
+  TrendingUp
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { StrategyDashboard } from './StrategyDashboard';
+import { analyzePuzzlePack } from '../engine/strategyAnalytics';
 
 interface KidModeAppProps {
   onModeChange: () => void;
@@ -89,6 +91,7 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
   );
   const [showSettings, setShowSettings] = useState(false);
   const [showPackSelector, setShowPackSelector] = useState(false);
+  const [showStrategyDashboard, setShowStrategyDashboard] = useState(false);
   const [showStarCollection, setShowStarCollection] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showTreasureBox, setShowTreasureBox] = useState(false);
@@ -182,11 +185,6 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
     dispatch({ type: 'KID_GUESS_LETTER', letter });
   };
 
-  // Handle hint
-  const handleUseHint = () => {
-    dispatch({ type: 'KID_USE_HINT' });
-  };
-
   // Handle outcome dismiss
   const handleDismissOutcome = () => {
     dispatch({ type: 'KID_DISMISS_OUTCOME' });
@@ -276,8 +274,7 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
     }
   };
 
-  // Check if should show hint nudge
-  const showNudge = shouldShowHintNudge(state, settings.showNudgeAfterActions);
+
 
   // Filter packs appropriate for kids
   const kidFriendlyPacks = useMemo(() => {
@@ -289,6 +286,11 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
       p.id === 'quick-25'
     );
   }, []);
+
+  // Analytics - computed when pack changes
+  const packAnalytics = useMemo(() => {
+    return analyzePuzzlePack(activePack.puzzles);
+  }, [activePack]);
 
   if (!state.currentPuzzle) {
     return (
@@ -310,8 +312,8 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
         </div>
 
         <div className="flex gap-0.5 sm:gap-1 items-center">
-          {/* Stars/Bank button */}
-          <button
+           {/* Stars/Bank button */}
+           <button
             onClick={() => setShowStarCollection(true)}
             className="flex items-center gap-1 px-1.5 sm:px-2 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full shadow-lg hover:scale-105 transition-transform text-xs sm:text-sm"
             aria-label="View kid bank and star collection"
@@ -367,6 +369,16 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
             <Library size={16} />
           </button>
 
+          {/* Strategy button */}
+          <button
+            onClick={() => setShowStrategyDashboard(true)}
+            className="p-1 hover:bg-white/10 rounded-full"
+            title="Strategy Insights"
+            aria-label="Strategy insights"
+          >
+            <TrendingUp size={16} className="text-blue-400" />
+          </button>
+
           {/* Settings */}
           <button
             onClick={() => setShowSettings(true)}
@@ -405,13 +417,10 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
         {/* HUD below board */}
         <div className="text-[0.7rem] bg-black/20 rounded-lg p-1.5">
           <KidModeHUD
-            kidState={state.kidState}
             category={state.currentPuzzle.category}
             phrase={state.currentPuzzle.phrase}
             revealedPositions={state.revealedPositions}
             isSolved={state.turnState === 'ROUND_OVER'}
-            showNudge={showNudge}
-            onUseHint={handleUseHint}
             readAloudEnabled={settings.readAloud}
           />
         </div>
@@ -477,36 +486,37 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
         )}
       </div>
 
-      {/* Keyboard - fixed at bottom, full width */}
-      {!['SPINNING', 'SHOWING_OUTCOME', 'WORD_BUILDER', 'ROUND_OVER'].includes(state.turnState) && (
-        <div className={`w-full px-1 py-1 flex-shrink-0 overflow-x-auto ${
-          state.turnState === 'GUESSING_LETTER'
-            ? 'bg-green-500/30 ring-2 ring-green-400'
-            : state.turnState === 'PICKING_VOWEL'
-              ? 'bg-yellow-500/30 ring-2 ring-yellow-400'
-              : state.turnState === 'PICKING_CONSONANT'
-                ? 'bg-blue-500/30 ring-2 ring-blue-400'
-                : 'bg-black/30'
-        }`}>
-          <Keyboard
-            guessedLetters={state.guessedLetters}
-            onGuess={handleGuess}
-            disabled={state.turnState === 'SPINNING'}
-            highlightVowels={true}
-            large={false}
-            vowelsOnly={state.turnState === 'PICKING_VOWEL'}
-            consonantsOnly={state.turnState === 'PICKING_CONSONANT'}
-          />
-        </div>
-      )}
-
-      {/* Outcome Card */}
-      {state.turnState === 'SHOWING_OUTCOME' && state.kidState.lastOutcome && (
-        <KidOutcomeCard
-          outcome={state.kidState.lastOutcome}
-          onDismiss={handleDismissOutcome}
-          readAloudEnabled={settings.readAloud}
+      {/* Keyboard - always visible but disabled when not guessing */}
+      <div className={`w-full px-1 py-1 flex-shrink-0 overflow-x-auto ${
+        state.turnState === 'GUESSING_LETTER'
+          ? 'bg-green-500/30 ring-2 ring-green-400'
+          : state.turnState === 'PICKING_VOWEL'
+            ? 'bg-yellow-500/30 ring-2 ring-yellow-400'
+            : state.turnState === 'PICKING_CONSONANT'
+              ? 'bg-blue-500/30 ring-2 ring-blue-400'
+              : 'bg-black/30'
+      }`}>
+        <Keyboard
+          guessedLetters={state.guessedLetters}
+          onGuess={handleGuess}
+          disabled={!['GUESSING_LETTER', 'PICKING_VOWEL', 'PICKING_CONSONANT'].includes(state.turnState)}
+          highlightVowels={true}
+          large={false}
+          vowelsOnly={state.turnState === 'PICKING_VOWEL'}
+          consonantsOnly={state.turnState === 'PICKING_CONSONANT'}
         />
+      </div>
+
+      {/* Outcome Card - shown in game area during SHOWING_OUTCOME state */}
+      {state.turnState === 'SHOWING_OUTCOME' && state.kidState.lastOutcome && (
+        <div className="w-full px-1 sm:px-2 py-1">
+          <KidOutcomeCard
+            outcome={state.kidState.lastOutcome}
+            onDismiss={handleDismissOutcome}
+            readAloudEnabled={settings.readAloud}
+          />
+          <p className="text-center text-white/70 text-xs mt-2">Tap card to continue</p>
+        </div>
       )}
 
       {/* Word Builder */}
@@ -709,6 +719,15 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
           achievement={pendingAchievement}
           onClaim={handleClaimAchievement}
           onClose={handleCloseAchievement}
+        />
+      )}
+
+      {/* Strategy Dashboard Modal */}
+      {showStrategyDashboard && (
+        <StrategyDashboard
+          analytics={packAnalytics}
+          currentCategory={state.currentPuzzle?.category}
+          onClose={() => setShowStrategyDashboard(false)}
         />
       )}
     </div>
