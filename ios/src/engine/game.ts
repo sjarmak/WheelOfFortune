@@ -1,56 +1,62 @@
-import { GameState, Puzzle, VOWELS, WheelWedge } from './types';
-import { SeededRNG } from './rng';
+import { GameState, Puzzle, VOWELS, WheelWedge } from "./types";
+import { SeededRNG } from "./rng";
 
 export const INITIAL_STATE: GameState = {
   currentPuzzle: null,
   guessedLetters: [],
   revealedPositions: [],
   spinResult: null,
-  turnState: 'IDLE',
+  turnState: "IDLE",
+  mustSpin: false,
   player: { currentRoundScore: 0, totalScore: 0, freePlay: false },
   tossUpRevealOrder: [],
   tossUpIndex: 0,
   bonusTimer: 10,
   bonusPicks: [],
-  packId: 'default',
+  packId: "default",
   seed: Date.now(),
   roundCount: 0,
-  spinCount: 0
+  spinCount: 0,
 };
 
 export type GameAction =
-  | { type: 'START_ROUND'; puzzle: Puzzle; seed?: number }
-  | { type: 'SPIN_WHEEL' }
-  | { type: 'SPIN_RESULT'; wedge: WheelWedge }
-  | { type: 'GUESS_LETTER'; letter: string; cost: number }
-  | { type: 'BUY_VOWEL' }
-  | { type: 'SOLVE_ATTEMPT'; phrase: string }
-  | { type: 'TOSS_UP_TICK' }
-  | { type: 'ADD_TO_ROUND_SCORE'; points: number }
-  | { type: 'CLEAR_ROUND_SCORE' }
-  | { type: 'RESET_GAME' }
-  | { type: 'RESET_ROUND' }
-  | { type: 'RANDOM_PUZZLE'; puzzles: Puzzle[] }
-  | { type: 'SELECT_PUZZLE'; puzzle: Puzzle };
+  | { type: "START_ROUND"; puzzle: Puzzle; seed?: number }
+  | { type: "SPIN_WHEEL" }
+  | { type: "SPIN_RESULT"; wedge: WheelWedge }
+  | { type: "GUESS_LETTER"; letter: string; cost: number }
+  | { type: "BUY_VOWEL" }
+  | { type: "SOLVE_ATTEMPT"; phrase: string }
+  | { type: "TOSS_UP_TICK" }
+  | { type: "ADD_TO_ROUND_SCORE"; points: number }
+  | { type: "CLEAR_ROUND_SCORE" }
+  | { type: "RESET_GAME" }
+  | { type: "RESET_ROUND" }
+  | { type: "RANDOM_PUZZLE"; puzzles: Puzzle[] }
+  | { type: "SELECT_PUZZLE"; puzzle: Puzzle };
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   // Use a temporary RNG instance based on current state seed + roundCount to keep deterministic flow if needed
   // ideally the RNG would be passed in or part of state, but for reducer purity we usually pass seeds
-  
+
   switch (action.type) {
-    case 'START_ROUND': {
+    case "START_ROUND": {
       const { puzzle, seed } = action;
       // Setup reveal order for tossups or just all hidden for main
-      const positions = Array.from({ length: puzzle.phrase.length }, (_, i) => i);
-      const letterPositions = positions.filter(i => /[A-Z]/.test(puzzle.phrase[i]));
-      
+      const positions = Array.from(
+        { length: puzzle.phrase.length },
+        (_, i) => i,
+      );
+      const letterPositions = positions.filter((i) =>
+        /[A-Z]/.test(puzzle.phrase[i]),
+      );
+
       const rng = new SeededRNG(seed || state.seed + state.roundCount);
       const shuffledReveal = rng.shuffle(letterPositions);
 
       // For Bonus rounds, reveal RSTLNE immediately
       let revealed = [] as number[];
-      if (puzzle.round_type === 'BONUS') {
-        const RSTLNE = ['R','S','T','L','N','E'];
+      if (puzzle.round_type === "BONUS") {
+        const RSTLNE = ["R", "S", "T", "L", "N", "E"];
         for (let i = 0; i < puzzle.phrase.length; i++) {
           if (RSTLNE.includes(puzzle.phrase[i].toUpperCase())) {
             revealed.push(i);
@@ -61,65 +67,74 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         currentPuzzle: puzzle,
-        guessedLetters: puzzle.round_type === 'BONUS' ? ['R','S','T','L','N','E'] : [],
-        revealedPositions: revealed, 
+        guessedLetters:
+          puzzle.round_type === "BONUS" ? ["R", "S", "T", "L", "N", "E"] : [],
+        revealedPositions: revealed,
         spinResult: null,
-        turnState: puzzle.round_type === 'TOSSUP' ? 'IDLE' : 'IDLE',
+        turnState: puzzle.round_type === "TOSSUP" ? "IDLE" : "IDLE",
+        mustSpin: false,
         tossUpRevealOrder: shuffledReveal,
         tossUpIndex: 0,
         player: { ...state.player, currentRoundScore: 0, freePlay: false },
         roundCount: state.roundCount + 1,
-        spinCount: 0
+        spinCount: 0,
       };
     }
 
-    case 'SPIN_WHEEL':
-      return { ...state, turnState: 'SPINNING', spinCount: state.spinCount + 1 };
+    case "SPIN_WHEEL":
+      return {
+        ...state,
+        turnState: "SPINNING",
+        spinCount: state.spinCount + 1,
+      };
 
-    case 'SPIN_RESULT': {
+    case "SPIN_RESULT": {
       const { wedge } = action;
-      if (wedge.type === 'BANKRUPT') {
+      if (wedge.type === "BANKRUPT") {
         return {
           ...state,
-          spinResult: 'BANKRUPT',
+          spinResult: "BANKRUPT",
+          mustSpin: true,
           player: { ...state.player, currentRoundScore: 0 },
-          turnState: 'IDLE' // End turn effectively, logic handled by UI to show toast then allow next action
+          turnState: "IDLE",
         };
       }
-      if (wedge.type === 'LOSE_TURN') {
-         return {
+      if (wedge.type === "LOSE_TURN") {
+        return {
           ...state,
-          spinResult: 'LOSE_TURN',
-          turnState: 'IDLE'
+          spinResult: "LOSE_TURN",
+          mustSpin: true,
+          turnState: "IDLE",
         };
       }
       return {
         ...state,
         spinResult: wedge.value,
-        turnState: 'GUESSING_CONSONANT',
-        player: { ...state.player, freePlay: wedge.type === 'FREE_PLAY' }
+        mustSpin: false,
+        turnState: "GUESSING_CONSONANT",
+        player: { ...state.player, freePlay: wedge.type === "FREE_PLAY" },
       };
     }
 
-    case 'GUESS_LETTER': {
+    case "GUESS_LETTER": {
       const { letter, cost } = action;
       const puzzle = state.currentPuzzle!;
       const upper = letter.toUpperCase();
-      
+
       // Prevent guessing same letter twice
       if (state.guessedLetters.includes(upper)) {
         return state;
       }
-      
+
       const isVowel = VOWELS.includes(upper);
-      
+
       // Deduct cost (buying vowel)
       let newScore = state.player.currentRoundScore - cost;
-      
+
       // Logic for occurrences
       let count = 0;
       const newRevealed = [...state.revealedPositions];
-      
+
       for (let i = 0; i < puzzle.phrase.length; i++) {
         if (puzzle.phrase[i].toUpperCase() === upper) {
           count++;
@@ -128,93 +143,102 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       }
 
       // Add money if consonant and not buying
-      if (!isVowel && typeof state.spinResult === 'number' && !state.player.freePlay) {
-        newScore += (state.spinResult * count);
+      if (
+        !isVowel &&
+        typeof state.spinResult === "number" &&
+        !state.player.freePlay
+      ) {
+        newScore += state.spinResult * count;
       }
-      
+
       // Determine next turn state
-      let nextTurnState: typeof state.turnState = state.turnState;
-      
-      // After any letter guess (consonant or vowel), return to IDLE to allow choosing next action
-      // (spin again, buy vowel, solve, or guess another consonant)
-      // On wrong guess and not free play, turn ends; UI handles flow
-      nextTurnState = 'IDLE';
-      
+      // Correct guess: stay on turn (keep spinResult so player can buy vowel/solve/spin again)
+      // Wrong guess: turn ends (clear spinResult so player must spin again)
+      const isCorrect = count > 0;
+
       return {
         ...state,
         guessedLetters: [...state.guessedLetters, upper],
         revealedPositions: newRevealed,
         player: { ...state.player, currentRoundScore: newScore },
-        turnState: nextTurnState,
-        // Keep spinResult so player can continue guessing/buying without re-spinning
-        spinResult: state.spinResult
+        turnState: "IDLE",
+        spinResult: isCorrect ? state.spinResult : null,
+        mustSpin: !isCorrect,
       };
     }
 
-    case 'TOSS_UP_TICK': {
+    case "TOSS_UP_TICK": {
       if (state.tossUpIndex >= state.tossUpRevealOrder.length) return state;
       const nextPos = state.tossUpRevealOrder[state.tossUpIndex];
       return {
         ...state,
         revealedPositions: [...state.revealedPositions, nextPos],
-        tossUpIndex: state.tossUpIndex + 1
+        tossUpIndex: state.tossUpIndex + 1,
       };
     }
 
-    case 'SOLVE_ATTEMPT': {
-      const correct = action.phrase.toUpperCase() === state.currentPuzzle?.phrase.toUpperCase();
+    case "SOLVE_ATTEMPT": {
+      const correct =
+        action.phrase.toUpperCase() ===
+        state.currentPuzzle?.phrase.toUpperCase();
       if (correct) {
         return {
           ...state,
-          turnState: 'ROUND_OVER',
-          revealedPositions: Array.from({ length: state.currentPuzzle!.phrase.length }, (_, i) => i), // Reveal all
+          turnState: "ROUND_OVER",
+          revealedPositions: Array.from(
+            { length: state.currentPuzzle!.phrase.length },
+            (_, i) => i,
+          ), // Reveal all
           player: {
-             ...state.player,
-             totalScore: state.player.totalScore + state.player.currentRoundScore
-          }
+            ...state.player,
+            totalScore:
+              state.player.totalScore + state.player.currentRoundScore,
+          },
         };
       }
       return state; // Wrong solve, logic handled by UI (lose turn)
     }
-    
-    case 'ADD_TO_ROUND_SCORE': {
+
+    case "ADD_TO_ROUND_SCORE": {
       const { points } = action;
       return {
         ...state,
-        player: { ...state.player, currentRoundScore: state.player.currentRoundScore + points }
+        player: {
+          ...state.player,
+          currentRoundScore: state.player.currentRoundScore + points,
+        },
       };
     }
 
-    case 'CLEAR_ROUND_SCORE': {
+    case "CLEAR_ROUND_SCORE": {
       return {
         ...state,
-        player: { ...state.player, currentRoundScore: 0 }
+        player: { ...state.player, currentRoundScore: 0 },
       };
     }
 
-    case 'BUY_VOWEL': {
+    case "BUY_VOWEL": {
       return {
         ...state,
-        turnState: 'BUYING_VOWEL'
+        turnState: "BUYING_VOWEL",
       };
     }
 
-    case 'RESET_ROUND': {
+    case "RESET_ROUND": {
       return {
         ...state,
         guessedLetters: [],
         revealedPositions: [],
         spinResult: null,
-        turnState: 'IDLE',
+        turnState: "IDLE",
+        mustSpin: false,
         player: { ...state.player, currentRoundScore: 0 },
       };
     }
 
-    case 'RANDOM_PUZZLE': {
+    case "RANDOM_PUZZLE": {
       const { puzzles } = action;
-      const available = puzzles.filter(
-        (p) => p.id !== state.currentPuzzle?.id
-      );
+      const available = puzzles.filter((p) => p.id !== state.currentPuzzle?.id);
       if (available.length === 0) return state;
       const randomIndex = Math.floor(Math.random() * available.length);
       const selected = available[randomIndex];
@@ -224,12 +248,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         guessedLetters: [],
         revealedPositions: [],
         spinResult: null,
-        turnState: 'IDLE',
+        turnState: "IDLE",
+        mustSpin: false,
         player: { ...state.player, currentRoundScore: 0 },
       };
     }
 
-    case 'SELECT_PUZZLE': {
+    case "SELECT_PUZZLE": {
       const { puzzle } = action;
       return {
         ...state,
@@ -237,12 +262,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         guessedLetters: [],
         revealedPositions: [],
         spinResult: null,
-        turnState: 'IDLE',
+        turnState: "IDLE",
+        mustSpin: false,
         player: { ...state.player, currentRoundScore: 0 },
       };
     }
 
-    case 'RESET_GAME':
+    case "RESET_GAME":
       return { ...INITIAL_STATE, seed: Date.now() };
 
     default:

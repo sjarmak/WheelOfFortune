@@ -196,6 +196,7 @@ export function StandardModeApp({
 
   const canBuyVowel =
     vowelsLeft &&
+    !state.mustSpin &&
     (state.player.currentRoundScore >= VOWEL_COST || state.player.freePlay);
 
   // Toast message
@@ -516,9 +517,8 @@ export function StandardModeApp({
                     seed={state.seed + state.spinCount}
                     canSpin={state.turnState === "IDLE"}
                   />
-                  {/* Banner overlay on wheel center */}
-                  {(state.turnState === "GUESSING_CONSONANT" ||
-                    state.turnState === "BUYING_VOWEL") && (
+                  {/* Banner overlay below wheel center */}
+                  {state.turnState !== "SPINNING" && (
                     <View style={styles.wheelBanner} pointerEvents="none">
                       <LinearGradient
                         colors={["rgba(0,0,0,0.85)", "rgba(0,0,0,0.75)"]}
@@ -529,6 +529,10 @@ export function StandardModeApp({
                             "GUESS A CONSONANT"}
                           {state.turnState === "BUYING_VOWEL" &&
                             "SELECT A VOWEL"}
+                          {state.turnState === "IDLE" &&
+                            (state.player.freePlay
+                              ? "FREE PLAY"
+                              : "SPIN THE WHEEL")}
                         </Text>
                         {state.turnState === "GUESSING_CONSONANT" &&
                           typeof state.spinResult === "number" && (
@@ -541,6 +545,12 @@ export function StandardModeApp({
                             ${VOWEL_COST} each
                           </Text>
                         )}
+                        {state.turnState === "IDLE" &&
+                          state.player.freePlay && (
+                            <Text style={styles.wheelBannerAmount}>
+                              Guess any letter free
+                            </Text>
+                          )}
                       </LinearGradient>
                     </View>
                   )}
@@ -938,7 +948,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: "10%",
     right: "10%",
-    top: "42%",
+    bottom: "8%",
     alignItems: "center",
   },
   wheelBannerGradient: {
