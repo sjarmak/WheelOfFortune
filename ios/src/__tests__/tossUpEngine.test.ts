@@ -240,3 +240,149 @@ describe("Toss-Up Engine: TOSSUP_LOCKED_OUT tick handling", () => {
     expect(result.tossUpIndex).toBe(1);
   });
 });
+
+describe("Toss-Up Engine: BUZZ_IN", () => {
+  it("pauses reveal by setting turnState to TOSSUP_BUZZED", () => {
+    const state = startTossUpRound();
+    expect(state.turnState).toBe("TOSSUP_REVEALING");
+    const buzzed = gameReducer(state, { type: "BUZZ_IN" });
+    expect(buzzed.turnState).toBe("TOSSUP_BUZZED");
+  });
+
+  it("preserves all other state when buzzing in", () => {
+    let state = startTossUpRound();
+    // Reveal a letter first
+    state = gameReducer(state, { type: "TOSS_UP_TICK", dtMs: 1000 });
+    expect(state.tossUpIndex).toBe(1);
+
+    const buzzed = gameReducer(state, { type: "BUZZ_IN" });
+    expect(buzzed.turnState).toBe("TOSSUP_BUZZED");
+    expect(buzzed.tossUpIndex).toBe(1);
+    expect(buzzed.revealedPositions).toEqual(state.revealedPositions);
+    expect(buzzed.tossUpElapsedMs).toBe(state.tossUpElapsedMs);
+  });
+
+  it("is a no-op when turnState is TOSSUP_LOCKED_OUT", () => {
+    const state: GameState = {
+      ...startTossUpRound(),
+      turnState: "TOSSUP_LOCKED_OUT",
+      tossUpLockoutMs: 3000,
+    };
+    const result = gameReducer(state, { type: "BUZZ_IN" });
+    expect(result).toBe(state);
+  });
+
+  it("is a no-op when turnState is TOSSUP_BUZZED", () => {
+    const state: GameState = {
+      ...startTossUpRound(),
+      turnState: "TOSSUP_BUZZED",
+    };
+    const result = gameReducer(state, { type: "BUZZ_IN" });
+    expect(result).toBe(state);
+  });
+
+  it("is a no-op when turnState is IDLE", () => {
+    const state: GameState = {
+      ...startTossUpRound(),
+      turnState: "IDLE",
+    };
+    const result = gameReducer(state, { type: "BUZZ_IN" });
+    expect(result).toBe(state);
+  });
+
+  it("is a no-op when turnState is ROUND_OVER", () => {
+    const state: GameState = {
+      ...startTossUpRound(),
+      turnState: "ROUND_OVER",
+    };
+    const result = gameReducer(state, { type: "BUZZ_IN" });
+    expect(result).toBe(state);
+  });
+});
+
+describe("Toss-Up Engine: TOSS_UP_SOLVE_ATTEMPT", () => {
+  it("correct solve ends round as win", () => {
+    const puzzle = makeTossUpPuzzle(); // "HELLO WORLD"
+    let state = startTossUpRound(puzzle);
+    state = gameReducer(state, { type: "BUZZ_IN" });
+    expect(state.turnState).toBe("TOSSUP_BUZZED");
+
+    const result = gameReducer(state, {
+      type: "TOSS_UP_SOLVE_ATTEMPT",
+      phrase: "hello world",
+    });
+    expect(result.turnState).toBe("ROUND_OVER");
+    expect(result.roundResult).toBe("win");
+    // All positions revealed
+    expect(result.revealedPositions).toHaveLength(puzzle.phrase.length);
+    for (let i = 0; i < puzzle.phrase.length; i++) {
+      expect(result.revealedPositions).toContain(i);
+    }
+  });
+
+  it("correct solve is case-insensitive", () => {
+    const puzzle = makeTossUpPuzzle();
+    let state = startTossUpRound(puzzle);
+    state = gameReducer(state, { type: "BUZZ_IN" });
+
+    const result = gameReducer(state, {
+      type: "TOSS_UP_SOLVE_ATTEMPT",
+      phrase: "HeLLo WoRLd",
+    });
+    expect(result.turnState).toBe("ROUND_OVER");
+    expect(result.roundResult).toBe("win");
+  });
+
+  it("wrong solve triggers lockout", () => {
+    let state = startTossUpRound();
+    state = gameReducer(state, { type: "BUZZ_IN" });
+
+    const result = gameReducer(state, {
+      type: "TOSS_UP_SOLVE_ATTEMPT",
+      phrase: "WRONG ANSWER",
+    });
+    expect(result.turnState).toBe("TOSSUP_LOCKED_OUT");
+    expect(result.tossUpLockoutMs).toBe(3000);
+  });
+
+  it("lockout expires after 3000ms of ticks and resumes revealing", () => {
+    let state = startTossUpRound();
+    // Buzz in and solve incorrectly
+    state = gameReducer(state, { type: "BUZZ_IN" });
+    state = gameReducer(state, {
+      type: "TOSS_UP_SOLVE_ATTEMPT",
+      phrase: "WRONG",
+    });
+    expect(state.turnState).toBe("TOSSUP_LOCKED_OUT");
+    expect(state.tossUpLockoutMs).toBe(3000);
+
+    // Tick through lockout
+    state = gameReducer(state, { type: "TOSS_UP_TICK", dtMs: 3000 });
+    expect(state.turnState).toBe("TOSSUP_REVEALING");
+    expect(state.tossUpLockoutMs).toBe(0);
+  });
+
+  it("cannot buzz during lockout", () => {
+    let state = startTossUpRound();
+    state = gameReducer(state, { type: "BUZZ_IN" });
+    state = gameReducer(state, {
+      type: "TOSS_UP_SOLVE_ATTEMPT",
+      phrase: "WRONG",
+    });
+    expect(state.turnState).toBe("TOSSUP_LOCKED_OUT");
+
+    const result = gameReducer(state, { type: "BUZZ_IN" });
+    expect(result).toBe(state);
+  });
+
+  it("is a no-op when turnState is not TOSSUP_BUZZED", () => {
+    const state = startTossUpRound();
+    expect(state.turnState).toBe("TOSSUP_REVEALING");
+
+    const result = gameReducer(state, {
+      type: "TOSS_UP_SOLVE_ATTEMPT",
+      phrase: "HELLO WORLD",
+    });
+    expect(result).toBe(state);
+  });
+});

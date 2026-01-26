@@ -34,6 +34,8 @@ export type GameAction =
   | { type: "BUY_VOWEL" }
   | { type: "SOLVE_ATTEMPT"; phrase: string }
   | { type: "TOSS_UP_TICK"; dtMs: number }
+  | { type: "BUZZ_IN" }
+  | { type: "TOSS_UP_SOLVE_ATTEMPT"; phrase: string }
   | { type: "ADD_TO_ROUND_SCORE"; points: number }
   | { type: "CLEAR_ROUND_SCORE" }
   | { type: "RESET_GAME" }
@@ -248,6 +250,42 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         revealedPositions: newRevealed,
         tossUpIndex: index,
         tossUpElapsedMs: elapsed,
+      };
+    }
+
+    case "BUZZ_IN": {
+      if (state.turnState !== "TOSSUP_REVEALING") {
+        return state;
+      }
+      return {
+        ...state,
+        turnState: "TOSSUP_BUZZED",
+      };
+    }
+
+    case "TOSS_UP_SOLVE_ATTEMPT": {
+      if (state.turnState !== "TOSSUP_BUZZED") {
+        return state;
+      }
+      const correct =
+        action.phrase.toUpperCase() ===
+        state.currentPuzzle?.phrase.toUpperCase();
+      if (correct) {
+        const allPositions = Array.from(
+          { length: state.currentPuzzle!.phrase.length },
+          (_, i) => i,
+        );
+        return {
+          ...state,
+          turnState: "ROUND_OVER",
+          roundResult: "win",
+          revealedPositions: allPositions,
+        };
+      }
+      return {
+        ...state,
+        turnState: "TOSSUP_LOCKED_OUT",
+        tossUpLockoutMs: state.tossUpLockoutDurationMs,
       };
     }
 
