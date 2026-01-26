@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Settings, RotateCcw, X } from 'lucide-react-native';
+import { Settings, RotateCcw, X, ChevronLeft, Play, BookOpen, BarChart3 } from 'lucide-react-native';
 
 import { gameReducer, INITIAL_STATE } from '../engine/game';
 import { VOWELS, WheelWedge } from '../engine/types';
@@ -31,6 +31,8 @@ import { colors, typography, spacing, borderRadius, shadows, layout } from '../s
 
 const STORAGE_KEY = 'wof_standard_state';
 const VOWEL_COST = 250;
+
+type ActiveScreen = 'home' | 'game' | 'packBrowser' | 'strategy';
 
 interface StandardModeAppProps {
   onModeChange?: () => void;
@@ -54,6 +56,7 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
     };
   });
 
+  const [activeScreen, setActiveScreen] = useState<ActiveScreen>('home');
   const [showSettings, setShowSettings] = useState(false);
   const [showSolveModal, setShowSolveModal] = useState(false);
   const [solveInput, setSolveInput] = useState('');
@@ -196,23 +199,50 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={onModeChange} style={styles.iconButton}>
-            <Text style={styles.modeText}>WHEEL PRACTICE</Text>
-          </TouchableOpacity>
+          {activeScreen !== 'home' ? (
+            <TouchableOpacity onPress={() => setActiveScreen('home')} style={styles.iconButton}>
+              <ChevronLeft size={24} color={colors.white} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={onModeChange} style={styles.iconButton}>
+              <Text style={styles.modeText}>WHEEL PRACTICE</Text>
+            </TouchableOpacity>
+          )}
 
-          <View style={styles.scoreContainer}>
-            <Text style={styles.scoreLabel}>ROUND</Text>
-            <Text style={styles.scoreValue}>${state.player.currentRoundScore}</Text>
-          </View>
+          {activeScreen !== 'home' && (
+            <Text style={styles.headerTitle}>WHEEL PRACTICE</Text>
+          )}
 
-          <View style={styles.scoreContainer}>
-            <Text style={styles.scoreLabel}>TOTAL</Text>
-            <Text style={styles.totalValue}>${state.player.totalScore}</Text>
-          </View>
+          {activeScreen === 'game' ? (
+            <>
+              <View style={styles.scoreContainer}>
+                <Text style={styles.scoreLabel}>ROUND</Text>
+                <Text style={styles.scoreValue}>${state.player.currentRoundScore}</Text>
+              </View>
 
-          <TouchableOpacity onPress={() => setShowSettings(true)} style={styles.iconButton}>
-            <Settings size={24} color={colors.white} />
-          </TouchableOpacity>
+              <View style={styles.scoreContainer}>
+                <Text style={styles.scoreLabel}>TOTAL</Text>
+                <Text style={styles.totalValue}>${state.player.totalScore}</Text>
+              </View>
+
+              <TouchableOpacity onPress={() => setShowSettings(true)} style={styles.iconButton}>
+                <Settings size={24} color={colors.white} />
+              </TouchableOpacity>
+            </>
+          ) : activeScreen !== 'home' ? (
+            <View style={styles.headerSpacer} />
+          ) : (
+            <>
+              <View style={styles.scoreContainer}>
+                <Text style={styles.scoreLabel}>TOTAL</Text>
+                <Text style={styles.totalValue}>${state.player.totalScore}</Text>
+              </View>
+
+              <TouchableOpacity onPress={() => setShowSettings(true)} style={styles.iconButton}>
+                <Settings size={24} color={colors.white} />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {/* Toast */}
@@ -223,108 +253,177 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
         )}
 
         {/* Main Content */}
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Puzzle Board */}
-          {state.currentPuzzle && (
-            <InteractiveBoard
-              phrase={state.currentPuzzle.phrase}
-              revealedPositions={state.revealedPositions}
-              category={state.currentPuzzle.category}
-              puzzleId={state.currentPuzzle.id}
-              isPuzzleSolved={isRoundOver}
-              readAloudEnabled={false}
-            />
-          )}
+        {activeScreen === 'home' && (
+          <View style={styles.homeContainer}>
+            <Text style={styles.homeTitle}>WHEEL PRACTICE</Text>
+            <Text style={styles.homeSubtitle}>Choose an activity</Text>
 
-          {/* Round Over */}
-          {isRoundOver ? (
-            <View style={styles.roundOverSection}>
-              <Text style={styles.solvedText}>PUZZLE SOLVED!</Text>
-              <Text style={styles.winningsText}>
-                Won: ${state.player.currentRoundScore}
-              </Text>
-              <TouchableOpacity onPress={nextRound}>
+            <View style={styles.navCards}>
+              <TouchableOpacity
+                style={styles.navCard}
+                onPress={() => setActiveScreen('game')}
+              >
                 <LinearGradient
                   colors={[colors.green[500], colors.green[600]]}
-                  style={styles.nextButton}
+                  style={styles.navCardGradient}
                 >
-                  <RotateCcw size={20} color={colors.white} />
-                  <Text style={styles.nextButtonText}>Next Puzzle</Text>
+                  <Play size={40} color={colors.white} />
+                  <Text style={styles.navCardTitle}>Play</Text>
+                  <Text style={styles.navCardDesc}>Spin the wheel and solve puzzles</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.navCard}
+                onPress={() => setActiveScreen('packBrowser')}
+              >
+                <LinearGradient
+                  colors={[colors.blue[500], colors.blue[600]]}
+                  style={styles.navCardGradient}
+                >
+                  <BookOpen size={40} color={colors.white} />
+                  <Text style={styles.navCardTitle}>Puzzle Packs</Text>
+                  <Text style={styles.navCardDesc}>Browse and select puzzle packs</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.navCard}
+                onPress={() => setActiveScreen('strategy')}
+              >
+                <LinearGradient
+                  colors={[colors.purple[500], colors.purple[600]]}
+                  style={styles.navCardGradient}
+                >
+                  <BarChart3 size={40} color={colors.white} />
+                  <Text style={styles.navCardTitle}>Strategy</Text>
+                  <Text style={styles.navCardDesc}>Analyze letter frequencies and patterns</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
-          ) : (
-            <View style={styles.gameArea}>
-              {/* Wheel */}
-              {!isRoundOver && (
-                <View style={styles.wheelContainer}>
-                   <StandardWheel
-                     onSpinStart={handleSpinStart}
-                     onSpinComplete={handleSpinComplete}
-                     isSpinning={state.turnState === 'SPINNING'}
-                     seed={state.seed + state.spinCount}
-                     canSpin={state.turnState === 'IDLE'}
-                   />
-                 </View>
-              )}
+          </View>
+        )}
 
-              {/* Action Buttons */}
-              {state.turnState === 'IDLE' && (
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity onPress={() => setShowSolveModal(true)}>
-                    <LinearGradient
-                      colors={[colors.blue[500], colors.blue[600]]}
-                      style={styles.actionButton}
-                    >
-                      <Text style={styles.actionButtonText}>SOLVE</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
+        {activeScreen === 'game' && (
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Puzzle Board */}
+            {state.currentPuzzle && (
+              <InteractiveBoard
+                phrase={state.currentPuzzle.phrase}
+                revealedPositions={state.revealedPositions}
+                category={state.currentPuzzle.category}
+                puzzleId={state.currentPuzzle.id}
+                isPuzzleSolved={isRoundOver}
+                readAloudEnabled={false}
+              />
+            )}
 
-                  <TouchableOpacity 
-                    onPress={handleBuyVowel}
-                    disabled={!canBuyVowel}
-                  >
-                    <LinearGradient
-                      colors={canBuyVowel ? [colors.purple[500], colors.purple[600]] : [colors.slate[600], colors.slate[700]]}
-                      style={styles.actionButton}
-                    >
-                      <Text style={[styles.actionButtonText, !canBuyVowel && styles.disabledText]}>
-                        {vowelsLeft ? `VOWEL $${VOWEL_COST}` : 'NO VOWELS'}
-                      </Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* Status */}
-              <View style={styles.statusContainer}>
-                <Text style={styles.statusText}>
-                  {state.turnState === 'SPINNING' && 'SPINNING...'}
-                  {state.turnState === 'GUESSING_CONSONANT' && `GUESS A CONSONANT ($${state.spinResult})`}
-                  {state.turnState === 'BUYING_VOWEL' && `SELECT A VOWEL ($${VOWEL_COST})`}
-                  {state.turnState === 'IDLE' && 'SPIN THE WHEEL'}
+            {/* Round Over */}
+            {isRoundOver ? (
+              <View style={styles.roundOverSection}>
+                <Text style={styles.solvedText}>PUZZLE SOLVED!</Text>
+                <Text style={styles.winningsText}>
+                  Won: ${state.player.currentRoundScore}
                 </Text>
+                <TouchableOpacity onPress={nextRound}>
+                  <LinearGradient
+                    colors={[colors.green[500], colors.green[600]]}
+                    style={styles.nextButton}
+                  >
+                    <RotateCcw size={20} color={colors.white} />
+                    <Text style={styles.nextButtonText}>Next Puzzle</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
+            ) : (
+              <View style={styles.gameArea}>
+                {/* Wheel */}
+                {!isRoundOver && (
+                  <View style={styles.wheelContainer}>
+                     <StandardWheel
+                       onSpinStart={handleSpinStart}
+                       onSpinComplete={handleSpinComplete}
+                       isSpinning={state.turnState === 'SPINNING'}
+                       seed={state.seed + state.spinCount}
+                       canSpin={state.turnState === 'IDLE'}
+                     />
+                   </View>
+                )}
 
-              {/* Keyboard */}
-              {canGuess && (
-                <View style={styles.keyboardSection}>
-                  <Keyboard
-                    guessedLetters={state.guessedLetters}
-                    onGuess={handleGuess}
-                    disabled={!canGuess}
-                    vowelsOnly={state.turnState === 'BUYING_VOWEL'}
-                    consonantsOnly={state.turnState === 'GUESSING_CONSONANT'}
-                  />
+                {/* Action Buttons */}
+                {state.turnState === 'IDLE' && (
+                  <View style={styles.actionButtons}>
+                    <TouchableOpacity onPress={() => setShowSolveModal(true)}>
+                      <LinearGradient
+                        colors={[colors.blue[500], colors.blue[600]]}
+                        style={styles.actionButton}
+                      >
+                        <Text style={styles.actionButtonText}>SOLVE</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={handleBuyVowel}
+                      disabled={!canBuyVowel}
+                    >
+                      <LinearGradient
+                        colors={canBuyVowel ? [colors.purple[500], colors.purple[600]] : [colors.slate[600], colors.slate[700]]}
+                        style={styles.actionButton}
+                      >
+                        <Text style={[styles.actionButtonText, !canBuyVowel && styles.disabledText]}>
+                          {vowelsLeft ? `VOWEL $${VOWEL_COST}` : 'NO VOWELS'}
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Status */}
+                <View style={styles.statusContainer}>
+                  <Text style={styles.statusText}>
+                    {state.turnState === 'SPINNING' && 'SPINNING...'}
+                    {state.turnState === 'GUESSING_CONSONANT' && `GUESS A CONSONANT ($${state.spinResult})`}
+                    {state.turnState === 'BUYING_VOWEL' && `SELECT A VOWEL ($${VOWEL_COST})`}
+                    {state.turnState === 'IDLE' && 'SPIN THE WHEEL'}
+                  </Text>
                 </View>
-              )}
-            </View>
-          )}
-        </ScrollView>
+
+                {/* Keyboard */}
+                {canGuess && (
+                  <View style={styles.keyboardSection}>
+                    <Keyboard
+                      guessedLetters={state.guessedLetters}
+                      onGuess={handleGuess}
+                      disabled={!canGuess}
+                      vowelsOnly={state.turnState === 'BUYING_VOWEL'}
+                      consonantsOnly={state.turnState === 'GUESSING_CONSONANT'}
+                    />
+                  </View>
+                )}
+              </View>
+            )}
+          </ScrollView>
+        )}
+
+        {activeScreen === 'packBrowser' && (
+          <View style={styles.placeholderScreen}>
+            <BookOpen size={48} color={colors.slate[500]} />
+            <Text style={styles.placeholderTitle}>Puzzle Packs</Text>
+            <Text style={styles.placeholderDesc}>Coming soon</Text>
+          </View>
+        )}
+
+        {activeScreen === 'strategy' && (
+          <View style={styles.placeholderScreen}>
+            <BarChart3 size={48} color={colors.slate[500]} />
+            <Text style={styles.placeholderTitle}>Strategy Dashboard</Text>
+            <Text style={styles.placeholderDesc}>Coming soon</Text>
+          </View>
+        )}
 
         {/* Solve Modal */}
         <Modal
@@ -614,5 +713,70 @@ const styles = StyleSheet.create({
   resetAllText: {
     color: colors.red[400],
     fontWeight: typography.weights.bold,
+  },
+  headerTitle: {
+    color: colors.yellow[400],
+    fontWeight: typography.weights.bold,
+    fontSize: typography.sizes.xs,
+    letterSpacing: 1,
+  },
+  headerSpacer: {
+    flex: 1,
+  },
+  homeContainer: {
+    flex: 1,
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[8],
+    alignItems: 'center',
+  },
+  homeTitle: {
+    color: colors.yellow[400],
+    fontSize: typography.sizes['4xl'],
+    fontWeight: typography.weights.bold,
+    letterSpacing: 2,
+    marginBottom: spacing[1],
+  },
+  homeSubtitle: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.base,
+    marginBottom: spacing[8],
+  },
+  navCards: {
+    width: '100%',
+    gap: spacing[4],
+  },
+  navCard: {
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    ...shadows.lg,
+  },
+  navCardGradient: {
+    padding: spacing[5],
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  navCardTitle: {
+    color: colors.white,
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold,
+  },
+  navCardDesc: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: typography.sizes.sm,
+  },
+  placeholderScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[3],
+  },
+  placeholderTitle: {
+    color: colors.white,
+    fontSize: typography.sizes['2xl'],
+    fontWeight: typography.weights.bold,
+  },
+  placeholderDesc: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.base,
   },
 });
