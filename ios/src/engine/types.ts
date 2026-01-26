@@ -15,6 +15,7 @@ export interface Puzzle {
   round_type: RoundType;
   difficulty?: PuzzleDifficulty;
   season?: number;
+  allowed_modes?: RoundType[];
 }
 
 export type PlayerState = {
@@ -35,7 +36,12 @@ export type GameState = {
     | "GUESSING_CONSONANT"
     | "BUYING_VOWEL"
     | "SOLVING"
-    | "ROUND_OVER";
+    | "ROUND_OVER"
+    | "TOSSUP_REVEALING"
+    | "TOSSUP_BUZZED"
+    | "TOSSUP_LOCKED_OUT"
+    | "BONUS_PICKING"
+    | "BONUS_SOLVE_TIMER";
   mustSpin: boolean; // True after wrong guess / bankrupt / lose turn - player must spin before buying vowel
 
   player: PlayerState;
@@ -43,10 +49,19 @@ export type GameState = {
   // Toss-up specific
   tossUpRevealOrder: number[];
   tossUpIndex: number; // How many revealed so far
+  tossUpElapsedMs: number;
+  tossUpRevealIntervalMs: number;
+  tossUpLockoutMs: number;
+  tossUpLockoutDurationMs: number;
 
   // Bonus specific
   bonusTimer: number;
+  bonusTimerMs: number;
+  bonusTimerDurationMs: number;
   bonusPicks: string[]; // RSTLNE + 3 + 1
+
+  // Round result
+  roundResult: "win" | "loss" | null;
 
   // Meta
   packId: string;
