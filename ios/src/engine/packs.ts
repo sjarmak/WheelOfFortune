@@ -20,6 +20,22 @@ function extractSeason(sourcePath: string): number | undefined {
   return match ? parseInt(match[1], 10) : undefined;
 }
 
+const BONUS_EXCLUDED_CATEGORIES = [
+  'before & after',
+  'same name',
+  'rhyme time',
+  'song lyrics',
+  'title/author',
+];
+
+function getAllowedModes(category: string): RoundType[] {
+  const normalized = category.toLowerCase();
+  if (BONUS_EXCLUDED_CATEGORIES.includes(normalized)) {
+    return ['MAIN', 'TOSSUP'];
+  }
+  return ['MAIN', 'TOSSUP', 'BONUS'];
+}
+
 function mapPuzzles(raw: any[]): Puzzle[] {
   return raw.map((p: any) => ({
     id: p.id,
@@ -28,7 +44,15 @@ function mapPuzzles(raw: any[]): Puzzle[] {
     round_type: p.round_type as RoundType,
     difficulty: p.difficulty,
     season: extractSeason(p.source?.path || ''),
+    allowed_modes: getAllowedModes(p.category),
   }));
+}
+
+export function getPuzzlesForMode(puzzles: Puzzle[], mode: RoundType): Puzzle[] {
+  return puzzles.filter(p => {
+    if (!p.allowed_modes) return true;
+    return p.allowed_modes.includes(mode);
+  });
 }
 
 function computePackStats(puzzles: Puzzle[]): { categories: string[]; difficultyRange: [number, number] } {
