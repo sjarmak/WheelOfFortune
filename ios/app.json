@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Wheel of Fortune",
+    "slug": "wheel-of-fortune",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#581c87"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wheeloffortune.kids",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "This app does not use the microphone.",
+        "UIBackgroundModes": []
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#581c87"
+      },
+      "package": "com.wheeloffortune.kids"
+    },
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": false
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "wheel-of-fortune-kids"
+      }
+    }
+  }
+}
