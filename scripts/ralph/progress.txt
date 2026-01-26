@@ -4,7 +4,12 @@
 - WHEEL_CONFIG has 24 wedges, WEDGE_ANGLE = 15 degrees
 - SeededRNG(seed).range(0, 24) determines the winning wedge index deterministically
 - Global git pre-commit hook at `~/.config/pre-commit/hooks/pre-commit` does secret scanning; may need `-c core.hooksPath=/dev/null` for clean commits
-- Pre-existing type error in game.test.ts (`difficultyRating` should be `difficulty`) — not from US-001
+- Pre-existing type error in game.test.ts (`difficultyRating` should be `difficulty`) — fixed in US-004
+- GameAction union type is defined in `game.ts` (not `types.ts`) alongside INITIAL_STATE and gameReducer
+- iOS WheelWedge uses type `'VALUE'` where web uses `'CASH'` — any code ported from web that switches on wedge type must update this
+- Navigation is state-based (`activeScreen` useState in StandardModeApp) — no routing library. Icons from `lucide-react-native` (ChevronLeft, Play, BookOpen, BarChart3)
+- ALL_PACKS from `packs.ts` provides all available packs as `PuzzlePack[]`. Includes original, seasons 1-20, seasons 40-42, individual season packs, difficulty sub-packs, and random quick-game packs
+- PackBrowser accepts `packs`, `activePackId`, and `onSelectPack` props — parent controls pack selection behavior and navigation
 
 # Ralph Progress Log
 Started: Mon Jan 26 08:38:47 EST 2026
@@ -34,4 +39,100 @@ Started: Mon Jan 26 08:38:47 EST 2026
 - **Learnings for future iterations:**
   - The header text is on the `onModeChange` touchable, serving dual purpose as both label and mode-switch button
   - Other "Standard" references in codebase are code identifiers (StandardWheel, StandardModeApp), not user-facing labels — no need to rename those
+---
+
+## 2026-01-26 08:51 - US-003
+- Ported strategyAnalytics engine from web (`app/src/engine/strategyAnalytics.ts`) to iOS (`ios/src/engine/strategyAnalytics.ts`)
+- All 5 core functions ported: calculateLetterFrequencies, calculateCategoryAnalysis, findCommonPatterns, calculateWheelAnalysis, generateRecommendations
+- Exports `analyzePuzzlePack(puzzles)` returning `PuzzleCorpusAnalytics`
+- Types defined inline in same file: LetterFrequency, CategoryAnalysis, WheelAnalysis, StrategyRecommendation, PuzzleCorpusAnalytics
+- Created `ios/src/__tests__/strategyAnalytics.test.ts` with 28 tests validating all functions
+- Files changed:
+  - `ios/src/engine/strategyAnalytics.ts` (new) — ported analytics engine
+  - `ios/src/__tests__/strategyAnalytics.test.ts` (new) — 28 unit tests
+- **Learnings for future iterations:**
+  - Key difference between web and iOS: web uses `'CASH'` wedge type, iOS uses `'VALUE'` — `calculateWheelAnalysis()` must use `case 'VALUE'` not `case 'CASH'`
+  - All analytics types are exported from the same file (no separate analyticsTypes.ts needed since types are small)
+  - The `generateRecommendations()` function mutates the `rstlne` array via `.sort()` — this is a local variable so it's acceptable, but be aware if extracting
+  - Test puzzles can be minimal `Puzzle` objects (just id, phrase, category, round_type) — no need for full normalized/difficulty fields
+---
+
+## 2026-01-26 08:56 - US-004
+- Added 3 new reducer actions: RESET_ROUND, RANDOM_PUZZLE, SELECT_PUZZLE to gameReducer
+- RESET_ROUND: clears guessedLetters, revealedPositions, spinResult; resets turnState to IDLE and currentRoundScore to 0; preserves currentPuzzle and totalScore
+- RANDOM_PUZZLE: filters out current puzzle from provided array, selects random alternative, resets round state; returns unchanged state if no alternatives available
+- SELECT_PUZZLE: sets provided puzzle as currentPuzzle, resets round state; preserves totalScore
+- Added action types to GameAction union in game.ts
+- Fixed pre-existing type error in game.test.ts (difficultyRating → difficulty)
+- Created `ios/src/__tests__/gameReducer.test.ts` with 19 tests covering all 3 actions plus RESET_GAME unchanged verification
+- Files changed:
+  - `ios/src/engine/game.ts` (modified) — 3 new action types + 3 new reducer cases
+  - `ios/src/__tests__/gameReducer.test.ts` (new) — 19 unit tests
+  - `ios/src/engine/game.test.ts` (modified) — fixed difficultyRating → difficulty type error
+  - `prd.json` (modified) — US-004 passes: true
+- **Learnings for future iterations:**
+  - GameAction union type and INITIAL_STATE are in `game.ts`, not `types.ts`
+  - RANDOM_PUZZLE uses Math.random() (non-deterministic) since it doesn't need replay — if deterministic selection is needed later, use SeededRNG
+  - The RESET_ROUND pattern: clear guessedLetters/revealedPositions/spinResult, set turnState='IDLE', zero currentRoundScore — reuse this pattern for any "soft reset"
+  - Existing game.test.ts had `difficultyRating: 1` instead of `difficulty: { score: 0.5, reasons: [] }` — now fixed
+---
+
+## 2026-01-26 09:03 - US-005
+- Added state-based home screen navigation to StandardModeApp.tsx
+- `activeScreen` state with type `'home' | 'game' | 'packBrowser' | 'strategy'`
+- HomeScreen with 3 navigation cards (Play, Puzzle Packs, Strategy) using LinearGradient and lucide-react-native icons
+- Header shows back button (ChevronLeft) when not on home screen, tapping returns to home
+- Game state preserved when navigating away — useReducer state lives at component root, only rendered content changes
+- Pack browser and strategy screens render placeholder content ("Coming soon")
+- No external routing library added — pure useState navigation
+- Files changed:
+  - `ios/src/components/StandardModeApp.tsx` (modified) — navigation state, HomeScreen UI, conditional rendering, new styles
+  - `prd.json` (modified) — US-005 passes: true
+- **Learnings for future iterations:**
+  - Navigation is done via `activeScreen` useState in StandardModeApp — future screens (PackBrowser, StrategyDashboard) should be conditionally rendered based on this state
+  - Icons available: Play, BookOpen, BarChart3, ChevronLeft, Settings, RotateCcw, X from lucide-react-native
+  - Game state is preserved across screen changes because the reducer lives at the StandardModeApp level and is never unmounted
+  - The header adapts per screen: home shows "WHEEL PRACTICE" + total score + settings; game shows back + scores + settings; others show back + title + spacer
+  - Placeholder screens use `placeholderScreen` style (flex:1, centered) — replace content when implementing US-006, US-009
+---
+
+## 2026-01-26 09:12 - US-006
+- Created PackBrowser component at `ios/src/components/PackBrowser.tsx`
+- Displays all available puzzle packs from `ALL_PACKS` as scrollable cards via FlatList
+- Each pack card shows: pack name, description, puzzle count, category count, and category breakdown chips with counts
+- Category chips are color-coded per category type (PHRASE=blue, THING=green, PLACE=purple, etc.)
+- Active pack highlighted with yellow border and "ACTIVE" badge
+- Tapping a pack sets it as active, starts a new round with that pack's puzzles, and navigates to game screen
+- Integrated into StandardModeApp navigation system (replaces placeholder)
+- Files changed:
+  - `ios/src/components/PackBrowser.tsx` (new) — pack list view component
+  - `ios/src/components/StandardModeApp.tsx` (modified) — imported PackBrowser, replaced placeholder with component
+  - `prd.json` (modified) — US-006 passes: true
+- **Learnings for future iterations:**
+  - `ALL_PACKS` from `packs.ts` provides ~30+ packs (original, seasons, difficulty sub-packs, quick-game)
+  - `PuzzlePack` interface has `id`, `name`, `description`, `source`, `puzzleCount`, `categories: string[]`, `difficultyRange`, `puzzles`
+  - Category counts must be computed from `pack.puzzles` (the `categories` array on PuzzlePack is just unique category names, not counts)
+  - Additional lucide-react-native icons used: Hash, Layers
+  - PackBrowser accepts `onSelectPack` callback — parent decides what happens on pack selection (navigate, load puzzles, etc.)
+---
+
+## 2026-01-26 09:18 - US-007
+- Added puzzle list view with filtering within PackBrowser component
+- Internal navigation: pack list → puzzle list (via `selectedPack` state)
+- Each puzzle row shows: category badge (color-coded), difficulty indicator (Easy/Medium/Hard), word count, masked phrase
+- Category filter: horizontal scrollable chips with 'All' default, categories extracted from pack puzzles
+- Difficulty filter: segmented control (All/Easy/Medium/Hard) with thresholds <0.33, 0.33-0.66, >0.66
+- Search bar: keyword search within puzzle phrases (case-insensitive)
+- Result count displayed in header (e.g. "42 puzzles")
+- FlatList for performant scrolling with empty state when no matches
+- Files changed:
+  - `ios/src/components/PackBrowser.tsx` (modified) — added PuzzleListView, PuzzleRow, CategoryFilterChips, DifficultySegmentedControl, search bar, internal navigation state
+  - `prd.json` (modified) — US-007 passes: true
+- **Learnings for future iterations:**
+  - PackBrowser now has two views controlled by `selectedPack` state (null = pack list, non-null = puzzle list)
+  - Tapping a pack card navigates to puzzle list internally; tapping a puzzle calls `onSelectPack(selectedPack)` to activate the pack
+  - Difficulty thresholds: Easy < 0.33, Medium 0.33-0.66, Hard > 0.66 (matching Puzzle.difficulty.score)
+  - maskPhrase() replaces letters with underscores and doubles spaces for word gaps — matches WoF board visual style
+  - Additional lucide-react-native icons used: ChevronLeft, Search
+  - Filter state (category, difficulty, search) is local to PuzzleListView and resets when navigating back to pack list
 ---

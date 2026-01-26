@@ -100,7 +100,7 @@
         "Typecheck passes"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Pack data schema: { pack_id, name, created_at, stats: { count, categories: { PHRASE: 17, THING: 7, ... } }, puzzles: [...] }. Import pack JSON directly or use require(). Only one pack exists currently (original.json with 54 puzzles) but design for multiple."
     },
     {
@@ -118,7 +118,7 @@
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": false,
+      "passes": true,
       "notes": "Puzzle schema includes: { id, phrase, category, round_type, normalized: { phrase, word_count, char_count, unique_letter_count, vowel_ratio }, difficulty: { score, reasons } }. Difficulty score is 0-1 float. Filter state managed with useState hooks."
     },
     {
