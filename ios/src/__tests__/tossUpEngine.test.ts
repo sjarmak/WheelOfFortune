@@ -121,6 +121,38 @@ describe("Toss-Up Engine: TOSS_UP_TICK reveal cadence", () => {
     expect(ticked.tossUpElapsedMs).toBe(0);
   });
 
+  it("reveals 5 letters with dtMs=5000 when interval=1000", () => {
+    const state = startTossUpRound();
+    const ticked = gameReducer(state, { type: "TOSS_UP_TICK", dtMs: 5000 });
+
+    expect(ticked.tossUpIndex).toBe(5);
+    expect(ticked.revealedPositions).toHaveLength(5);
+    expect(ticked.tossUpElapsedMs).toBe(0);
+    // Verify each revealed position matches the seeded reveal order
+    for (let i = 0; i < 5; i++) {
+      expect(ticked.revealedPositions[i]).toBe(state.tossUpRevealOrder[i]);
+    }
+  });
+
+  it("reveals all letters and ends round as loss with huge dtMs on short puzzle", () => {
+    const shortPuzzle = makeTossUpPuzzle({ phrase: "HI" }); // 2 letters
+    const state = startTossUpRound(shortPuzzle);
+    const totalLetters = state.tossUpRevealOrder.length;
+    expect(totalLetters).toBe(2);
+
+    // Dispatch dtMs far exceeding what's needed to reveal all letters
+    const result = gameReducer(state, { type: "TOSS_UP_TICK", dtMs: 50000 });
+
+    expect(result.turnState).toBe("ROUND_OVER");
+    expect(result.roundResult).toBe("loss");
+    expect(result.tossUpIndex).toBe(totalLetters);
+    // All positions revealed (both characters)
+    expect(result.revealedPositions).toHaveLength(shortPuzzle.phrase.length);
+    for (let i = 0; i < shortPuzzle.phrase.length; i++) {
+      expect(result.revealedPositions).toContain(i);
+    }
+  });
+
   it("reveal order matches seeded shuffle", () => {
     const puzzle = makeTossUpPuzzle();
     const expected = expectedRevealOrder(puzzle.phrase, SEED);
@@ -238,6 +270,21 @@ describe("Toss-Up Engine: TOSSUP_LOCKED_OUT tick handling", () => {
     expect(result.turnState).toBe("TOSSUP_REVEALING");
     expect(result.tossUpLockoutMs).toBe(0);
     expect(result.tossUpIndex).toBe(1);
+  });
+
+  it("applies large leftover time after lockout, revealing multiple letters", () => {
+    const state: GameState = {
+      ...startTossUpRound(),
+      turnState: "TOSSUP_LOCKED_OUT",
+      tossUpLockoutMs: 500,
+      tossUpElapsedMs: 0,
+    };
+    // 500ms clears lockout, 3000ms leftover reveals 3 letters
+    const result = gameReducer(state, { type: "TOSS_UP_TICK", dtMs: 3500 });
+    expect(result.turnState).toBe("TOSSUP_REVEALING");
+    expect(result.tossUpLockoutMs).toBe(0);
+    expect(result.tossUpIndex).toBe(3);
+    expect(result.revealedPositions).toHaveLength(3);
   });
 });
 
