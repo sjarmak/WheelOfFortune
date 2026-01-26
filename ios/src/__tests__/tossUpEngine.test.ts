@@ -386,3 +386,132 @@ describe("Toss-Up Engine: TOSS_UP_SOLVE_ATTEMPT", () => {
     expect(result).toBe(state);
   });
 });
+
+describe("Toss-Up Engine: end-to-end simulation — wrong solve, lockout, correct solve win", () => {
+  const SIMULATION_SEED = 42;
+  const puzzle = makeTossUpPuzzle({ phrase: "HELLO WORLD" });
+
+  it("full round: tick reveals -> buzz -> wrong solve -> lockout -> resume -> buzz -> correct solve -> win", () => {
+    const revealOrder = expectedRevealOrder(puzzle.phrase, SIMULATION_SEED);
+
+    // Step 1: Start round
+    let state = startTossUpRound(puzzle, SIMULATION_SEED);
+    expect(state.turnState).toBe("TOSSUP_REVEALING");
+    expect(state.tossUpIndex).toBe(0);
+    expect(state.revealedPositions).toHaveLength(0);
+    expect(state.roundResult).toBeNull();
+
+    // Step 2: Tick to reveal 3 letters (3000ms)
+    state = gameReducer(state, { type: "TOSS_UP_TICK", dtMs: 3000 });
+    expect(state.turnState).toBe("TOSSUP_REVEALING");
+    expect(state.tossUpIndex).toBe(3);
+    expect(state.revealedPositions).toHaveLength(3);
+    expect(state.revealedPositions).toEqual([
+      revealOrder[0],
+      revealOrder[1],
+      revealOrder[2],
+    ]);
+    expect(state.roundResult).toBeNull();
+
+    // Step 3: Buzz in
+    state = gameReducer(state, { type: "BUZZ_IN" });
+    expect(state.turnState).toBe("TOSSUP_BUZZED");
+    expect(state.tossUpIndex).toBe(3);
+    expect(state.revealedPositions).toHaveLength(3);
+
+    // Step 4: Wrong solve attempt
+    state = gameReducer(state, {
+      type: "TOSS_UP_SOLVE_ATTEMPT",
+      phrase: "WRONG GUESS",
+    });
+    expect(state.turnState).toBe("TOSSUP_LOCKED_OUT");
+    expect(state.tossUpLockoutMs).toBe(3000);
+    expect(state.tossUpIndex).toBe(3);
+    expect(state.revealedPositions).toHaveLength(3);
+    expect(state.roundResult).toBeNull();
+
+    // Step 5: Tick through half the lockout (1500ms)
+    state = gameReducer(state, { type: "TOSS_UP_TICK", dtMs: 1500 });
+    expect(state.turnState).toBe("TOSSUP_LOCKED_OUT");
+    expect(state.tossUpLockoutMs).toBe(1500);
+    // No new reveals during lockout
+    expect(state.tossUpIndex).toBe(3);
+    expect(state.revealedPositions).toHaveLength(3);
+
+    // Step 6: Tick remaining lockout (1500ms) — lockout expires, resumes revealing
+    state = gameReducer(state, { type: "TOSS_UP_TICK", dtMs: 1500 });
+    expect(state.turnState).toBe("TOSSUP_REVEALING");
+    expect(state.tossUpLockoutMs).toBe(0);
+    // No extra reveals since leftover time is 0ms (exactly at boundary)
+    expect(state.tossUpIndex).toBe(3);
+
+    // Step 7: Tick to reveal 1 more letter (1000ms)
+    state = gameReducer(state, { type: "TOSS_UP_TICK", dtMs: 1000 });
+    expect(state.turnState).toBe("TOSSUP_REVEALING");
+    expect(state.tossUpIndex).toBe(4);
+    expect(state.revealedPositions).toHaveLength(4);
+    expect(state.revealedPositions[3]).toBe(revealOrder[3]);
+
+    // Step 8: Buzz in again
+    state = gameReducer(state, { type: "BUZZ_IN" });
+    expect(state.turnState).toBe("TOSSUP_BUZZED");
+    expect(state.tossUpIndex).toBe(4);
+
+    // Step 9: Correct solve
+    state = gameReducer(state, {
+      type: "TOSS_UP_SOLVE_ATTEMPT",
+      phrase: "hello world",
+    });
+    expect(state.turnState).toBe("ROUND_OVER");
+    expect(state.roundResult).toBe("win");
+    // All positions revealed (including space at index 5)
+    expect(state.revealedPositions).toHaveLength(puzzle.phrase.length);
+    for (let i = 0; i < puzzle.phrase.length; i++) {
+      expect(state.revealedPositions).toContain(i);
+    }
+  });
+});
+
+describe("Toss-Up Engine: end-to-end simulation — all letters revealed, loss", () => {
+  const SIMULATION_SEED = 42;
+  const puzzle = makeTossUpPuzzle({ phrase: "HELLO WORLD" });
+
+  it("full round: tick all letters revealed -> round over as loss", () => {
+    const revealOrder = expectedRevealOrder(puzzle.phrase, SIMULATION_SEED);
+    const totalLetters = revealOrder.length; // 10 letters in "HELLO WORLD"
+
+    // Step 1: Start round
+    let state = startTossUpRound(puzzle, SIMULATION_SEED);
+    expect(state.turnState).toBe("TOSSUP_REVEALING");
+    expect(state.tossUpIndex).toBe(0);
+    expect(state.revealedPositions).toHaveLength(0);
+    expect(state.roundResult).toBeNull();
+    expect(state.tossUpRevealOrder).toEqual(revealOrder);
+
+    // Step 2: Tick letters one by one, verifying each intermediate state
+    for (let i = 0; i < totalLetters - 1; i++) {
+      state = gameReducer(state, { type: "TOSS_UP_TICK", dtMs: 1000 });
+      expect(state.turnState).toBe("TOSSUP_REVEALING");
+      expect(state.tossUpIndex).toBe(i + 1);
+      expect(state.revealedPositions).toHaveLength(i + 1);
+      expect(state.revealedPositions[i]).toBe(revealOrder[i]);
+      expect(state.roundResult).toBeNull();
+    }
+
+    // Step 3: Last letter reveal — round ends as loss
+    state = gameReducer(state, { type: "TOSS_UP_TICK", dtMs: 1000 });
+    expect(state.turnState).toBe("ROUND_OVER");
+    expect(state.roundResult).toBe("loss");
+    expect(state.tossUpIndex).toBe(totalLetters);
+
+    // All positions revealed (including non-letter positions like the space)
+    expect(state.revealedPositions).toHaveLength(puzzle.phrase.length);
+    for (let i = 0; i < puzzle.phrase.length; i++) {
+      expect(state.revealedPositions).toContain(i);
+    }
+    // Verify all original reveal order positions are present
+    for (const pos of revealOrder) {
+      expect(state.revealedPositions).toContain(pos);
+    }
+  });
+});

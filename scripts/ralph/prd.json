@@ -1,0 +1,275 @@
+{
+  "project": "WheelOfFortune",
+  "branchName": "ralph/tossup-bonus-modes",
+  "description": "Add Toss-Up and Bonus Round game modes to the iOS Wheel of Fortune practice app",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Extend TurnState and GameState types for new modes",
+      "description": "As a developer, I need the type system extended to support Toss-Up and Bonus Round flow states before implementing any logic.",
+      "acceptanceCriteria": [
+        "In ios/src/engine/types.ts, extend TurnState union with: 'TOSSUP_REVEALING' | 'TOSSUP_BUZZED' | 'TOSSUP_LOCKED_OUT' | 'BONUS_PICKING' | 'BONUS_SOLVE_TIMER'",
+        "Existing TurnState values unchanged: 'IDLE' | 'SPINNING' | 'GUESSING_CONSONANT' | 'BUYING_VOWEL' | 'SOLVING' | 'ROUND_OVER'",
+        "Add to GameState: tossUpElapsedMs: number, tossUpRevealIntervalMs: number, tossUpLockoutMs: number, tossUpLockoutDurationMs: number",
+        "Add to GameState: bonusTimerMs: number, bonusTimerDurationMs: number, roundResult: 'win' | 'loss' | null",
+        "Add optional field to Puzzle interface: allowed_modes?: RoundType[]",
+        "Update INITIAL_STATE in game.ts with defaults: tossUpElapsedMs: 0, tossUpRevealIntervalMs: 1000, tossUpLockoutMs: 0, tossUpLockoutDurationMs: 3000, bonusTimerMs: 20000, bonusTimerDurationMs: 20000, roundResult: null",
+        "Typecheck passes",
+        "All existing 172 tests pass"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "TurnState is defined inline in GameState type in types.ts. INITIAL_STATE and GameAction are in game.ts."
+    },
+    {
+      "id": "US-002",
+      "title": "Add puzzle mode eligibility metadata",
+      "description": "As a developer, I need puzzles tagged with allowed_modes so the app can filter puzzles per mode.",
+      "acceptanceCriteria": [
+        "In ios/src/engine/packs.ts, update mapPuzzles() to set allowed_modes on each puzzle based on category",
+        "Categories excluded from BONUS mode: 'Before & After', 'Same Name', 'Rhyme Time', 'Song Lyrics', 'Title/Author' (case-insensitive matching)",
+        "All other categories get allowed_modes: ['MAIN', 'TOSSUP', 'BONUS']",
+        "Excluded categories get allowed_modes: ['MAIN', 'TOSSUP']",
+        "Add and export function getPuzzlesForMode(puzzles: Puzzle[], mode: RoundType): Puzzle[] that filters by allowed_modes, falling back to all modes if allowed_modes is undefined",
+        "Create ios/src/__tests__/puzzleModes.test.ts with tests: 'Before & After' puzzle excluded from BONUS, 'Phrase' puzzle eligible for all modes, getPuzzlesForMode filters correctly, puzzles without allowed_modes default to eligible for all modes",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "mapPuzzles() is in packs.ts. Puzzle interface is in types.ts. Categories in data are human-readable strings like 'Before & After', 'Phrase', 'Thing'."
+    },
+    {
+      "id": "US-003",
+      "title": "Toss-Up engine: START_ROUND and auto-reveal tick",
+      "description": "As a developer, I need the reducer to handle Toss-Up round initialization and timed letter reveal.",
+      "acceptanceCriteria": [
+        "In gameReducer START_ROUND case: when puzzle.round_type === 'TOSSUP', set turnState to 'TOSSUP_REVEALING' (not 'IDLE')",
+        "Enhance TOSS_UP_TICK action type to accept { type: 'TOSS_UP_TICK'; dtMs: number }",
+        "In TOSS_UP_TICK handler: add dtMs to tossUpElapsedMs. When tossUpElapsedMs >= tossUpRevealIntervalMs, reveal next letter from tossUpRevealOrder[tossUpIndex], increment tossUpIndex, reset tossUpElapsedMs to remainder",
+        "When turnState is 'TOSSUP_LOCKED_OUT': TOSS_UP_TICK decrements tossUpLockoutMs by dtMs. When tossUpLockoutMs <= 0, set turnState back to 'TOSSUP_REVEALING' and reset tossUpLockoutMs to 0",
+        "When all letters in tossUpRevealOrder are revealed (tossUpIndex >= tossUpRevealOrder.length): set turnState to 'ROUND_OVER', roundResult to 'loss', reveal all positions",
+        "TOSS_UP_TICK is a no-op when turnState is not 'TOSSUP_REVEALING' and not 'TOSSUP_LOCKED_OUT'",
+        "Create ios/src/__tests__/tossUpEngine.test.ts with tests: reveal cadence respects 1000ms interval, partial ticks accumulate, reveal order matches seeded shuffle, round ends as loss when all revealed, tick is no-op when buzzed",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Existing TOSS_UP_TICK action has no dtMs param. The GameAction union is in game.ts. SeededRNG shuffle already produces tossUpRevealOrder in START_ROUND."
+    },
+    {
+      "id": "US-004",
+      "title": "Toss-Up engine: buzz-in, solve, and lockout",
+      "description": "As a developer, I need buzz-in and lockout mechanics for Toss-Up mode.",
+      "acceptanceCriteria": [
+        "Add new action BUZZ_IN to GameAction union: { type: 'BUZZ_IN' }",
+        "BUZZ_IN handler: only works when turnState is 'TOSSUP_REVEALING'. Sets turnState to 'TOSSUP_BUZZED'. Preserves all other state.",
+        "Add new action TOSS_UP_SOLVE_ATTEMPT: { type: 'TOSS_UP_SOLVE_ATTEMPT'; phrase: string }",
+        "TOSS_UP_SOLVE_ATTEMPT handler: only works when turnState is 'TOSSUP_BUZZED'. Correct solve (case-insensitive match): set turnState to 'ROUND_OVER', roundResult to 'win', reveal all positions. Wrong solve: set turnState to 'TOSSUP_LOCKED_OUT', set tossUpLockoutMs to tossUpLockoutDurationMs (3000)",
+        "BUZZ_IN is a no-op when turnState is 'TOSSUP_LOCKED_OUT' or not 'TOSSUP_REVEALING'",
+        "Add tests to ios/src/__tests__/tossUpEngine.test.ts: buzz-in pauses reveal (turnState changes to TOSSUP_BUZZED), correct solve ends round as win, wrong solve triggers lockout, lockout expires after 3000ms of ticks and resumes revealing, cannot buzz during lockout",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Build on the tossUpEngine.test.ts created in US-003. TOSS_UP_TICK lockout logic was added in US-003."
+    },
+    {
+      "id": "US-005",
+      "title": "Toss-Up end-to-end round simulation test",
+      "description": "As a developer, I need full round simulation tests proving Toss-Up works end-to-end.",
+      "acceptanceCriteria": [
+        "Add simulation test to ios/src/__tests__/tossUpEngine.test.ts: start round with known seed -> tick several reveals -> buzz in -> wrong solve -> lockout -> tick through lockout -> resume -> buzz in -> correct solve -> round over with roundResult 'win'",
+        "Add simulation test: start round -> tick all letters revealed -> round ends with roundResult 'loss'",
+        "Both tests use a fixed seed for deterministic reveal order",
+        "Both tests verify intermediate state at each step (turnState, revealedPositions count, tossUpIndex, roundResult)",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "These are integration-style tests exercising the full reducer flow. Use a simple puzzle like 'HELLO WORLD' with a known seed."
+    },
+    {
+      "id": "US-006",
+      "title": "Bonus Round engine: START_ROUND and letter picking",
+      "description": "As a developer, I need the reducer to handle Bonus Round initialization and the 3-consonant + 1-vowel letter picking phase.",
+      "acceptanceCriteria": [
+        "In gameReducer START_ROUND case: when puzzle.round_type === 'BONUS', set turnState to 'BONUS_PICKING' (not 'IDLE'). Reset bonusTimerMs to bonusTimerDurationMs. Set roundResult to null.",
+        "Add new action BONUS_CHOOSE_LETTERS: { type: 'BONUS_CHOOSE_LETTERS'; consonants: [string, string, string]; vowel: string }",
+        "BONUS_CHOOSE_LETTERS handler: only works when turnState is 'BONUS_PICKING'. Validates: exactly 3 distinct consonants (in CONSONANTS list), exactly 1 vowel (in VOWELS list), no letter is in ['R','S','T','L','N','E']. On invalid: return state unchanged.",
+        "On valid: add all 4 letters to guessedLetters, reveal all positions where those letters appear in the phrase, set bonusPicks to the 4 chosen letters, transition to turnState 'BONUS_SOLVE_TIMER'",
+        "Create ios/src/__tests__/bonusEngine.test.ts with tests: START_ROUND reveals RSTLNE and sets BONUS_PICKING, valid letter picks reveal correct positions and transition to BONUS_SOLVE_TIMER, RSTLNE letters are rejected, duplicate consonants rejected, invalid letters rejected",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "VOWELS and CONSONANTS constants are in types.ts. START_ROUND already has BONUS logic for RSTLNE reveal — extend it, don't replace."
+    },
+    {
+      "id": "US-007",
+      "title": "Bonus Round engine: timed solve and expiry",
+      "description": "As a developer, I need the Bonus Round solve timer countdown and solve attempt logic.",
+      "acceptanceCriteria": [
+        "Add new action BONUS_TICK: { type: 'BONUS_TICK'; dtMs: number }",
+        "BONUS_TICK handler: only works when turnState is 'BONUS_SOLVE_TIMER'. Decrements bonusTimerMs by dtMs. When bonusTimerMs <= 0: set turnState to 'ROUND_OVER', roundResult to 'loss', reveal all positions.",
+        "Add new action BONUS_SOLVE_ATTEMPT: { type: 'BONUS_SOLVE_ATTEMPT'; phrase: string }",
+        "BONUS_SOLVE_ATTEMPT handler: only works when turnState is 'BONUS_SOLVE_TIMER'. Correct solve (case-insensitive match): set turnState to 'ROUND_OVER', roundResult to 'win', reveal all positions. Wrong solve: return state unchanged (player can try again within timer).",
+        "Add tests to ios/src/__tests__/bonusEngine.test.ts: timer decrements correctly, solve during timer works (win), wrong solve allows retry (state unchanged), timer expiry ends round as loss, BONUS_TICK is no-op when not in BONUS_SOLVE_TIMER, BONUS_SOLVE_ATTEMPT is no-op when not in BONUS_SOLVE_TIMER",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Build on the bonusEngine.test.ts created in US-006."
+    },
+    {
+      "id": "US-008",
+      "title": "Bonus Round end-to-end simulation test",
+      "description": "As a developer, I need full round simulation tests proving Bonus Round works end-to-end.",
+      "acceptanceCriteria": [
+        "Add simulation test to ios/src/__tests__/bonusEngine.test.ts: start round -> verify RSTLNE revealed -> choose valid 3 consonants + 1 vowel -> verify chosen letters revealed -> tick timer partially -> solve correctly -> round over with roundResult 'win'",
+        "Add simulation test: start round -> RSTLNE revealed -> choose letters -> tick timer to expiry (20000ms) -> round over with roundResult 'loss'",
+        "Add simulation test: start round -> choose letters -> wrong solve -> verify still in BONUS_SOLVE_TIMER -> correct solve -> round over win",
+        "All tests use puzzle 'PRACTICE MAKES PERFECT' (category 'PHRASE') for predictable RSTLNE coverage",
+        "Verify intermediate state at each step",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "'PRACTICE MAKES PERFECT' has R,S,T,L,N,E all appearing — good test puzzle for RSTLNE reveal."
+    },
+    {
+      "id": "US-009",
+      "title": "Home screen mode selector cards",
+      "description": "As a player, I want to choose between Standard, Toss-Up, and Bonus Round from the home screen.",
+      "acceptanceCriteria": [
+        "In StandardModeApp.tsx, add a new state: selectedRoundMode: RoundType (default 'MAIN')",
+        "Replace or extend the existing Play card on the home screen with 3 mode cards: 'Standard Game' (description: 'Spin the wheel, guess letters, solve the puzzle'), 'Toss-Up' (description: 'Letters reveal one by one — buzz in to solve!'), 'Bonus Round' (description: 'Pick your letters, solve before time runs out')",
+        "Each card uses the existing card styling pattern (LinearGradient, icon, title, description) already in the home screen",
+        "Tapping a mode card sets selectedRoundMode and navigates to activeScreen 'game'",
+        "When navigating to game, use getPuzzlesForMode() to filter puzzles from activePack based on selectedRoundMode",
+        "When starting a new round, pass selectedRoundMode as the puzzle's round_type (override the puzzle's own round_type since all puzzles are tagged MAIN in pack data)",
+        "Import getPuzzlesForMode from packs.ts",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "Home screen is in StandardModeApp.tsx. Existing card pattern uses LinearGradient + lucide icons (Play, BookOpen, BarChart3). The Play card currently just starts a MAIN round. Icons suggestion: Play for Standard, Zap for Toss-Up, Trophy for Bonus."
+    },
+    {
+      "id": "US-010",
+      "title": "Toss-Up UI screen",
+      "description": "As a player, I want to play Toss-Up rounds with auto-revealing letters and a Buzz In button.",
+      "acceptanceCriteria": [
+        "In StandardModeApp.tsx, when activeScreen is 'game' and selectedRoundMode is 'TOSSUP': hide the wheel component, hide the standard keyboard, show a 'Buzz In' button centered below the puzzle board",
+        "Use setInterval (or requestAnimationFrame) to dispatch TOSS_UP_TICK with dtMs every ~16-33ms (frame rate). The reducer handles accumulating time and revealing letters at the 1000ms interval",
+        "When turnState is 'TOSSUP_BUZZED': show the solve modal (reuse existing solve modal pattern with TextInput)",
+        "When turnState is 'TOSSUP_LOCKED_OUT': disable Buzz In button, show countdown text like 'Locked out... 2s'",
+        "When turnState is 'ROUND_OVER' and roundResult is 'win': show celebration (confetti + Vanna). When roundResult is 'loss': show 'Puzzle Revealed' message",
+        "Show 'Next Puzzle' button on round over (reuse existing pattern with celebrationReady delay for wins)",
+        "Status banner above board shows 'TOSS-UP' and context text ('Buzz in to solve!', 'Locked out...', etc.)",
+        "Wire expo-haptics: Haptics.impactAsync on buzz-in tap, Haptics.notificationAsync(success/error) on solve result",
+        "Clear interval on unmount and when round ends",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "Existing solve modal uses Modal component with TextInput and keyboardShouldPersistTaps='handled'. Haptics already imported in StandardModeApp. The tick interval should run only when turnState is TOSSUP_REVEALING or TOSSUP_LOCKED_OUT."
+    },
+    {
+      "id": "US-011",
+      "title": "Bonus Round UI: letter picking phase",
+      "description": "As a player, I want to pick 3 consonants + 1 vowel after RSTLNE is revealed in Bonus Round.",
+      "acceptanceCriteria": [
+        "In StandardModeApp.tsx, when activeScreen is 'game' and selectedRoundMode is 'BONUS' and turnState is 'BONUS_PICKING': hide the wheel, show the Keyboard component with RSTLNE letters disabled/grayed out",
+        "Add local UI state for tracking letter picks before confirming: selectedConsonants: string[] (max 3), selectedVowel: string | null",
+        "Keyboard onPress handler: if letter is consonant and selectedConsonants.length < 3, add to selectedConsonants. If letter is vowel and selectedVowel is null and selectedConsonants.length === 3, set selectedVowel. Already-selected letters shown as highlighted/selected.",
+        "Allow deselecting: tapping a selected letter removes it from the selection",
+        "Show 'Confirm' button below keyboard, enabled only when selectedConsonants.length === 3 and selectedVowel is not null",
+        "On confirm: dispatch BONUS_CHOOSE_LETTERS with consonants and vowel, clear local selection state",
+        "Show pick progress indicator: '3 consonants + 1 vowel' with counts updating as player selects",
+        "Status banner shows 'BONUS ROUND' and 'Pick 3 consonants, then 1 vowel'",
+        "Wire expo-haptics: light impact on each letter pick",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "Keyboard component is at ios/src/components/Keyboard.tsx. It accepts onPress callback and has consonant/vowel sections. RSTLNE = ['R','S','T','L','N','E']. The picking order is enforced: consonants first (3), then vowel (1)."
+    },
+    {
+      "id": "US-012",
+      "title": "Bonus Round UI: timed solve phase",
+      "description": "As a player, I want to solve the Bonus Round puzzle under a 20-second countdown timer.",
+      "acceptanceCriteria": [
+        "When turnState transitions to 'BONUS_SOLVE_TIMER': hide keyboard, show TextInput for solve attempt (always visible, not in modal), start timer interval dispatching BONUS_TICK with dtMs every ~16-33ms",
+        "Show large countdown timer display: seconds and tenths (e.g., '15.3') prominently above or below the board",
+        "Submit button next to TextInput. On press: dispatch BONUS_SOLVE_ATTEMPT with input text, clear input on wrong guess",
+        "On correct solve (roundResult 'win'): stop timer, show celebration (confetti + Vanna), show Next Puzzle after delay",
+        "On wrong solve: brief shake animation on TextInput or red flash feedback, input cleared, timer continues",
+        "On timer expiry (roundResult 'loss'): stop interval, show 'Time\\'s Up!' message, reveal full puzzle, show Next Puzzle",
+        "Wire expo-haptics: warning haptic in last 5 seconds (every second), success/error on solve result, strong impact on timer expiry",
+        "Clear interval on unmount and when round ends",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "Timer runs from 20000ms down to 0. bonusTimerMs in state tracks remaining time. Use Animated shake for wrong guess feedback (Reanimated withSequence + withTiming for translateX oscillation)."
+    },
+    {
+      "id": "US-013",
+      "title": "Background/foreground timer handling",
+      "description": "As a player, I don't want timers to desync when I background the app.",
+      "acceptanceCriteria": [
+        "In StandardModeApp.tsx, add AppState listener (import { AppState } from 'react-native') with useRef to track backgroundTimestamp",
+        "On AppState change to 'background' or 'inactive': record Date.now() in backgroundTimestamp ref",
+        "On AppState change to 'active': compute elapsed = Date.now() - backgroundTimestamp. If in TOSSUP mode (TOSSUP_REVEALING or TOSSUP_LOCKED_OUT): dispatch TOSS_UP_TICK with dtMs = elapsed to catch up reveals/lockout. If in BONUS mode (BONUS_SOLVE_TIMER): dispatch BONUS_TICK with dtMs = elapsed to catch up timer",
+        "The reducer handles large dtMs correctly: TOSS_UP_TICK reveals multiple letters if enough time passed, BONUS_TICK expires if bonusTimerMs would go <= 0",
+        "Clean up AppState listener on unmount",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": "The TOSS_UP_TICK handler from US-003 should already handle large dtMs by revealing one letter at a time. But verify: if dtMs = 5000 and interval = 1000, it should reveal 5 letters. If the current implementation only reveals one per tick call, the handler needs to loop."
+    },
+    {
+      "id": "US-014",
+      "title": "Fix TOSS_UP_TICK to handle large dtMs (multi-reveal)",
+      "description": "As a developer, I need TOSS_UP_TICK to handle catching up multiple reveals in a single dispatch for background resume.",
+      "acceptanceCriteria": [
+        "In gameReducer TOSS_UP_TICK handler: when accumulated tossUpElapsedMs exceeds tossUpRevealIntervalMs, reveal multiple letters in a loop (not just one)",
+        "Loop: while tossUpElapsedMs >= tossUpRevealIntervalMs AND tossUpIndex < tossUpRevealOrder.length: reveal next letter, increment index, subtract interval from elapsed",
+        "If all letters revealed during the loop: break, set roundResult 'loss', turnState 'ROUND_OVER'",
+        "Similarly for lockout: if dtMs > tossUpLockoutMs, clear lockout and apply remaining time as reveal ticks",
+        "Add test: dispatch TOSS_UP_TICK with dtMs=5000 when interval=1000 -> 5 letters revealed",
+        "Add test: dispatch TOSS_UP_TICK with dtMs=50000 on short puzzle -> all letters revealed, round over as loss",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "This ensures background resume works correctly. Place before US-013 logically, but both can be tested independently."
+    },
+    {
+      "id": "US-015",
+      "title": "Backward compatibility and regression validation",
+      "description": "As a developer, I need to confirm all existing functionality still works after the new mode additions.",
+      "acceptanceCriteria": [
+        "Run full test suite: cd ios && npx vitest run — all tests pass (existing + new)",
+        "Verify Standard mode game flow is unchanged: START_ROUND with MAIN puzzle still sets turnState to IDLE, SPIN_WHEEL/SPIN_RESULT/GUESS_LETTER/SOLVE_ATTEMPT all work as before",
+        "Verify puzzle packs load without errors (ALL_PACKS builds successfully)",
+        "Verify StandardModeApp renders home screen with 3 mode cards without crashing",
+        "Add regression test in ios/src/__tests__/gameReducer.test.ts: standard MAIN round flow (start -> spin -> guess -> solve) works identically to before",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "This is the final validation story. Run after all other stories pass."
+    }
+  ]
+}
