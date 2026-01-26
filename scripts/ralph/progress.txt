@@ -251,3 +251,23 @@ Started: Mon Jan 26 08:38:47 EST 2026
   - Dance multipliers from web: arms 2x, legs 1.5x (applied in `useAnimatedStyle` closures)
   - The `isDancing` prop is the only prop needed — US-014 will pass `showCelebration` state as isDancing
 ---
+
+## 2026-01-26 09:47 - US-014
+- Integrated confetti + dancing Vanna + delayed Next Round as cohesive celebration sequence
+- Imported Vanna component into StandardModeApp.tsx
+- Added `celebrationReady` state + `celebrationTimerRef` — 3-second delay before Next Puzzle button appears
+- Celebration triggers on ROUND_OVER: confetti fires, Vanna appears dancing at bottom-center, haptic success feedback
+- Vanna rendered as absolute overlay (`vannaOverlay` style: bottom:40, alignSelf:center, zIndex:101) with `pointerEvents="none"` so it doesn't block interaction
+- Removed `onAnimationEnd` confetti self-dismiss — celebration now stays until Next Puzzle pressed (Vanna + confetti persist together)
+- Next Puzzle button only renders after `celebrationReady=true` (3s delay), pressing it clears all celebration state and advances
+- Removed duplicate `Haptics.notificationAsync` from `handleSolve` — now centralized in celebration effect
+- Files changed:
+  - `ios/src/components/StandardModeApp.tsx` (modified) — Vanna import, celebration state/timer, delayed Next button, Vanna overlay
+  - `prd.json` (modified) — US-014 passes: true
+- **Learnings for future iterations:**
+  - `celebrationReady` pattern: use a timer-controlled boolean to gate UI elements (e.g., delay button appearance for celebration duration)
+  - Vanna overlay uses `alignSelf: 'center'` with absolute positioning and `bottom: 40` — no need for `left: 50%` + negative margin hack
+  - Celebration dismissal should be explicit (user taps Next Puzzle), not tied to confetti `onAnimationEnd` — this allows Vanna to keep dancing until dismissed
+  - `celebrationTimerRef` must be cleaned up in both `nextRound` and the non-ROUND_OVER branch of the effect to prevent stale timers
+  - All celebration state (`showCelebration`, `celebrationReady`, timer ref) cleared in `nextRound` to ensure clean transitions
+---

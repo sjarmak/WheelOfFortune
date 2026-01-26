@@ -237,7 +237,7 @@
         "Typecheck passes"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "Both confetti (US-012) and Vanna (US-013) must be complete. Wire them together in StandardModeApp.tsx. Use a celebration state flag that enables both. Add a short delay (setTimeout or useEffect with timer) before showing Next Round button. Vanna's isDancing prop tied to the celebration state."
     }
   ]

@@ -21,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Settings, RotateCcw, X, ChevronLeft, Play, BookOpen, BarChart3 } from 'lucide-react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 
+import { Vanna } from './Vanna';
 import { gameReducer, INITIAL_STATE } from '../engine/game';
 import { Puzzle, VOWELS, WheelWedge } from '../engine/types';
 import { ALL_PACKS, PuzzlePack } from '../engine/packs';
@@ -69,20 +70,34 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
   const solveInputRef = useRef<TextInput>(null);
   const confettiRef = useRef<ConfettiCannon>(null);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationReady, setCelebrationReady] = useState(false);
   const prevTurnStateRef = useRef(state.turnState);
+  const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Trigger confetti on successful puzzle solve
+  // Trigger confetti + Vanna + toast on successful puzzle solve
   useEffect(() => {
     const wasNotRoundOver = prevTurnStateRef.current !== 'ROUND_OVER';
     const isNowRoundOver = state.turnState === 'ROUND_OVER';
 
     if (wasNotRoundOver && isNowRoundOver) {
       setShowCelebration(true);
+      setCelebrationReady(false);
       confettiRef.current?.start();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // Allow Next Round after 3 seconds
+      celebrationTimerRef.current = setTimeout(() => {
+        setCelebrationReady(true);
+      }, 3000);
     }
 
     if (!isNowRoundOver) {
       setShowCelebration(false);
+      setCelebrationReady(false);
+      if (celebrationTimerRef.current) {
+        clearTimeout(celebrationTimerRef.current);
+        celebrationTimerRef.current = null;
+      }
     }
 
     prevTurnStateRef.current = state.turnState;
@@ -143,8 +158,14 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
     setTimeout(() => setMessage(null), 2000);
   }, []);
 
-  // Start new round
+  // Start new round — also dismisses celebration
   const nextRound = useCallback(() => {
+    setShowCelebration(false);
+    setCelebrationReady(false);
+    if (celebrationTimerRef.current) {
+      clearTimeout(celebrationTimerRef.current);
+      celebrationTimerRef.current = null;
+    }
     const puzzles = activePack.puzzles;
     const next = puzzles[Math.floor(Math.random() * puzzles.length)];
     dispatch({ type: 'START_ROUND', puzzle: next });
@@ -200,14 +221,12 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
 
   const handleSolve = useCallback(() => {
     dispatch({ type: 'SOLVE_ATTEMPT', phrase: solveInput });
-    
+
     const correct = solveInput.toUpperCase() === state.currentPuzzle?.phrase.toUpperCase();
-    if (correct) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else {
+    if (!correct) {
       showToast('Wrong! Try again.');
     }
-    
+
     setShowSolveModal(false);
     setSolveInput('');
   }, [solveInput, state.currentPuzzle, showToast]);
@@ -354,22 +373,24 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
               />
             )}
 
-            {/* Round Over */}
+            {/* Round Over — Celebration Sequence */}
             {isRoundOver ? (
               <View style={styles.roundOverSection}>
                 <Text style={styles.solvedText}>PUZZLE SOLVED!</Text>
                 <Text style={styles.winningsText}>
                   Won: ${state.player.currentRoundScore}
                 </Text>
-                <TouchableOpacity onPress={nextRound}>
-                  <LinearGradient
-                    colors={[colors.green[500], colors.green[600]]}
-                    style={styles.nextButton}
-                  >
-                    <RotateCcw size={20} color={colors.white} />
-                    <Text style={styles.nextButtonText}>Next Puzzle</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+                {celebrationReady && (
+                  <TouchableOpacity onPress={nextRound}>
+                    <LinearGradient
+                      colors={[colors.green[500], colors.green[600]]}
+                      style={styles.nextButton}
+                    >
+                      <RotateCcw size={20} color={colors.white} />
+                      <Text style={styles.nextButtonText}>Next Puzzle</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                )}
               </View>
             ) : (
               <View style={styles.gameArea}>
@@ -509,7 +530,7 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
           />
         </Modal>
 
-        {/* Confetti Overlay */}
+        {/* Celebration Overlays — Confetti + Vanna */}
         {showCelebration && (
           <View style={styles.confettiContainer} pointerEvents="none">
             <ConfettiCannon
@@ -520,8 +541,12 @@ export function StandardModeApp({ onModeChange }: StandardModeAppProps): React.J
               autoStart={false}
               fallSpeed={3000}
               explosionSpeed={350}
-              onAnimationEnd={() => setShowCelebration(false)}
             />
+          </View>
+        )}
+        {showCelebration && (
+          <View style={styles.vannaOverlay} pointerEvents="none">
+            <Vanna isDancing />
           </View>
         )}
 
@@ -896,5 +921,11 @@ const styles = StyleSheet.create({
   confettiContainer: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 100,
+  },
+  vannaOverlay: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    zIndex: 101,
   },
 });
