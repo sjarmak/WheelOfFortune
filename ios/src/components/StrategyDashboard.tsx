@@ -5,26 +5,26 @@
  * wheel analysis, and category insights for puzzle packs.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-} from 'react-native';
-import Svg, { Rect, Text as SvgText } from 'react-native-svg';
+} from "react-native";
+import Svg, { Rect, Text as SvgText } from "react-native-svg";
 
 import {
   analyzePuzzlePack,
   LetterFrequency,
   WheelAnalysis,
   CategoryAnalysis,
-} from '../engine/strategyAnalytics';
-import { Puzzle, VOWELS, CONSONANTS } from '../engine/types';
-import { colors, typography, spacing, borderRadius } from '../styles/theme';
+} from "../engine/strategyAnalytics";
+import { Puzzle, VOWELS, CONSONANTS } from "../engine/types";
+import { colors, typography, spacing, borderRadius } from "../styles/theme";
 
-type TabId = 'frequency' | 'strategy' | 'wheel' | 'categories';
+type TabId = "frequency" | "strategy" | "wheel" | "categories";
 
 interface Tab {
   id: TabId;
@@ -32,10 +32,10 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { id: 'frequency', label: 'Letter Frequency' },
-  { id: 'strategy', label: 'Strategy' },
-  { id: 'wheel', label: 'Wheel' },
-  { id: 'categories', label: 'Categories' },
+  { id: "frequency", label: "Letter Frequency" },
+  { id: "strategy", label: "Strategy" },
+  { id: "wheel", label: "Wheel" },
+  { id: "categories", label: "Categories" },
 ];
 
 interface StrategyDashboardProps {
@@ -49,11 +49,15 @@ function getFrequencyColor(rate: number): string {
   return colors.red[500];
 }
 
-function LetterFrequencyTab({ frequencies }: { frequencies: LetterFrequency[] }): React.JSX.Element {
-  const allLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  const frequencyMap = new Map(frequencies.map(f => [f.letter, f]));
+function LetterFrequencyTab({
+  frequencies,
+}: {
+  frequencies: LetterFrequency[];
+}): React.JSX.Element {
+  const allLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const frequencyMap = new Map(frequencies.map((f) => [f.letter, f]));
 
-  const maxRate = Math.max(...frequencies.map(f => f.occurrenceRate), 1);
+  const maxRate = Math.max(...frequencies.map((f) => f.occurrenceRate), 1);
 
   const BAR_WIDTH = 10;
   const BAR_GAP = 2;
@@ -70,7 +74,11 @@ function LetterFrequencyTab({ frequencies }: { frequencies: LetterFrequency[] })
         How often each letter appears across all puzzles in this pack
       </Text>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chartScrollContainer}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.chartScrollContainer}
+      >
         <Svg width={CHART_WIDTH + 20} height={TOTAL_HEIGHT}>
           {allLetters.map((letter, i) => {
             const freq = frequencyMap.get(letter);
@@ -122,19 +130,27 @@ function LetterFrequencyTab({ frequencies }: { frequencies: LetterFrequency[] })
       {/* Legend */}
       <View style={styles.legend}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: colors.green[500] }]} />
+          <View
+            style={[styles.legendDot, { backgroundColor: colors.green[500] }]}
+          />
           <Text style={styles.legendText}>&gt;70%</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: colors.yellow[400] }]} />
+          <View
+            style={[styles.legendDot, { backgroundColor: colors.yellow[400] }]}
+          />
           <Text style={styles.legendText}>40-70%</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: colors.orange[500] }]} />
+          <View
+            style={[styles.legendDot, { backgroundColor: colors.orange[500] }]}
+          />
           <Text style={styles.legendText}>20-40%</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: colors.red[500] }]} />
+          <View
+            style={[styles.legendDot, { backgroundColor: colors.red[500] }]}
+          />
           <Text style={styles.legendText}>&lt;20%</Text>
         </View>
       </View>
@@ -178,13 +194,15 @@ function OptimalStrategyTab({
   optimalFirstGuesses: string[];
   vowelBuyThreshold: number;
 }): React.JSX.Element {
-  const frequencyMap = new Map(frequencies.map(f => [f.letter, f]));
+  const frequencyMap = new Map(frequencies.map((f) => [f.letter, f]));
 
   return (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       {/* Top 5 Consonants */}
       <Text style={styles.sectionTitle}>Top 5 Consonants</Text>
-      <Text style={styles.sectionDesc}>Best consonant guesses based on frequency</Text>
+      <Text style={styles.sectionDesc}>
+        Best consonant guesses based on frequency
+      </Text>
       <View style={styles.letterGrid}>
         {topConsonants.map((letter, index) => {
           const freq = frequencyMap.get(letter);
@@ -212,7 +230,9 @@ function OptimalStrategyTab({
 
       {/* Top 5 Vowels */}
       <Text style={styles.sectionTitle}>Top 5 Vowels</Text>
-      <Text style={styles.sectionDesc}>Best vowel purchases based on frequency</Text>
+      <Text style={styles.sectionDesc}>
+        Best vowel purchases based on frequency
+      </Text>
       <View style={styles.letterGrid}>
         {topVowels.map((letter, index) => {
           const freq = frequencyMap.get(letter);
@@ -282,31 +302,29 @@ function OptimalStrategyTab({
   );
 }
 
-function WheelAnalysisTab({ wheelAnalysis }: { wheelAnalysis: WheelAnalysis }): React.JSX.Element {
+function WheelAnalysisTab({
+  wheelAnalysis,
+}: {
+  wheelAnalysis: WheelAnalysis;
+}): React.JSX.Element {
   const outcomes = [
     {
-      label: 'Cash',
+      label: "Cash",
       probability: wheelAnalysis.cashProbability,
       color: colors.green[500],
-      icon: '$',
+      icon: "$",
     },
     {
-      label: 'Bankrupt',
+      label: "Bankrupt",
       probability: wheelAnalysis.bankruptProbability,
       color: colors.red[500],
-      icon: 'X',
+      icon: "X",
     },
     {
-      label: 'Lose a Turn',
+      label: "Lose a Turn",
       probability: wheelAnalysis.loseTurnProbability,
       color: colors.orange[500],
-      icon: '!',
-    },
-    {
-      label: 'Free Play',
-      probability: wheelAnalysis.freePlayProbability,
-      color: colors.blue[500],
-      icon: '*',
+      icon: "!",
     },
   ];
 
@@ -315,7 +333,9 @@ function WheelAnalysisTab({ wheelAnalysis }: { wheelAnalysis: WheelAnalysis }): 
       {/* Expected Value */}
       <View style={styles.evCard}>
         <Text style={styles.evLabel}>Expected Value Per Spin</Text>
-        <Text style={styles.evValue}>${Math.round(wheelAnalysis.expectedValue)}</Text>
+        <Text style={styles.evValue}>
+          ${Math.round(wheelAnalysis.expectedValue)}
+        </Text>
         <Text style={styles.evDesc}>
           Average cash earned per spin across all wedges
         </Text>
@@ -329,7 +349,9 @@ function WheelAnalysisTab({ wheelAnalysis }: { wheelAnalysis: WheelAnalysis }): 
       <View style={styles.outcomeGrid}>
         {outcomes.map((outcome) => (
           <View key={outcome.label} style={styles.outcomeCard}>
-            <View style={[styles.outcomeIcon, { backgroundColor: outcome.color }]}>
+            <View
+              style={[styles.outcomeIcon, { backgroundColor: outcome.color }]}
+            >
               <Text style={styles.outcomeIconText}>{outcome.icon}</Text>
             </View>
             <Text style={styles.outcomeLabel}>{outcome.label}</Text>
@@ -371,12 +393,12 @@ function CategoryInsightsTab({
   categoryBreakdown: CategoryAnalysis[];
 }): React.JSX.Element {
   const [selectedCategory, setSelectedCategory] = useState<string>(
-    categoryBreakdown.length > 0 ? categoryBreakdown[0].category : ''
+    categoryBreakdown.length > 0 ? categoryBreakdown[0].category : "",
   );
   const [showDropdown, setShowDropdown] = useState(false);
 
   const selectedAnalysis = categoryBreakdown.find(
-    (c) => c.category === selectedCategory
+    (c) => c.category === selectedCategory,
   );
 
   const topLetters = selectedAnalysis
@@ -401,9 +423,9 @@ function CategoryInsightsTab({
         onPress={() => setShowDropdown(!showDropdown)}
       >
         <Text style={styles.dropdownButtonText}>
-          {selectedCategory || 'Select Category'}
+          {selectedCategory || "Select Category"}
         </Text>
-        <Text style={styles.dropdownArrow}>{showDropdown ? '▲' : '▼'}</Text>
+        <Text style={styles.dropdownArrow}>{showDropdown ? "▲" : "▼"}</Text>
       </TouchableOpacity>
 
       {showDropdown && (
@@ -461,7 +483,7 @@ function CategoryInsightsTab({
                 Vowels {(selectedAnalysis.vowelRatio * 100).toFixed(0)}%
               </Text>
               <Text style={styles.vowelRatioLabelText}>
-                Consonants{' '}
+                Consonants{" "}
                 {((1 - selectedAnalysis.vowelRatio) * 100).toFixed(0)}%
               </Text>
             </View>
@@ -533,8 +555,10 @@ function CategoryInsightsTab({
   );
 }
 
-export function StrategyDashboard({ puzzles }: StrategyDashboardProps): React.JSX.Element {
-  const [activeTab, setActiveTab] = useState<TabId>('frequency');
+export function StrategyDashboard({
+  puzzles,
+}: StrategyDashboardProps): React.JSX.Element {
+  const [activeTab, setActiveTab] = useState<TabId>("frequency");
 
   const analytics = useMemo(() => analyzePuzzlePack(puzzles), [puzzles]);
 
@@ -550,10 +574,7 @@ export function StrategyDashboard({ puzzles }: StrategyDashboardProps): React.JS
         {TABS.map((tab) => (
           <TouchableOpacity
             key={tab.id}
-            style={[
-              styles.tab,
-              activeTab === tab.id && styles.activeTab,
-            ]}
+            style={[styles.tab, activeTab === tab.id && styles.activeTab]}
             onPress={() => setActiveTab(tab.id)}
           >
             <Text
@@ -569,10 +590,10 @@ export function StrategyDashboard({ puzzles }: StrategyDashboardProps): React.JS
       </ScrollView>
 
       {/* Tab Content */}
-      {activeTab === 'frequency' && (
+      {activeTab === "frequency" && (
         <LetterFrequencyTab frequencies={analytics.letterFrequencies} />
       )}
-      {activeTab === 'strategy' && (
+      {activeTab === "strategy" && (
         <OptimalStrategyTab
           frequencies={analytics.letterFrequencies}
           topConsonants={analytics.recommendations.topConsonants}
@@ -581,10 +602,10 @@ export function StrategyDashboard({ puzzles }: StrategyDashboardProps): React.JS
           vowelBuyThreshold={analytics.recommendations.vowelBuyThreshold}
         />
       )}
-      {activeTab === 'wheel' && (
+      {activeTab === "wheel" && (
         <WheelAnalysisTab wheelAnalysis={analytics.wheelAnalysis} />
       )}
-      {activeTab === 'categories' && (
+      {activeTab === "categories" && (
         <CategoryInsightsTab categoryBreakdown={analytics.categoryBreakdown} />
       )}
     </View>
@@ -608,7 +629,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2.5],
     borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    borderBottomColor: "transparent",
   },
   activeTab: {
     borderBottomColor: colors.yellow[400],
@@ -640,19 +661,19 @@ const styles = StyleSheet.create({
   },
   chartScrollContainer: {
     marginVertical: spacing[3],
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
     borderRadius: borderRadius.lg,
     padding: spacing[2],
   },
   legend: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: spacing[4],
     marginBottom: spacing[4],
   },
   legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing[1],
   },
   legendDot: {
@@ -665,8 +686,8 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
   },
   topLetterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: spacing[1.5],
     gap: spacing[2],
   },
@@ -684,28 +705,28 @@ const styles = StyleSheet.create({
   topLetterBarContainer: {
     flex: 1,
     height: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 6,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   topLetterBar: {
-    height: '100%',
+    height: "100%",
     borderRadius: 6,
   },
   topLetterPercent: {
     color: colors.slate[400],
     fontSize: typography.sizes.sm,
     width: 48,
-    textAlign: 'right',
+    textAlign: "right",
   },
   letterGrid: {
     gap: spacing[2],
     marginBottom: spacing[4],
   },
   letterCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
     borderRadius: borderRadius.base,
     padding: spacing[3],
     gap: spacing[2],
@@ -717,34 +738,34 @@ const styles = StyleSheet.create({
   },
   letterCardLetter: {
     color: colors.white,
-    fontSize: typography.sizes['2xl'],
+    fontSize: typography.sizes["2xl"],
     fontWeight: typography.weights.bold,
     width: 28,
   },
   letterCardBarContainer: {
     flex: 1,
     height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 4,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   letterCardBar: {
-    height: '100%',
+    height: "100%",
     borderRadius: 4,
   },
   letterCardPercent: {
     color: colors.slate[400],
     fontSize: typography.sizes.sm,
     width: 48,
-    textAlign: 'right',
+    textAlign: "right",
   },
   rstlneContainer: {
     gap: spacing[2],
     marginBottom: spacing[4],
   },
   rstlneRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing[2],
     paddingVertical: spacing[1],
   },
@@ -753,8 +774,8 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     backgroundColor: colors.yellow[400],
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   rstlneRankText: {
     color: colors.slate[900],
@@ -770,27 +791,27 @@ const styles = StyleSheet.create({
   rstlneBarContainer: {
     flex: 1,
     height: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 5,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   rstlneBar: {
-    height: '100%',
+    height: "100%",
     borderRadius: 5,
   },
   rstlnePercent: {
     color: colors.slate[400],
     fontSize: typography.sizes.sm,
     width: 48,
-    textAlign: 'right',
+    textAlign: "right",
   },
   thresholdCard: {
-    backgroundColor: 'rgba(250, 204, 21, 0.1)',
+    backgroundColor: "rgba(250, 204, 21, 0.1)",
     borderWidth: 1,
     borderColor: colors.yellow[400],
     borderRadius: borderRadius.lg,
     padding: spacing[4],
-    alignItems: 'center',
+    alignItems: "center",
     gap: spacing[2],
     marginBottom: spacing[8],
   },
@@ -798,27 +819,27 @@ const styles = StyleSheet.create({
     color: colors.yellow[400],
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   thresholdValue: {
     color: colors.white,
-    fontSize: typography.sizes['4xl'],
+    fontSize: typography.sizes["4xl"],
     fontWeight: typography.weights.bold,
   },
   thresholdDesc: {
     color: colors.slate[400],
     fontSize: typography.sizes.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
   // Wheel Analysis Tab
   evCard: {
-    backgroundColor: 'rgba(250, 204, 21, 0.1)',
+    backgroundColor: "rgba(250, 204, 21, 0.1)",
     borderWidth: 1,
     borderColor: colors.yellow[400],
     borderRadius: borderRadius.lg,
     padding: spacing[4],
-    alignItems: 'center',
+    alignItems: "center",
     gap: spacing[2],
     marginTop: spacing[4],
     marginBottom: spacing[4],
@@ -827,27 +848,27 @@ const styles = StyleSheet.create({
     color: colors.yellow[400],
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   evValue: {
     color: colors.white,
-    fontSize: typography.sizes['4xl'],
+    fontSize: typography.sizes["4xl"],
     fontWeight: typography.weights.bold,
   },
   evDesc: {
     color: colors.slate[400],
     fontSize: typography.sizes.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
   outcomeGrid: {
     gap: spacing[3],
     marginBottom: spacing[4],
   },
   outcomeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
     borderRadius: borderRadius.base,
     padding: spacing[3],
     gap: spacing[2],
@@ -856,8 +877,8 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   outcomeIconText: {
     color: colors.white,
@@ -874,26 +895,26 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
     width: 52,
-    textAlign: 'right',
+    textAlign: "right",
   },
   outcomeBarContainer: {
     flex: 1,
     height: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 4,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   outcomeBar: {
-    height: '100%',
+    height: "100%",
     borderRadius: 4,
   },
   avgCashCard: {
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
     borderWidth: 1,
     borderColor: colors.green[500],
     borderRadius: borderRadius.lg,
     padding: spacing[4],
-    alignItems: 'center',
+    alignItems: "center",
     gap: spacing[2],
     marginBottom: spacing[8],
   },
@@ -901,26 +922,26 @@ const styles = StyleSheet.create({
     color: colors.green[500],
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   avgCashValue: {
     color: colors.white,
-    fontSize: typography.sizes['4xl'],
+    fontSize: typography.sizes["4xl"],
     fontWeight: typography.weights.bold,
   },
   avgCashDesc: {
     color: colors.slate[400],
     fontSize: typography.sizes.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   // Category Insights Tab
   dropdownButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: borderRadius.base,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2.5],
@@ -941,7 +962,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.slate[700],
     marginBottom: spacing[3],
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   dropdownItem: {
     paddingHorizontal: spacing[3],
@@ -950,7 +971,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.slate[700],
   },
   dropdownItemActive: {
-    backgroundColor: 'rgba(250, 204, 21, 0.15)',
+    backgroundColor: "rgba(250, 204, 21, 0.15)",
   },
   dropdownItemText: {
     color: colors.slate[400],
@@ -961,10 +982,10 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
   },
   vowelRatioCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
     borderRadius: borderRadius.lg,
     padding: spacing[4],
-    alignItems: 'center',
+    alignItems: "center",
     gap: spacing[2],
     marginBottom: spacing[4],
   },
@@ -972,41 +993,41 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 1,
   },
   vowelRatioValue: {
     color: colors.blue[400],
-    fontSize: typography.sizes['3xl'],
+    fontSize: typography.sizes["3xl"],
     fontWeight: typography.weights.bold,
   },
   vowelRatioBarContainer: {
-    flexDirection: 'row',
-    width: '100%',
+    flexDirection: "row",
+    width: "100%",
     height: 12,
     borderRadius: 6,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   vowelRatioBarVowel: {
     backgroundColor: colors.blue[500],
-    height: '100%',
+    height: "100%",
   },
   vowelRatioBarConsonant: {
     backgroundColor: colors.purple[500],
-    height: '100%',
+    height: "100%",
   },
   vowelRatioLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
   },
   vowelRatioLabelText: {
     color: colors.slate[400],
     fontSize: typography.sizes.xs,
   },
   categoryLetterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: spacing[1.5],
     gap: spacing[2],
   },
@@ -1019,8 +1040,8 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   categoryLetterBadgeText: {
     color: colors.white,
@@ -1030,28 +1051,28 @@ const styles = StyleSheet.create({
   categoryLetterBarContainer: {
     flex: 1,
     height: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 5,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   categoryLetterBar: {
-    height: '100%',
+    height: "100%",
     borderRadius: 5,
   },
   categoryLetterPercent: {
     color: colors.slate[400],
     fontSize: typography.sizes.sm,
     width: 48,
-    textAlign: 'right',
+    textAlign: "right",
   },
   patternsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing[2],
     marginBottom: spacing[8],
   },
   patternChip: {
-    backgroundColor: 'rgba(250, 204, 21, 0.15)',
+    backgroundColor: "rgba(250, 204, 21, 0.15)",
     borderWidth: 1,
     borderColor: colors.yellow[400],
     borderRadius: borderRadius.full,

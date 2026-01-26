@@ -8,7 +8,7 @@ export const INITIAL_STATE: GameState = {
   spinResult: null,
   turnState: "IDLE",
   mustSpin: false,
-  player: { currentRoundScore: 0, totalScore: 0, freePlay: false },
+  player: { currentRoundScore: 0, totalScore: 0 },
   tossUpRevealOrder: [],
   tossUpIndex: 0,
   bonusTimer: 10,
@@ -75,7 +75,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         mustSpin: false,
         tossUpRevealOrder: shuffledReveal,
         tossUpIndex: 0,
-        player: { ...state.player, currentRoundScore: 0, freePlay: false },
+        player: { ...state.player, currentRoundScore: 0 },
         roundCount: state.roundCount + 1,
         spinCount: 0,
       };
@@ -112,7 +112,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         spinResult: wedge.value,
         mustSpin: false,
         turnState: "GUESSING_CONSONANT",
-        player: { ...state.player, freePlay: wedge.type === "FREE_PLAY" },
       };
     }
 
@@ -142,12 +141,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
 
-      // Add money if consonant and not buying
-      if (
-        !isVowel &&
-        typeof state.spinResult === "number" &&
-        !state.player.freePlay
-      ) {
+      // Add money if consonant
+      if (!isVowel && typeof state.spinResult === "number") {
         newScore += state.spinResult * count;
       }
 
@@ -160,11 +155,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         guessedLetters: [...state.guessedLetters, upper],
         revealedPositions: newRevealed,
-        player: {
-          ...state.player,
-          currentRoundScore: newScore,
-          freePlay: isCorrect ? state.player.freePlay : false,
-        },
+        player: { ...state.player, currentRoundScore: newScore },
         turnState: "IDLE",
         spinResult: isCorrect ? state.spinResult : null,
         mustSpin: !isCorrect,

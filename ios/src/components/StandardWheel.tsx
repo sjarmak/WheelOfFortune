@@ -158,14 +158,11 @@ export function StandardWheel({
 
     // Text color based on wedge type
     const textColor = wedge.type === "BANKRUPT" ? "#fff" : "#000";
-    const isSpecial =
-      wedge.type === "BANKRUPT" ||
-      wedge.type === "LOSE_TURN" ||
-      wedge.type === "FREE_PLAY";
+    const isSpecial = wedge.type === "BANKRUPT" || wedge.type === "LOSE_TURN";
 
     // Position text: numbers shifted outward, long text more centered
     let textOffset = "35%";
-    if (wedge.type === "LOSE_TURN" || wedge.type === "FREE_PLAY") {
+    if (wedge.type === "LOSE_TURN") {
       textOffset = "50%";
     } else if (wedge.type === "BANKRUPT") {
       textOffset = "42%";

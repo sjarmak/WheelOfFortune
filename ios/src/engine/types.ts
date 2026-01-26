@@ -20,7 +20,6 @@ export interface Puzzle {
 export type PlayerState = {
   currentRoundScore: number;
   totalScore: number;
-  freePlay: boolean;
 };
 
 export type GameState = {
@@ -58,7 +57,7 @@ export type GameState = {
 
 export interface WheelWedge {
   id: string;
-  type: "VALUE" | "BANKRUPT" | "LOSE_TURN" | "FREE_PLAY";
+  type: "VALUE" | "BANKRUPT" | "LOSE_TURN";
   value: number;
   label: string;
   color: string;
@@ -86,7 +85,7 @@ export const WHEEL_CONFIG: WheelWedge[] = [
   { id: "9", type: "VALUE", value: 550, label: "$550", color: PURPLE },
   { id: "10", type: "VALUE", value: 500, label: "$500", color: YELLOW },
   { id: "11", type: "VALUE", value: 900, label: "$900", color: BLUE },
-  { id: "12", type: "FREE_PLAY", value: 500, label: "FREE PLAY", color: GREEN },
+  { id: "12", type: "VALUE", value: 500, label: "$500", color: GREEN },
   { id: "13", type: "VALUE", value: 700, label: "$700", color: PINK },
   { id: "14", type: "VALUE", value: 600, label: "$600", color: BLUE },
   { id: "15", type: "VALUE", value: 800, label: "$800", color: ORANGE },

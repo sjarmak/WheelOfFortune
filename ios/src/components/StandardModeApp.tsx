@@ -197,7 +197,7 @@ export function StandardModeApp({
   const canBuyVowel =
     vowelsLeft &&
     !state.mustSpin &&
-    (state.player.currentRoundScore >= VOWEL_COST || state.player.freePlay);
+    state.player.currentRoundScore >= VOWEL_COST;
 
   // Toast message
   const showToast = useCallback((msg: string) => {
@@ -245,8 +245,6 @@ export function StandardModeApp({
         showToast("BANKRUPT! 💸");
       } else if (wedge.type === "LOSE_TURN") {
         showToast("LOSE A TURN!");
-      } else if (wedge.type === "FREE_PLAY") {
-        showToast("FREE PLAY! 🎉");
       }
     },
     [showToast],
@@ -564,6 +562,39 @@ export function StandardModeApp({
               <Animated.View
                 style={[styles.keyboardOverlay, keyboardAnimatedStyle]}
               >
+                {/* Status banner above keyboard */}
+                <View style={styles.keyboardBanner}>
+                  <View style={styles.keyboardBannerContent}>
+                    <Text style={styles.keyboardBannerText}>
+                      {state.turnState === "GUESSING_CONSONANT"
+                        ? "GUESS A CONSONANT"
+                        : "SELECT A VOWEL"}
+                    </Text>
+                    {state.turnState === "GUESSING_CONSONANT" &&
+                      typeof state.spinResult === "number" && (
+                        <Text style={styles.keyboardBannerSubtext}>
+                          ${state.spinResult} per letter
+                        </Text>
+                      )}
+                    {state.turnState === "BUYING_VOWEL" && (
+                      <Text style={styles.keyboardBannerSubtext}>
+                        ${VOWEL_COST} each
+                      </Text>
+                    )}
+                  </View>
+                  {state.turnState === "GUESSING_CONSONANT" && canBuyVowel && (
+                    <TouchableOpacity onPress={handleBuyVowel}>
+                      <LinearGradient
+                        colors={[colors.purple[500], colors.purple[600]]}
+                        style={styles.bannerVowelButton}
+                      >
+                        <Text style={styles.bannerVowelButtonText}>
+                          BUY VOWEL ${VOWEL_COST}
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
+                </View>
                 <Keyboard
                   guessedLetters={state.guessedLetters}
                   onGuess={handleGuess}
@@ -580,14 +611,7 @@ export function StandardModeApp({
               !isRoundOver &&
               state.turnState !== "SPINNING" && (
                 <View style={styles.bottomStatusBar}>
-                  <Text style={styles.bottomStatusText}>
-                    {state.player.freePlay ? "FREE PLAY" : "SPIN THE WHEEL"}
-                  </Text>
-                  {state.player.freePlay && (
-                    <Text style={styles.bottomStatusSubtext}>
-                      Guess any letter free
-                    </Text>
-                  )}
+                  <Text style={styles.bottomStatusText}>SPIN THE WHEEL</Text>
                 </View>
               )
             )}
@@ -923,6 +947,39 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     position: "relative",
   },
+  keyboardBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.slate[700],
+  },
+  keyboardBannerContent: {
+    flex: 1,
+  },
+  keyboardBannerText: {
+    color: colors.yellow[300],
+    fontWeight: typography.weights.bold,
+    fontSize: typography.sizes.sm,
+    letterSpacing: 1,
+  },
+  keyboardBannerSubtext: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.xs,
+    marginTop: spacing[0.5],
+  },
+  bannerVowelButton: {
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
+    borderRadius: borderRadius.lg,
+  },
+  bannerVowelButtonText: {
+    color: colors.white,
+    fontWeight: typography.weights.bold,
+    fontSize: typography.sizes.xs,
+  },
   bottomStatusBar: {
     position: "absolute",
     bottom: 0,
@@ -941,12 +998,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textAlign: "center",
   },
-  bottomStatusSubtext: {
-    color: colors.slate[400],
-    fontSize: typography.sizes.sm,
-    marginTop: spacing[1],
-    textAlign: "center",
-  },
+
   actionButtons: {
     flexDirection: "row",
     justifyContent: "center",
