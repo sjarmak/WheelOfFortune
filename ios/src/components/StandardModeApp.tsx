@@ -507,7 +507,7 @@ export function StandardModeApp({
               </View>
             ) : (
               <View style={styles.gameArea}>
-                {/* Wheel */}
+                {/* Wheel with status banner */}
                 <View style={styles.wheelContainer}>
                   <StandardWheel
                     onSpinStart={handleSpinStart}
@@ -516,6 +516,43 @@ export function StandardModeApp({
                     seed={state.seed + state.spinCount}
                     canSpin={state.turnState === "IDLE"}
                   />
+                  {/* Banner overlay on wheel center */}
+                  {state.turnState !== "SPINNING" && (
+                    <View style={styles.wheelBanner} pointerEvents="none">
+                      <LinearGradient
+                        colors={["rgba(0,0,0,0.85)", "rgba(0,0,0,0.75)"]}
+                        style={styles.wheelBannerGradient}
+                      >
+                        <Text style={styles.wheelBannerText}>
+                          {state.turnState === "GUESSING_CONSONANT" &&
+                            `GUESS A CONSONANT`}
+                          {state.turnState === "BUYING_VOWEL" &&
+                            `SELECT A VOWEL`}
+                          {state.turnState === "IDLE" &&
+                            (state.player.freePlay
+                              ? "FREE PLAY"
+                              : "SPIN THE WHEEL")}
+                        </Text>
+                        {state.turnState === "GUESSING_CONSONANT" &&
+                          typeof state.spinResult === "number" && (
+                            <Text style={styles.wheelBannerAmount}>
+                              ${state.spinResult} per letter
+                            </Text>
+                          )}
+                        {state.turnState === "BUYING_VOWEL" && (
+                          <Text style={styles.wheelBannerAmount}>
+                            ${VOWEL_COST} each
+                          </Text>
+                        )}
+                        {state.turnState === "IDLE" &&
+                          state.player.freePlay && (
+                            <Text style={styles.wheelBannerAmount}>
+                              Guess any letter free
+                            </Text>
+                          )}
+                      </LinearGradient>
+                    </View>
+                  )}
                 </View>
 
                 {/* Action Buttons */}
@@ -554,18 +591,6 @@ export function StandardModeApp({
                     </TouchableOpacity>
                   </View>
                 )}
-
-                {/* Status */}
-                <View style={styles.statusContainer}>
-                  <Text style={styles.statusText}>
-                    {state.turnState === "SPINNING" && "SPINNING..."}
-                    {state.turnState === "GUESSING_CONSONANT" &&
-                      `GUESS A CONSONANT ($${state.spinResult})`}
-                    {state.turnState === "BUYING_VOWEL" &&
-                      `SELECT A VOWEL ($${VOWEL_COST})`}
-                    {state.turnState === "IDLE" && "SPIN THE WHEEL"}
-                  </Text>
-                </View>
               </View>
             )}
 
@@ -916,6 +941,35 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     maxWidth: 400,
     flexShrink: 1,
+    position: "relative",
+  },
+  wheelBanner: {
+    position: "absolute",
+    left: "10%",
+    right: "10%",
+    top: "42%",
+    alignItems: "center",
+  },
+  wheelBannerGradient: {
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
+    borderRadius: borderRadius.lg,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+  wheelBannerText: {
+    color: colors.yellow[300],
+    fontWeight: typography.weights.bold,
+    fontSize: typography.sizes.sm,
+    letterSpacing: 1,
+    textAlign: "center",
+  },
+  wheelBannerAmount: {
+    color: colors.white,
+    fontSize: typography.sizes.xs,
+    marginTop: spacing[0.5],
+    textAlign: "center",
   },
   actionButtons: {
     flexDirection: "row",
@@ -936,15 +990,7 @@ const styles = StyleSheet.create({
   disabledText: {
     opacity: 0.5,
   },
-  statusContainer: {
-    alignItems: "center",
-    paddingVertical: spacing[2],
-  },
-  statusText: {
-    color: colors.yellow[300],
-    fontWeight: typography.weights.bold,
-    fontSize: typography.sizes.sm,
-  },
+
   keyboardOverlay: {
     position: "absolute",
     bottom: 0,
