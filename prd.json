@@ -183,7 +183,7 @@
         "Typecheck passes"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "Settings modal is already in StandardModeApp.tsx. The puzzles array needs to be available in the component scope - import from data/packs/original.json or wherever packs are loaded. Toast system already exists in the app."
     },
     {
