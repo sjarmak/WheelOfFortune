@@ -46,7 +46,13 @@ import ConfettiCannon from "react-native-confetti-cannon";
 
 import { Vanna } from "./Vanna";
 import { gameReducer, INITIAL_STATE } from "../engine/game";
-import { Puzzle, RoundType, VOWELS, WheelWedge } from "../engine/types";
+import {
+  Puzzle,
+  RoundType,
+  VOWELS,
+  CONSONANTS,
+  WheelWedge,
+} from "../engine/types";
 import { ALL_PACKS, getPuzzlesForMode, PuzzlePack } from "../engine/packs";
 import { DEFAULT_PUZZLES } from "../engine/defaultPack";
 import { InteractiveBoard } from "./InteractiveBoard";
@@ -118,6 +124,14 @@ export function StandardModeApp({
   const [tossUpSolveInput, setTossUpSolveInput] = useState("");
   const tossUpSolveInputRef = useRef<TextInput>(null);
   const tossUpTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Bonus Round letter picking state
+  const [bonusSelectedConsonants, setBonusSelectedConsonants] = useState<
+    string[]
+  >([]);
+  const [bonusSelectedVowel, setBonusSelectedVowel] = useState<string | null>(
+    null,
+  );
 
   // Trigger confetti + Vanna on successful puzzle solve (or loss feedback for toss-up/bonus)
   useEffect(() => {
@@ -272,6 +286,8 @@ export function StandardModeApp({
   const nextRound = useCallback(() => {
     setShowCelebration(false);
     setCelebrationReady(false);
+    setBonusSelectedConsonants([]);
+    setBonusSelectedVowel(null);
     if (celebrationTimerRef.current) {
       clearTimeout(celebrationTimerRef.current);
       celebrationTimerRef.current = null;
@@ -398,6 +414,81 @@ export function StandardModeApp({
     setTossUpSolveInput("");
   }, [tossUpSolveInput, state.currentPuzzle, showToast]);
 
+  // Bonus Round letter picking handlers
+  const RSTLNE = ["R", "S", "T", "L", "N", "E"];
+
+  const handleBonusLetterPick = useCallback(
+    (letter: string) => {
+      const upper = letter.toUpperCase();
+      if (RSTLNE.includes(upper)) return;
+
+      const isVowel = VOWELS.includes(upper);
+      const isConsonant = CONSONANTS.includes(upper);
+
+      if (isConsonant) {
+        if (bonusSelectedConsonants.includes(upper)) {
+          // Deselect
+          setBonusSelectedConsonants(
+            bonusSelectedConsonants.filter((c) => c !== upper),
+          );
+        } else if (bonusSelectedConsonants.length < 3) {
+          setBonusSelectedConsonants([...bonusSelectedConsonants, upper]);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+      } else if (isVowel) {
+        if (bonusSelectedVowel === upper) {
+          // Deselect
+          setBonusSelectedVowel(null);
+        } else if (
+          bonusSelectedVowel === null &&
+          bonusSelectedConsonants.length === 3
+        ) {
+          setBonusSelectedVowel(upper);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+      }
+    },
+    [bonusSelectedConsonants, bonusSelectedVowel],
+  );
+
+  const handleBonusConfirm = useCallback(() => {
+    if (bonusSelectedConsonants.length === 3 && bonusSelectedVowel) {
+      dispatch({
+        type: "BONUS_CHOOSE_LETTERS",
+        consonants: bonusSelectedConsonants as [string, string, string],
+        vowel: bonusSelectedVowel,
+      });
+      setBonusSelectedConsonants([]);
+      setBonusSelectedVowel(null);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+  }, [bonusSelectedConsonants, bonusSelectedVowel]);
+
+  const bonusPicksReady =
+    bonusSelectedConsonants.length === 3 && bonusSelectedVowel !== null;
+
+  const bonusPickStatusText = useMemo(() => {
+    const cCount = bonusSelectedConsonants.length;
+    const vCount = bonusSelectedVowel ? 1 : 0;
+    if (cCount < 3) {
+      return `Pick ${3 - cCount} more consonant${3 - cCount !== 1 ? "s" : ""}`;
+    }
+    if (vCount === 0) {
+      return "Now pick 1 vowel";
+    }
+    return "Ready! Tap Confirm";
+  }, [bonusSelectedConsonants.length, bonusSelectedVowel]);
+
+  // Letters that are disabled in bonus picking (RSTLNE already in guessedLetters from START_ROUND)
+  const bonusDisabledLetters = state.guessedLetters;
+
+  // Letters that are selected (highlighted) during bonus picking
+  const bonusHighlightedLetters = useMemo(() => {
+    const selected = [...bonusSelectedConsonants];
+    if (bonusSelectedVowel) selected.push(bonusSelectedVowel);
+    return selected;
+  }, [bonusSelectedConsonants, bonusSelectedVowel]);
+
   const handleSelectPuzzle = useCallback((puzzle: Puzzle, pack: PuzzlePack) => {
     setActivePack(pack);
     const idx = pack.puzzles.findIndex((p) => p.id === puzzle.id);
@@ -409,6 +500,8 @@ export function StandardModeApp({
 
   const isRoundOver = state.turnState === "ROUND_OVER";
   const isTossUpMode = selectedRoundMode === "TOSSUP";
+  const isBonusMode = selectedRoundMode === "BONUS";
+  const isBonusPicking = isBonusMode && state.turnState === "BONUS_PICKING";
   const canSpin = state.turnState === "IDLE" && !isRoundOver;
   const canGuess =
     state.turnState === "GUESSING_CONSONANT" ||
@@ -644,7 +737,7 @@ export function StandardModeApp({
             {/* Round Over */}
             {isRoundOver ? (
               <View style={styles.roundOverSection}>
-                {isTossUpMode ? (
+                {isTossUpMode || isBonusMode ? (
                   <>
                     <Text
                       style={
@@ -655,7 +748,9 @@ export function StandardModeApp({
                     >
                       {state.roundResult === "win"
                         ? "CORRECT!"
-                        : "PUZZLE REVEALED"}
+                        : isBonusMode
+                          ? "TIME'S UP!"
+                          : "PUZZLE REVEALED"}
                     </Text>
                     {state.roundResult === "win" && (
                       <Text style={styles.winningsText}>
@@ -714,6 +809,77 @@ export function StandardModeApp({
                     </Text>
                   </View>
                 )}
+              </View>
+            ) : isBonusPicking ? (
+              <View style={styles.bonusPickingArea}>
+                {/* Bonus Round Status Banner */}
+                <View style={styles.bonusBanner}>
+                  <Text style={styles.bonusBannerTitle}>BONUS ROUND</Text>
+                  <Text style={styles.bonusBannerStatus}>
+                    Pick 3 consonants, then 1 vowel
+                  </Text>
+                </View>
+
+                {/* Pick progress indicator */}
+                <View style={styles.bonusPickProgress}>
+                  <Text style={styles.bonusPickProgressText}>
+                    Consonants: {bonusSelectedConsonants.length}/3
+                    {bonusSelectedConsonants.length > 0 &&
+                      ` (${bonusSelectedConsonants.join(", ")})`}
+                  </Text>
+                  <Text style={styles.bonusPickProgressText}>
+                    Vowel: {bonusSelectedVowel ?? "—"}
+                  </Text>
+                  <Text style={styles.bonusPickStatusHint}>
+                    {bonusPickStatusText}
+                  </Text>
+                </View>
+
+                {/* Keyboard with RSTLNE disabled */}
+                <Keyboard
+                  guessedLetters={bonusDisabledLetters}
+                  onGuess={handleBonusLetterPick}
+                  disabled={false}
+                  selectedLetters={bonusHighlightedLetters}
+                  highlightVowels={
+                    bonusSelectedConsonants.length === 3 &&
+                    bonusSelectedVowel === null
+                  }
+                />
+
+                {/* Confirm button */}
+                <TouchableOpacity
+                  onPress={handleBonusConfirm}
+                  disabled={!bonusPicksReady}
+                >
+                  <LinearGradient
+                    colors={
+                      bonusPicksReady
+                        ? [colors.purple[500], colors.purple[600]]
+                        : [colors.slate[600], colors.slate[700]]
+                    }
+                    style={styles.bonusConfirmButton}
+                  >
+                    <Text
+                      style={[
+                        styles.bonusConfirmButtonText,
+                        !bonusPicksReady && styles.disabledText,
+                      ]}
+                    >
+                      CONFIRM LETTERS
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            ) : isBonusMode ? (
+              <View style={styles.bonusSolveArea}>
+                {/* Bonus Round solve phase placeholder — implemented in US-012 */}
+                <View style={styles.bonusBanner}>
+                  <Text style={styles.bonusBannerTitle}>BONUS ROUND</Text>
+                  <Text style={styles.bonusBannerStatus}>
+                    Solve the puzzle!
+                  </Text>
+                </View>
               </View>
             ) : (
               <View style={styles.gameArea}>
@@ -820,6 +986,7 @@ export function StandardModeApp({
             ) : (
               !isRoundOver &&
               !isTossUpMode &&
+              !isBonusMode &&
               state.turnState !== "SPINNING" && (
                 <View style={styles.bottomStatusBar}>
                   <Text style={styles.bottomStatusText}>SPIN THE WHEEL</Text>
@@ -1507,6 +1674,66 @@ const styles = StyleSheet.create({
     color: colors.red[400],
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
+  },
+  bonusPickingArea: {
+    flex: 1,
+    gap: spacing[3],
+    marginTop: spacing[2],
+  },
+  bonusBanner: {
+    alignItems: "center",
+    gap: spacing[1],
+  },
+  bonusBannerTitle: {
+    color: colors.purple[500],
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold,
+    letterSpacing: 3,
+  },
+  bonusBannerStatus: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.base,
+  },
+  bonusPickProgress: {
+    alignItems: "center",
+    gap: spacing[1],
+    backgroundColor: "rgba(30, 41, 59, 0.8)",
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.slate[700],
+    marginHorizontal: spacing[4],
+  },
+  bonusPickProgressText: {
+    color: colors.white,
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.medium,
+  },
+  bonusPickStatusHint: {
+    color: colors.purple[500],
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    marginTop: spacing[1],
+  },
+  bonusConfirmButton: {
+    alignItems: "center",
+    paddingVertical: spacing[3],
+    marginHorizontal: spacing[4],
+    borderRadius: borderRadius.lg,
+    ...shadows.md,
+  },
+  bonusConfirmButtonText: {
+    color: colors.white,
+    fontWeight: typography.weights.bold,
+    fontSize: typography.sizes.lg,
+    letterSpacing: 1,
+  },
+  bonusSolveArea: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing[6],
   },
   confettiContainer: {
     ...StyleSheet.absoluteFillObject,

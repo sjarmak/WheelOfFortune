@@ -35,6 +35,11 @@
 - `isTossUpMode` flag (`selectedRoundMode === 'TOSSUP'`) gates all toss-up UI rendering
 - Round over celebration: wins get confetti + Vanna + 3s delay, losses get immediate Next Puzzle button with error haptic
 - TOSSUP_BUZZED state opens solve modal; modal close without submission keeps the buzzed state (reducer doesn't transition back)
+- Keyboard `selectedLetters` prop: shows letters with green highlight and allows tapping for deselection; used for bonus round picking
+- `isBonusPicking` flag (`isBonusMode && state.turnState === 'BONUS_PICKING'`) gates bonus picking UI rendering
+- `isBonusMode` flag (`selectedRoundMode === 'BONUS'`) used for bonus-specific round over text and hiding standard game controls
+- Bonus picking local state: `bonusSelectedConsonants[]` (max 3) and `bonusSelectedVowel` (null or string) — cleared on nextRound and on confirm
+- RSTLNE letters are already in `state.guessedLetters` after START_ROUND for BONUS — no need to build a separate disabled list
 
 # Ralph Progress Log
 Started: Sun Jan 26 2026 — Toss-Up & Bonus Round Modes
@@ -193,5 +198,27 @@ Started: Sun Jan 26 2026 — Toss-Up & Bonus Round Modes
   - `isTossUpMode` flag gates rendering — avoids mixing standard/toss-up UI logic with complex conditionals
   - TOSSUP_BUZZED opens the solve modal; if user cancels, state stays TOSSUP_BUZZED (reducer needs BUZZ_IN from TOSSUP_REVEALING)
   - Round over celebration logic split: `roundResult === 'win'` or `null` (standard mode) shows confetti; `roundResult === 'loss'` shows error haptic + immediate next puzzle
+  - Typecheck passes, all 299 tests pass (no new tests needed — UI story)
+---
+
+## 2026-01-26 - US-011
+- Implemented Bonus Round letter picking UI in StandardModeApp.tsx
+- Added local state: bonusSelectedConsonants (string[], max 3) and bonusSelectedVowel (string | null)
+- Added isBonusMode and isBonusPicking flags for conditional rendering
+- Bonus picking area shows: BONUS ROUND banner, pick progress indicator (consonants: X/3, vowel: Y), keyboard with RSTLNE disabled, Confirm button
+- Keyboard extended with `selectedLetters` prop: renders selected keys with green background, allows deselection by tapping
+- Enforced picking order: consonants first (3), then vowel (1) — vowel keys only respond when 3 consonants selected
+- highlightVowels activates when 3 consonants selected and no vowel yet (pulse animation on eligible vowels)
+- Confirm button dispatches BONUS_CHOOSE_LETTERS, clears local selection state
+- Haptic feedback: Light impact on each letter pick, Medium impact on confirm
+- Round over text updated for bonus mode: shows "TIME'S UP!" for losses
+- Selection state cleared on nextRound
+- Added placeholder bonusSolveArea for US-012 (timed solve phase)
+- Files changed: ios/src/components/StandardModeApp.tsx, ios/src/components/Keyboard.tsx
+- **Learnings for future iterations:**
+  - RSTLNE letters are already in state.guessedLetters from START_ROUND — just pass guessedLetters as disabled letters directly
+  - Keyboard selectedLetters prop works alongside guessedLetters: selected letters override guessed styling and remain tappable
+  - Bonus picking is a separate rendering branch from toss-up and standard — uses isBonusPicking (mode + turnState) as gate
+  - bonusSolveArea is a placeholder for US-012 — renders when isBonusMode but not isBonusPicking and not isRoundOver
   - Typecheck passes, all 299 tests pass (no new tests needed — UI story)
 ---

@@ -34,6 +34,7 @@ interface KeyboardProps {
   highlightVowels?: boolean;
   hideGuessedLetters?: boolean;
   large?: boolean;
+  selectedLetters?: string[];
 }
 
 const ROWS = [
@@ -51,6 +52,7 @@ interface KeyProps {
   isGuessed: boolean;
   isVowel: boolean;
   isAllowed: boolean;
+  isSelected: boolean;
   vowelHighlight: boolean;
   large: boolean;
   onPress: () => void;
@@ -61,6 +63,7 @@ function Key({
   isGuessed,
   isVowel,
   isAllowed,
+  isSelected,
   vowelHighlight,
   large,
   onPress,
@@ -130,6 +133,26 @@ function Key({
     );
   }
 
+  if (isSelected) {
+    return (
+      <AnimatedTouchable
+        onPress={handlePress}
+        activeOpacity={0.8}
+        style={[styles.keyBase, keySize, styles.keySelected, animatedStyle]}
+      >
+        <Text
+          style={[
+            styles.keyText,
+            large && styles.keyTextLarge,
+            styles.keyTextSelected,
+          ]}
+        >
+          {char}
+        </Text>
+      </AnimatedTouchable>
+    );
+  }
+
   return (
     <AnimatedTouchable
       onPress={handlePress}
@@ -173,6 +196,7 @@ export function Keyboard({
   highlightVowels = false,
   hideGuessedLetters = false,
   large = false,
+  selectedLetters = [],
 }: KeyboardProps): React.JSX.Element {
   return (
     <View
@@ -189,14 +213,18 @@ export function Keyboard({
           {row.map((char) => {
             const isGuessed = guessedLetters.includes(char);
             const isVowel = VOWELS.includes(char);
+            const isSelected = selectedLetters.includes(char);
 
             // In hide mode, guessed letters look available but trigger onAlreadyCalled
             const visuallyGuessed = hideGuessedLetters ? false : isGuessed;
 
             let isAllowed = !disabled;
-            if (!hideGuessedLetters && isGuessed) isAllowed = false;
+            if (!hideGuessedLetters && isGuessed && !isSelected)
+              isAllowed = false;
             if (vowelsOnly && !isVowel) isAllowed = false;
             if (consonantsOnly && isVowel) isAllowed = false;
+            // Selected letters are always tappable (for deselection)
+            if (isSelected) isAllowed = true;
 
             const vowelHighlight =
               highlightVowels && isVowel && !isGuessed && !disabled;
@@ -213,9 +241,10 @@ export function Keyboard({
               <Key
                 key={char}
                 char={char}
-                isGuessed={visuallyGuessed}
+                isGuessed={isSelected ? false : visuallyGuessed}
                 isVowel={isVowel}
                 isAllowed={isAllowed}
+                isSelected={isSelected}
                 vowelHighlight={vowelHighlight}
                 large={large}
                 onPress={handlePress}
@@ -272,6 +301,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.slate[800],
     opacity: 0.5,
   },
+  keySelected: {
+    backgroundColor: colors.green[500],
+    ...shadows.md,
+  },
   highlighted: {
     borderWidth: 2,
     borderColor: colors.yellow[200],
@@ -292,6 +325,10 @@ const styles = StyleSheet.create({
   },
   keyTextDisabled: {
     color: colors.slate[600],
+  },
+  keyTextSelected: {
+    color: colors.white,
+    fontWeight: typography.weights.bold,
   },
   highlightedText: {
     color: colors.black,

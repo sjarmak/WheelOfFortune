@@ -198,7 +198,7 @@
         "Typecheck passes"
       ],
       "priority": 11,
-      "passes": false,
+      "passes": true,
       "notes": "Keyboard component is at ios/src/components/Keyboard.tsx. It accepts onPress callback and has consonant/vowel sections. RSTLNE = ['R','S','T','L','N','E']. The picking order is enforced: consonants first (3), then vowel (1)."
     },
     {
