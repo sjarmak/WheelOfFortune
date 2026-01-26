@@ -1,8 +1,8 @@
-import originalPack from '../assets/original.json';
-import seasonsPack from '../assets/seasons_1_20.json';
-import seasons40_42Pack from '../assets/seasons_40_42_all.json';
-import kidPack from '../assets/kid_pack.json';
-import { Puzzle, RoundType } from './types';
+import originalPack from "../assets/original.json";
+import seasonsPack from "../assets/seasons_1_20.json";
+import seasons40_42Pack from "../assets/seasons_40_42_all.json";
+import kidPack from "../assets/kid_pack.json";
+import { Puzzle, RoundType } from "./types";
 
 export interface PuzzlePack {
   id: string;
@@ -21,19 +21,19 @@ function extractSeason(sourcePath: string): number | undefined {
 }
 
 const BONUS_EXCLUDED_CATEGORIES = [
-  'before & after',
-  'same name',
-  'rhyme time',
-  'song lyrics',
-  'title/author',
+  "before & after",
+  "same name",
+  "rhyme time",
+  "song lyrics",
+  "title/author",
 ];
 
 function getAllowedModes(category: string): RoundType[] {
   const normalized = category.toLowerCase();
   if (BONUS_EXCLUDED_CATEGORIES.includes(normalized)) {
-    return ['MAIN', 'TOSSUP'];
+    return ["MAIN", "TOSSUP"];
   }
-  return ['MAIN', 'TOSSUP', 'BONUS'];
+  return ["MAIN", "TOSSUP", "BONUS"];
 }
 
 function mapPuzzles(raw: any[]): Puzzle[] {
@@ -43,21 +43,27 @@ function mapPuzzles(raw: any[]): Puzzle[] {
     category: p.category,
     round_type: p.round_type as RoundType,
     difficulty: p.difficulty,
-    season: extractSeason(p.source?.path || ''),
+    season: extractSeason(p.source?.path || ""),
     allowed_modes: getAllowedModes(p.category),
   }));
 }
 
-export function getPuzzlesForMode(puzzles: Puzzle[], mode: RoundType): Puzzle[] {
-  return puzzles.filter(p => {
+export function getPuzzlesForMode(
+  puzzles: Puzzle[],
+  mode: RoundType,
+): Puzzle[] {
+  return puzzles.filter((p) => {
     if (!p.allowed_modes) return true;
     return p.allowed_modes.includes(mode);
   });
 }
 
-function computePackStats(puzzles: Puzzle[]): { categories: string[]; difficultyRange: [number, number] } {
-  const categories = [...new Set(puzzles.map(p => p.category))];
-  const difficulties = puzzles.map(p => p.difficulty?.score ?? 0.5);
+function computePackStats(puzzles: Puzzle[]): {
+  categories: string[];
+  difficultyRange: [number, number];
+} {
+  const categories = [...new Set(puzzles.map((p) => p.category))];
+  const difficulties = puzzles.map((p) => p.difficulty?.score ?? 0.5);
   const min = Math.min(...difficulties);
   const max = Math.max(...difficulties);
   return { categories, difficultyRange: [min, max] };
@@ -66,14 +72,14 @@ function computePackStats(puzzles: Puzzle[]): { categories: string[]; difficulty
 // Create individual season packs
 function createSeasonPacks(
   puzzles: Puzzle[],
-  seasonNumbers: number[]
+  seasonNumbers: number[],
 ): PuzzlePack[] {
   const packs: PuzzlePack[] = [];
-  
+
   for (const season of seasonNumbers.sort((a, b) => a - b)) {
-    const seasonPuzzles = puzzles.filter(p => p.season === season);
+    const seasonPuzzles = puzzles.filter((p) => p.season === season);
     if (seasonPuzzles.length === 0) continue;
-    
+
     const stats = computePackStats(seasonPuzzles);
     packs.push({
       id: `season-${season}`,
@@ -85,7 +91,7 @@ function createSeasonPacks(
       puzzles: seasonPuzzles,
     });
   }
-  
+
   return packs;
 }
 
@@ -93,14 +99,14 @@ function createSeasonPacks(
 function createDifficultyPacks(
   puzzles: Puzzle[],
   source: string,
-  baseName: string
+  baseName: string,
 ): PuzzlePack[] {
-  const easy = puzzles.filter(p => (p.difficulty?.score ?? 0.5) < 0.3);
-  const medium = puzzles.filter(p => {
+  const easy = puzzles.filter((p) => (p.difficulty?.score ?? 0.5) < 0.3);
+  const medium = puzzles.filter((p) => {
     const score = p.difficulty?.score ?? 0.5;
     return score >= 0.3 && score < 0.5;
   });
-  const hard = puzzles.filter(p => (p.difficulty?.score ?? 0.5) >= 0.5);
+  const hard = puzzles.filter((p) => (p.difficulty?.score ?? 0.5) >= 0.5);
 
   const packs: PuzzlePack[] = [];
 
@@ -150,27 +156,14 @@ function createDifficultyPacks(
 function buildPacks(): PuzzlePack[] {
   const packs: PuzzlePack[] = [];
 
-  // Kid Mode pack (first for easy access)
-  const kidPuzzles = mapPuzzles(kidPack.puzzles);
-  const kidStats = computePackStats(kidPuzzles);
-  packs.push({
-    id: 'kid-pack',
-    name: 'Kid Mode Puzzles',
-    description: '220 kid-friendly puzzles with simple words',
-    source: 'kid-pack',
-    puzzleCount: kidPuzzles.length,
-    ...kidStats,
-    puzzles: kidPuzzles,
-  });
-
   // Original practice pack
   const originalPuzzles = mapPuzzles(originalPack.puzzles);
   const originalStats = computePackStats(originalPuzzles);
   packs.push({
-    id: 'original',
-    name: 'Practice Pack',
-    description: 'Starter puzzles for practice',
-    source: 'original',
+    id: "original",
+    name: "Practice Pack",
+    description: "Starter puzzles for practice",
+    source: "original",
     puzzleCount: originalPuzzles.length,
     ...originalStats,
     puzzles: originalPuzzles,
@@ -180,10 +173,10 @@ function buildPacks(): PuzzlePack[] {
   const seasonsPuzzles = mapPuzzles(seasonsPack.puzzles);
   const seasonsStats = computePackStats(seasonsPuzzles);
   packs.push({
-    id: 'seasons-1-20-all',
-    name: 'Seasons 1-20 (Classic)',
-    description: '12,847 puzzles from classic TV seasons 1-20',
-    source: 'seasons_1_20',
+    id: "seasons-1-20-all",
+    name: "Seasons 1-20 (Classic)",
+    description: "12,847 puzzles from classic TV seasons 1-20",
+    source: "seasons_1_20",
     puzzleCount: seasonsPuzzles.length,
     ...seasonsStats,
     puzzles: seasonsPuzzles,
@@ -193,58 +186,78 @@ function buildPacks(): PuzzlePack[] {
   const seasons40_42Puzzles = mapPuzzles(seasons40_42Pack.puzzles);
   const seasons40_42Stats = computePackStats(seasons40_42Puzzles);
   packs.push({
-    id: 'seasons-40-42',
-    name: 'Seasons 40-42 (2022-2025)',
-    description: '5,724 recent puzzles with categories',
-    source: 'seasons_40_42',
+    id: "seasons-40-42",
+    name: "Seasons 40-42 (2022-2025)",
+    description: "5,724 recent puzzles with categories",
+    source: "seasons_40_42",
     puzzleCount: seasons40_42Puzzles.length,
     ...seasons40_42Stats,
     puzzles: seasons40_42Puzzles,
   });
 
   // Individual season packs for Seasons 1-20 (estimated from source order)
-  packs.push(...createSeasonPacks(seasonsPuzzles, Array.from({ length: 20 }, (_, i) => i + 1)));
+  packs.push(
+    ...createSeasonPacks(
+      seasonsPuzzles,
+      Array.from({ length: 20 }, (_, i) => i + 1),
+    ),
+  );
 
   // Individual season packs for Seasons 40-42 (metadata available in source)
   packs.push(...createSeasonPacks(seasons40_42Puzzles, [40, 41, 42]));
 
   // Difficulty-based sub-packs for recent seasons
-  packs.push(...createDifficultyPacks(seasons40_42Puzzles, 'seasons_40_42', 'Recent'));
+  packs.push(
+    ...createDifficultyPacks(seasons40_42Puzzles, "seasons_40_42", "Recent"),
+  );
 
   // Random sample packs for quick games
   const shuffled = [...seasonsPuzzles].sort(() => Math.random() - 0.5);
-  
+
   packs.push({
-    id: 'quick-10',
-    name: 'Quick Game (10)',
-    description: '10 random puzzles for a quick game',
-    source: 'random',
+    id: "quick-10",
+    name: "Quick Game (10)",
+    description: "10 random puzzles for a quick game",
+    source: "random",
     puzzleCount: 10,
-    categories: ['MIXED'],
+    categories: ["MIXED"],
     difficultyRange: [0, 1],
     puzzles: shuffled.slice(0, 10),
   });
 
   packs.push({
-    id: 'quick-25',
-    name: 'Quick Game (25)',
-    description: '25 random puzzles',
-    source: 'random',
+    id: "quick-25",
+    name: "Quick Game (25)",
+    description: "25 random puzzles",
+    source: "random",
     puzzleCount: 25,
-    categories: ['MIXED'],
+    categories: ["MIXED"],
     difficultyRange: [0, 1],
     puzzles: shuffled.slice(0, 25),
   });
 
   packs.push({
-    id: 'quick-50',
-    name: 'Quick Game (50)',
-    description: '50 random puzzles for a longer session',
-    source: 'random',
+    id: "quick-50",
+    name: "Quick Game (50)",
+    description: "50 random puzzles for a longer session",
+    source: "random",
     puzzleCount: 50,
-    categories: ['MIXED'],
+    categories: ["MIXED"],
     difficultyRange: [0, 1],
     puzzles: shuffled.slice(0, 50),
+  });
+
+  // Kid-friendly pack (available as a selectable pack)
+  const kidPuzzles = mapPuzzles(kidPack.puzzles);
+  const kidStats = computePackStats(kidPuzzles);
+  packs.push({
+    id: "kid-pack",
+    name: "Kid Mode Puzzles",
+    description: "220 kid-friendly puzzles with simple words",
+    source: "kid-pack",
+    puzzleCount: kidPuzzles.length,
+    ...kidStats,
+    puzzles: kidPuzzles,
   });
 
   return packs;
@@ -253,5 +266,5 @@ function buildPacks(): PuzzlePack[] {
 export const ALL_PACKS = buildPacks();
 
 export function getPackById(id: string): PuzzlePack | undefined {
-  return ALL_PACKS.find(p => p.id === id);
+  return ALL_PACKS.find((p) => p.id === id);
 }

@@ -19,6 +19,7 @@ import {
   Switch,
   TouchableOpacity,
   TextInput,
+  ScrollView,
   Dimensions,
   AppState,
 } from "react-native";
@@ -36,6 +37,7 @@ import {
   BarChart3,
   Zap,
   Trophy,
+  Shuffle,
 } from "lucide-react-native";
 import Animated, {
   useSharedValue,
@@ -75,15 +77,15 @@ import {
 const STORAGE_KEY = "wof_standard_state";
 const VOWEL_COST = 250;
 
-type ActiveScreen = "home" | "game" | "packBrowser" | "strategy";
+const MODE_LABELS: Record<RoundType, string> = {
+  MAIN: "STANDARD GAME",
+  TOSSUP: "TOSS-UP",
+  BONUS: "BONUS ROUND",
+};
 
-interface StandardModeAppProps {
-  onModeChange?: () => void;
-}
+type ActiveScreen = "home" | "game" | "packBrowser" | "packSelect" | "strategy";
 
-export function StandardModeApp({
-  onModeChange,
-}: StandardModeAppProps): React.JSX.Element {
+export function StandardModeApp(): React.JSX.Element {
   const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
   const [activePack, setActivePack] = useState<PuzzlePack>(() => {
     if (ALL_PACKS && ALL_PACKS.length > 0) {
@@ -102,8 +104,7 @@ export function StandardModeApp({
   });
 
   const [activeScreen, setActiveScreen] = useState<ActiveScreen>("home");
-  const [selectedRoundMode, setSelectedRoundMode] =
-    useState<RoundType>("MAIN");
+  const [selectedRoundMode, setSelectedRoundMode] = useState<RoundType>("MAIN");
   const [showSettings, setShowSettings] = useState(false);
   const [showPackBrowserModal, setShowPackBrowserModal] = useState(false);
   const [showSolveModal, setShowSolveModal] = useState(false);
@@ -242,8 +243,7 @@ export function StandardModeApp({
   // Bonus Round tick interval — runs during BONUS_SOLVE_TIMER
   useEffect(() => {
     const isBonusSolveActive =
-      selectedRoundMode === "BONUS" &&
-      state.turnState === "BONUS_SOLVE_TIMER";
+      selectedRoundMode === "BONUS" && state.turnState === "BONUS_SOLVE_TIMER";
 
     if (isBonusSolveActive) {
       let lastTime = Date.now();
@@ -279,7 +279,12 @@ export function StandardModeApp({
     const prevSec = prevBonusTimerSecRef.current;
     prevBonusTimerSecRef.current = currentSec;
 
-    if (prevSec !== null && currentSec !== prevSec && currentSec <= 5 && currentSec > 0) {
+    if (
+      prevSec !== null &&
+      currentSec !== prevSec &&
+      currentSec <= 5 &&
+      currentSec > 0
+    ) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
   }, [state.turnState, state.bonusTimerMs]);
@@ -302,7 +307,10 @@ export function StandardModeApp({
         return;
       }
 
-      if (nextAppState === "active" && backgroundTimestampRef.current !== null) {
+      if (
+        nextAppState === "active" &&
+        backgroundTimestampRef.current !== null
+      ) {
         const elapsed = Date.now() - backgroundTimestampRef.current;
         backgroundTimestampRef.current = null;
 
@@ -411,23 +419,52 @@ export function StandardModeApp({
     });
   }, [activePack, puzzleIndex, selectedRoundMode]);
 
-  // Navigate to game with a specific round mode
-  const startMode = useCallback(
-    (mode: RoundType) => {
-      setSelectedRoundMode(mode);
-      const puzzles = getPuzzlesForMode(activePack.puzzles, mode);
+  // Navigate to pack selection for a specific round mode
+  const startMode = useCallback((mode: RoundType) => {
+    setSelectedRoundMode(mode);
+    setActiveScreen("packSelect");
+  }, []);
+
+  // Start game with a specific pack and the selected round mode
+  const startGameWithPack = useCallback(
+    (pack: PuzzlePack) => {
+      setActivePack(pack);
+      const puzzles = getPuzzlesForMode(pack.puzzles, selectedRoundMode);
       const first = puzzles[0];
       if (first) {
         setPuzzleIndex(0);
         dispatch({
           type: "START_ROUND",
-          puzzle: { ...first, round_type: mode },
+          puzzle: { ...first, round_type: selectedRoundMode },
         });
       }
       setActiveScreen("game");
     },
-    [activePack],
+    [selectedRoundMode],
   );
+
+  // Start game with a random puzzle from all packs (filtered for mode)
+  const startShuffleAll = useCallback(() => {
+    const allEligible = ALL_PACKS.flatMap((pack) =>
+      getPuzzlesForMode(pack.puzzles, selectedRoundMode),
+    );
+    if (allEligible.length === 0) return;
+    const randomPuzzle =
+      allEligible[Math.floor(Math.random() * allEligible.length)];
+    // Find which pack contains this puzzle
+    const containingPack = ALL_PACKS.find((pack) =>
+      pack.puzzles.some((p) => p.id === randomPuzzle.id),
+    );
+    if (containingPack) {
+      setActivePack(containingPack);
+    }
+    setPuzzleIndex(0);
+    dispatch({
+      type: "START_ROUND",
+      puzzle: { ...randomPuzzle, round_type: selectedRoundMode },
+    });
+    setActiveScreen("game");
+  }, [selectedRoundMode]);
 
   // Load puzzle on mount — start at first puzzle in pack
   useEffect(() => {
@@ -694,9 +731,9 @@ export function StandardModeApp({
               <ChevronLeft size={24} color={colors.white} />
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity onPress={onModeChange} style={styles.iconButton}>
+            <View style={styles.iconButton}>
               <Text style={styles.modeText}>WHEEL PRACTICE</Text>
-            </TouchableOpacity>
+            </View>
           )}
 
           {activeScreen !== "home" && (
@@ -846,6 +883,68 @@ export function StandardModeApp({
                 </LinearGradient>
               </TouchableOpacity>
             </View>
+          </View>
+        )}
+
+        {activeScreen === "packSelect" && (
+          <View style={styles.homeContainer}>
+            <Text style={styles.homeTitle}>
+              {MODE_LABELS[selectedRoundMode]}
+            </Text>
+            <Text style={styles.homeSubtitle}>Choose your puzzles</Text>
+
+            <ScrollView
+              style={styles.packSelectScroll}
+              contentContainerStyle={styles.packSelectContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Shuffle All */}
+              <TouchableOpacity
+                style={styles.navCard}
+                onPress={startShuffleAll}
+              >
+                <LinearGradient
+                  colors={[colors.yellow[500], colors.orange[500]]}
+                  style={styles.navCardGradient}
+                >
+                  <Shuffle size={32} color={colors.white} />
+                  <Text style={styles.navCardTitle}>Shuffle All</Text>
+                  <Text style={styles.navCardDesc}>
+                    Random puzzle from all packs
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Pack cards */}
+              {ALL_PACKS.map((pack) => {
+                const eligibleCount = getPuzzlesForMode(
+                  pack.puzzles,
+                  selectedRoundMode,
+                ).length;
+                if (eligibleCount === 0) return null;
+                return (
+                  <TouchableOpacity
+                    key={pack.id}
+                    style={[
+                      styles.navCard,
+                      activePack.id === pack.id && styles.packSelectActive,
+                    ]}
+                    onPress={() => startGameWithPack(pack)}
+                  >
+                    <LinearGradient
+                      colors={[colors.slate[600], colors.slate[700]]}
+                      style={styles.navCardGradient}
+                    >
+                      <BookOpen size={24} color={colors.slate[400]} />
+                      <Text style={styles.navCardTitle}>{pack.name}</Text>
+                      <Text style={styles.navCardDesc}>
+                        {eligibleCount} puzzle{eligibleCount !== 1 ? "s" : ""}
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
         )}
 
@@ -1796,6 +1895,18 @@ const styles = StyleSheet.create({
   navCardDesc: {
     color: "rgba(255, 255, 255, 0.8)",
     fontSize: typography.sizes.sm,
+  },
+  packSelectScroll: {
+    flex: 1,
+    width: "100%",
+  },
+  packSelectContent: {
+    gap: spacing[3],
+    paddingBottom: spacing[8],
+  },
+  packSelectActive: {
+    borderWidth: 2,
+    borderColor: colors.yellow[500],
   },
   placeholderScreen: {
     flex: 1,
