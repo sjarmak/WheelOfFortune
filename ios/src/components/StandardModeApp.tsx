@@ -517,43 +517,7 @@ export function StandardModeApp({
                     seed={state.seed + state.spinCount}
                     canSpin={state.turnState === "IDLE"}
                   />
-                  {/* Banner overlay below wheel center */}
-                  {state.turnState !== "SPINNING" && (
-                    <View style={styles.wheelBanner} pointerEvents="none">
-                      <LinearGradient
-                        colors={["rgba(0,0,0,0.85)", "rgba(0,0,0,0.75)"]}
-                        style={styles.wheelBannerGradient}
-                      >
-                        <Text style={styles.wheelBannerText}>
-                          {state.turnState === "GUESSING_CONSONANT" &&
-                            "GUESS A CONSONANT"}
-                          {state.turnState === "BUYING_VOWEL" &&
-                            "SELECT A VOWEL"}
-                          {state.turnState === "IDLE" &&
-                            (state.player.freePlay
-                              ? "FREE PLAY"
-                              : "SPIN THE WHEEL")}
-                        </Text>
-                        {state.turnState === "GUESSING_CONSONANT" &&
-                          typeof state.spinResult === "number" && (
-                            <Text style={styles.wheelBannerAmount}>
-                              ${state.spinResult} per letter
-                            </Text>
-                          )}
-                        {state.turnState === "BUYING_VOWEL" && (
-                          <Text style={styles.wheelBannerAmount}>
-                            ${VOWEL_COST} each
-                          </Text>
-                        )}
-                        {state.turnState === "IDLE" &&
-                          state.player.freePlay && (
-                            <Text style={styles.wheelBannerAmount}>
-                              Guess any letter free
-                            </Text>
-                          )}
-                      </LinearGradient>
-                    </View>
-                  )}
+                  {/* No banner on wheel - status shown in bottom bar */}
                 </View>
 
                 {/* Action Buttons */}
@@ -595,23 +559,38 @@ export function StandardModeApp({
               </View>
             )}
 
-            {/* Keyboard slides up from bottom when guessing */}
-            <Animated.View
-              style={[styles.keyboardOverlay, keyboardAnimatedStyle]}
-              pointerEvents={canGuess ? "auto" : "none"}
-            >
-              <Keyboard
-                guessedLetters={state.guessedLetters}
-                onGuess={handleGuess}
-                onAlreadyCalled={(letter) =>
-                  showToast(`${letter} - Already called!`)
-                }
-                disabled={!canGuess}
-                vowelsOnly={state.turnState === "BUYING_VOWEL"}
-                consonantsOnly={state.turnState === "GUESSING_CONSONANT"}
-                hideGuessedLetters={hideGuessedLetters}
-              />
-            </Animated.View>
+            {/* Bottom bar - keyboard when guessing, status text otherwise */}
+            {canGuess ? (
+              <Animated.View
+                style={[styles.keyboardOverlay, keyboardAnimatedStyle]}
+              >
+                <Keyboard
+                  guessedLetters={state.guessedLetters}
+                  onGuess={handleGuess}
+                  onAlreadyCalled={(letter) =>
+                    showToast(`${letter} - Already called!`)
+                  }
+                  disabled={!canGuess}
+                  vowelsOnly={state.turnState === "BUYING_VOWEL"}
+                  consonantsOnly={state.turnState === "GUESSING_CONSONANT"}
+                  hideGuessedLetters={hideGuessedLetters}
+                />
+              </Animated.View>
+            ) : (
+              !isRoundOver &&
+              state.turnState !== "SPINNING" && (
+                <View style={styles.bottomStatusBar}>
+                  <Text style={styles.bottomStatusText}>
+                    {state.player.freePlay ? "FREE PLAY" : "SPIN THE WHEEL"}
+                  </Text>
+                  {state.player.freePlay && (
+                    <Text style={styles.bottomStatusSubtext}>
+                      Guess any letter free
+                    </Text>
+                  )}
+                </View>
+              )
+            )}
           </View>
         )}
 
@@ -944,32 +923,28 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     position: "relative",
   },
-  wheelBanner: {
+  bottomStatusBar: {
     position: "absolute",
-    left: "10%",
-    right: "10%",
-    bottom: "8%",
+    bottom: 0,
+    left: 0,
+    right: 0,
     alignItems: "center",
+    paddingVertical: spacing[4],
+    backgroundColor: colors.slate[900],
+    borderTopWidth: 1,
+    borderTopColor: colors.slate[700],
   },
-  wheelBannerGradient: {
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[2],
-    borderRadius: borderRadius.lg,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-  },
-  wheelBannerText: {
+  bottomStatusText: {
     color: colors.yellow[300],
     fontWeight: typography.weights.bold,
-    fontSize: typography.sizes.sm,
-    letterSpacing: 1,
+    fontSize: typography.sizes.lg,
+    letterSpacing: 2,
     textAlign: "center",
   },
-  wheelBannerAmount: {
-    color: colors.white,
-    fontSize: typography.sizes.xs,
-    marginTop: spacing[0.5],
+  bottomStatusSubtext: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.sm,
+    marginTop: spacing[1],
     textAlign: "center",
   },
   actionButtons: {
