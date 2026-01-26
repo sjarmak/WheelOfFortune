@@ -140,7 +140,7 @@
         "Tests pass"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "'PRACTICE MAKES PERFECT' has R,S,T,L,N,E all appearing — good test puzzle for RSTLNE reveal."
     },
     {

@@ -421,3 +421,175 @@ describe("Bonus Engine: BONUS_SOLVE_ATTEMPT", () => {
     expect(next).toBe(won);
   });
 });
+
+// ──────────────────────────────────────────────────────────
+// End-to-end simulation tests
+// ──────────────────────────────────────────────────────────
+
+describe("Bonus Engine: end-to-end simulation", () => {
+  // "PRACTICE MAKES PERFECT"
+  // P R A C T I C E   M A  K  E  S     P  E  R  F  E  C  T
+  // 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21
+  //
+  // RSTLNE positions: R(1,17), S(13), T(4,21), E(7,12,16,19)  → [1,4,7,12,13,16,17,19,21]
+  // (L and N do not appear in this puzzle)
+
+  const RSTLNE_POSITIONS = [1, 4, 7, 12, 13, 16, 17, 19, 21];
+
+  it("simulation: start → RSTLNE → pick letters → partial timer → correct solve → win", () => {
+    const puzzle = makeBonusPuzzle();
+
+    // Step 1: Start round — verify RSTLNE revealed and BONUS_PICKING
+    const s1 = startBonusRound(puzzle);
+    expect(s1.turnState).toBe("BONUS_PICKING");
+    expect(s1.guessedLetters.sort()).toEqual(
+      ["E", "L", "N", "R", "S", "T"].sort(),
+    );
+    expect(s1.revealedPositions.sort()).toEqual(RSTLNE_POSITIONS.sort());
+    expect(s1.roundResult).toBeNull();
+    expect(s1.bonusTimerMs).toBe(20000);
+    expect(s1.bonusPicks).toEqual([]);
+
+    // Step 2: Choose 3 consonants (C, D, M) + 1 vowel (A) → BONUS_SOLVE_TIMER
+    const s2 = gameReducer(s1, {
+      type: "BONUS_CHOOSE_LETTERS",
+      consonants: ["C", "D", "M"],
+      vowel: "A",
+    });
+    expect(s2.turnState).toBe("BONUS_SOLVE_TIMER");
+    expect(s2.bonusPicks).toEqual(["C", "D", "M", "A"]);
+    expect(s2.guessedLetters).toContain("C");
+    expect(s2.guessedLetters).toContain("D");
+    expect(s2.guessedLetters).toContain("M");
+    expect(s2.guessedLetters).toContain("A");
+
+    // Verify chosen letter positions are revealed (C:3,6,20  M:9  A:2,10  D:none)
+    const chosenPositions = [2, 3, 6, 9, 10, 20];
+    const expectedRevealedAfterPick = [...RSTLNE_POSITIONS, ...chosenPositions];
+    expect(s2.revealedPositions.sort()).toEqual(
+      expectedRevealedAfterPick.sort(),
+    );
+
+    // Unrevealed: P(0,15), I(5), K(11), F(18), spaces(8,14) — 6 positions
+    const allPositions = Array.from({ length: puzzle.phrase.length }, (_, i) => i);
+    const unrevealed = allPositions.filter(
+      (p) => !s2.revealedPositions.includes(p),
+    );
+    expect(unrevealed.sort()).toEqual([0, 5, 8, 11, 14, 15, 18].sort());
+
+    // Step 3: Tick timer partially (10 seconds elapsed)
+    const s3 = gameReducer(s2, { type: "BONUS_TICK", dtMs: 10000 });
+    expect(s3.turnState).toBe("BONUS_SOLVE_TIMER");
+    expect(s3.bonusTimerMs).toBe(10000);
+    expect(s3.roundResult).toBeNull();
+
+    // Step 4: Correct solve — round over as win
+    const s4 = gameReducer(s3, {
+      type: "BONUS_SOLVE_ATTEMPT",
+      phrase: "PRACTICE MAKES PERFECT",
+    });
+    expect(s4.turnState).toBe("ROUND_OVER");
+    expect(s4.roundResult).toBe("win");
+    expect(s4.revealedPositions.sort()).toEqual(allPositions.sort());
+  });
+
+  it("simulation: start → RSTLNE → pick letters → timer expiry → loss", () => {
+    const puzzle = makeBonusPuzzle();
+
+    // Step 1: Start round
+    const s1 = startBonusRound(puzzle);
+    expect(s1.turnState).toBe("BONUS_PICKING");
+
+    // Step 2: Choose letters
+    const s2 = gameReducer(s1, {
+      type: "BONUS_CHOOSE_LETTERS",
+      consonants: ["C", "D", "M"],
+      vowel: "A",
+    });
+    expect(s2.turnState).toBe("BONUS_SOLVE_TIMER");
+    expect(s2.bonusTimerMs).toBe(20000);
+
+    // Step 3: Tick timer in increments toward expiry
+    const s3a = gameReducer(s2, { type: "BONUS_TICK", dtMs: 8000 });
+    expect(s3a.bonusTimerMs).toBe(12000);
+    expect(s3a.turnState).toBe("BONUS_SOLVE_TIMER");
+
+    const s3b = gameReducer(s3a, { type: "BONUS_TICK", dtMs: 7000 });
+    expect(s3b.bonusTimerMs).toBe(5000);
+    expect(s3b.turnState).toBe("BONUS_SOLVE_TIMER");
+
+    // Step 4: Final tick pushes timer to 0 — round over as loss
+    const s4 = gameReducer(s3b, { type: "BONUS_TICK", dtMs: 5000 });
+    expect(s4.bonusTimerMs).toBe(0);
+    expect(s4.turnState).toBe("ROUND_OVER");
+    expect(s4.roundResult).toBe("loss");
+
+    // All positions revealed on expiry
+    const allPositions = Array.from({ length: puzzle.phrase.length }, (_, i) => i);
+    expect(s4.revealedPositions.sort()).toEqual(allPositions.sort());
+
+    // Step 5: Further ticks and solves are no-ops
+    const s5a = gameReducer(s4, { type: "BONUS_TICK", dtMs: 1000 });
+    expect(s5a).toBe(s4);
+
+    const s5b = gameReducer(s4, {
+      type: "BONUS_SOLVE_ATTEMPT",
+      phrase: "PRACTICE MAKES PERFECT",
+    });
+    expect(s5b).toBe(s4);
+  });
+
+  it("simulation: start → pick letters → wrong solve → retry correct → win", () => {
+    const puzzle = makeBonusPuzzle();
+
+    // Step 1: Start round and pick letters
+    const s1 = startBonusRound(puzzle);
+    const s2 = gameReducer(s1, {
+      type: "BONUS_CHOOSE_LETTERS",
+      consonants: ["C", "D", "M"],
+      vowel: "A",
+    });
+    expect(s2.turnState).toBe("BONUS_SOLVE_TIMER");
+    expect(s2.bonusTimerMs).toBe(20000);
+
+    // Step 2: Tick a bit (3 seconds)
+    const s3 = gameReducer(s2, { type: "BONUS_TICK", dtMs: 3000 });
+    expect(s3.bonusTimerMs).toBe(17000);
+
+    // Step 3: Wrong solve attempt — state unchanged, still in BONUS_SOLVE_TIMER
+    const s4 = gameReducer(s3, {
+      type: "BONUS_SOLVE_ATTEMPT",
+      phrase: "PRACTICE MAKES PROGRESS",
+    });
+    expect(s4).toBe(s3);
+    expect(s4.turnState).toBe("BONUS_SOLVE_TIMER");
+    expect(s4.bonusTimerMs).toBe(17000);
+    expect(s4.roundResult).toBeNull();
+
+    // Step 4: More time passes (5 seconds)
+    const s5 = gameReducer(s4, { type: "BONUS_TICK", dtMs: 5000 });
+    expect(s5.bonusTimerMs).toBe(12000);
+
+    // Step 5: Another wrong solve
+    const s6 = gameReducer(s5, {
+      type: "BONUS_SOLVE_ATTEMPT",
+      phrase: "TOTALLY WRONG",
+    });
+    expect(s6).toBe(s5);
+    expect(s6.turnState).toBe("BONUS_SOLVE_TIMER");
+
+    // Step 6: Correct solve — round over as win
+    const s7 = gameReducer(s6, {
+      type: "BONUS_SOLVE_ATTEMPT",
+      phrase: "PRACTICE MAKES PERFECT",
+    });
+    expect(s7.turnState).toBe("ROUND_OVER");
+    expect(s7.roundResult).toBe("win");
+    // Timer should still show 12000 (frozen at solve time)
+    expect(s7.bonusTimerMs).toBe(12000);
+
+    // All positions revealed
+    const allPositions = Array.from({ length: puzzle.phrase.length }, (_, i) => i);
+    expect(s7.revealedPositions.sort()).toEqual(allPositions.sort());
+  });
+});
