@@ -217,7 +217,7 @@
         "Typecheck passes"
       ],
       "priority": 12,
-      "passes": false,
+      "passes": true,
       "notes": "Timer runs from 20000ms down to 0. bonusTimerMs in state tracks remaining time. Use Animated shake for wrong guess feedback (Reanimated withSequence + withTiming for translateX oscillation)."
     },
     {
@@ -233,7 +233,7 @@
         "Typecheck passes"
       ],
       "priority": 13,
-      "passes": false,
+      "passes": true,
       "notes": "The TOSS_UP_TICK handler from US-003 should already handle large dtMs by revealing one letter at a time. But verify: if dtMs = 5000 and interval = 1000, it should reveal 5 letters. If the current implementation only reveals one per tick call, the handler needs to loop."
     },
     {

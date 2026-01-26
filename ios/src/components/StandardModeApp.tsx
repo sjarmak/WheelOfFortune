@@ -20,6 +20,7 @@ import {
   TouchableOpacity,
   TextInput,
   Dimensions,
+  AppState,
 } from "react-native";
 import { SafeAreaView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -140,6 +141,9 @@ export function StandardModeApp({
   const bonusTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const bonusShakeX = useSharedValue(0);
   const prevBonusTimerSecRef = useRef<number | null>(null);
+
+  // Background/foreground timer catch-up
+  const backgroundTimestampRef = useRef<number | null>(null);
 
   // Trigger confetti + Vanna on successful puzzle solve (or loss feedback for toss-up/bonus)
   useEffect(() => {
@@ -289,6 +293,44 @@ export function StandardModeApp({
       return () => clearTimeout(timer);
     }
   }, [state.turnState]);
+
+  // Background/foreground timer catch-up for TOSSUP and BONUS modes
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "background" || nextAppState === "inactive") {
+        backgroundTimestampRef.current = Date.now();
+        return;
+      }
+
+      if (nextAppState === "active" && backgroundTimestampRef.current !== null) {
+        const elapsed = Date.now() - backgroundTimestampRef.current;
+        backgroundTimestampRef.current = null;
+
+        if (elapsed <= 0) return;
+
+        const { turnState } = state;
+
+        if (
+          selectedRoundMode === "TOSSUP" &&
+          (turnState === "TOSSUP_REVEALING" ||
+            turnState === "TOSSUP_LOCKED_OUT")
+        ) {
+          dispatch({ type: "TOSS_UP_TICK", dtMs: elapsed });
+        }
+
+        if (
+          selectedRoundMode === "BONUS" &&
+          turnState === "BONUS_SOLVE_TIMER"
+        ) {
+          dispatch({ type: "BONUS_TICK", dtMs: elapsed });
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [selectedRoundMode, state.turnState]);
 
   // Load saved state
   useEffect(() => {

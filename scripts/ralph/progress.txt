@@ -27,6 +27,10 @@
 - Only 4 vowels are eligible for bonus picks: A, I, O, U (E is in RSTLNE)
 - BONUS_SOLVE_ATTEMPT returns state unchanged on wrong solve (unlimited retries within timer); TOSS_UP_SOLVE_ATTEMPT triggers lockout on wrong solve
 - BONUS_TICK handler is simple decrement (not a loop like TOSS_UP_TICK) — timer just counts down to 0
+- Bonus solve phase uses inline TextInput (not a modal) — `isBonusSolving` flag gates rendering
+- Reanimated shake animation: `withSequence(withTiming(10, 50), withTiming(-10, 50), ..., withTiming(0, 50))` on a shared value
+- `fontVariant: ['tabular-nums']` prevents layout shift in countdown timer displays
+- Last-N-seconds haptic: use a ref to track previous second, fire haptic only when second boundary crossed
 - Theme `colors.yellow` only has shades 200-500 (no 600) — use `colors.orange[500]/[600]` for gradient pairs
 - `startMode(mode)` in StandardModeApp: sets selectedRoundMode, filters puzzles via getPuzzlesForMode, overrides puzzle round_type, and navigates to game — single callback for mode selection
 - Theme `colors.orange` only has 500/600/700 (no 400) — use 500 for text. `colors.slate` only has 400-900 (no 300)
@@ -40,6 +44,7 @@
 - `isBonusMode` flag (`selectedRoundMode === 'BONUS'`) used for bonus-specific round over text and hiding standard game controls
 - Bonus picking local state: `bonusSelectedConsonants[]` (max 3) and `bonusSelectedVowel` (null or string) — cleared on nextRound and on confirm
 - RSTLNE letters are already in `state.guessedLetters` after START_ROUND for BONUS — no need to build a separate disabled list
+- AppState.addEventListener returns a subscription with .remove() — use in useEffect cleanup for background/foreground handling
 
 # Ralph Progress Log
 Started: Sun Jan 26 2026 — Toss-Up & Bonus Round Modes
@@ -221,4 +226,46 @@ Started: Sun Jan 26 2026 — Toss-Up & Bonus Round Modes
   - Bonus picking is a separate rendering branch from toss-up and standard — uses isBonusPicking (mode + turnState) as gate
   - bonusSolveArea is a placeholder for US-012 — renders when isBonusMode but not isBonusPicking and not isRoundOver
   - Typecheck passes, all 299 tests pass (no new tests needed — UI story)
+---
+
+## 2026-01-26 - US-012
+- Implemented Bonus Round timed solve phase in StandardModeApp.tsx
+- Added bonus tick interval (setInterval at ~33ms with Date.now() delta tracking, same pattern as toss-up)
+- Added large countdown timer display (seconds with tenths, e.g. "15.3") using tabular-nums font variant
+- Timer text turns red when <= 5 seconds remaining
+- Added TextInput for solve attempt (always visible, not in modal) with adjacent SOLVE button
+- onSubmitEditing wired to handleBonusSolve for keyboard submit support
+- Wrong guess: Reanimated shake animation (withSequence of translateX oscillations), error haptic, input cleared
+- Last 5 seconds: heavy haptic on each second tick (tracks previous second to fire once per second)
+- Round over (win/loss) handled by existing celebration effect — bonusSolveInput cleared
+- Timer interval cleared on unmount and when turnState changes away from BONUS_SOLVE_TIMER
+- Focus auto-set to TextInput 400ms after entering BONUS_SOLVE_TIMER state
+- Added `isBonusSolving` flag for clean conditional rendering
+- Fallback branch for isBonusMode (non-picking, non-solving, non-round-over) still exists for safety
+- Files changed: ios/src/components/StandardModeApp.tsx
+- **Learnings for future iterations:**
+  - `withSequence` from Reanimated: chain multiple `withTiming` calls for shake effect (translateX: 10, -10, 10, -10, 0)
+  - `fontVariant: ['tabular-nums']` in React Native ensures monospaced digits for countdown timer (no layout shift)
+  - Bonus timer haptic warning uses a ref to track previous second — fire haptic only when second changes AND <= 5
+  - `bonusShakeX` shared value used in `useAnimatedStyle` for the input row — wrap entire row in Animated.View
+  - `isBonusSolving = isBonusMode && state.turnState === 'BONUS_SOLVE_TIMER'` gates solve phase rendering
+  - Bonus solve does NOT use a modal (unlike toss-up) — TextInput is always visible during timer
+  - Typecheck passes, all 299 tests pass (no new tests needed — UI story)
+---
+
+## 2026-01-26 - US-013
+- Added AppState listener for background/foreground timer catch-up in StandardModeApp.tsx
+- Imported AppState from react-native
+- Added backgroundTimestampRef (useRef<number | null>) to record timestamp on background
+- useEffect with AppState.addEventListener: records Date.now() on background/inactive, dispatches catch-up ticks on active
+- TOSSUP catch-up: dispatches TOSS_UP_TICK with full elapsed ms when in TOSSUP_REVEALING or TOSSUP_LOCKED_OUT
+- BONUS catch-up: dispatches BONUS_TICK with full elapsed ms when in BONUS_SOLVE_TIMER
+- Reducer already handles large dtMs: TOSS_UP_TICK has while loop for multi-reveal (from US-003), BONUS_TICK clamps to 0 on expiry (from US-007)
+- Cleanup: subscription.remove() in useEffect return
+- Files changed: ios/src/components/StandardModeApp.tsx
+- **Learnings for future iterations:**
+  - AppState.addEventListener returns a subscription object with .remove() method — use this for cleanup instead of removeEventListener
+  - useEffect dependencies include selectedRoundMode and state.turnState to ensure the listener reads current state values
+  - No new tests needed — this is a UI integration story. The reducer's large dtMs handling is already tested in tossUpEngine.test.ts and bonusEngine.test.ts
+  - Typecheck passes, all 299 tests pass
 ---
