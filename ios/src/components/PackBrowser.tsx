@@ -735,10 +735,11 @@ const styles = StyleSheet.create({
   filterChipsScroll: {
     marginBottom: spacing[3],
     flexGrow: 0,
+    overflow: "visible",
   },
   filterChipsContent: {
     paddingHorizontal: spacing[4],
-    paddingVertical: spacing[1],
+    paddingVertical: spacing[2],
     gap: spacing[2],
     alignItems: "center",
   },
@@ -747,7 +748,7 @@ const styles = StyleSheet.create({
     borderColor: colors.slate[600],
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing[3],
-    paddingVertical: spacing[1.5],
+    paddingVertical: spacing[2],
     alignSelf: "center",
   },
   filterChipActive: {
@@ -758,7 +759,7 @@ const styles = StyleSheet.create({
     color: colors.slate[400],
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.medium,
-    lineHeight: typography.sizes.sm * 1.3,
+    lineHeight: typography.sizes.sm * 1.5,
   },
   filterChipLabelActive: {
     color: colors.yellow[400],
