@@ -368,75 +368,78 @@ This project is a **Wheel of Fortune practice app** with two game modes:
   - `src/styles/` - Theme configuration (colors, spacing, typography)
 - `data/` - Puzzle packs and game data
 
-### Known Issues & Blockers
+### Resolved Issues (Learnings for Future Agents)
 
-#### Critical: Xcode License Not Agreed (Blocks Native Build)
+#### Reanimated Worklet Boundary (CRITICAL)
 
-When running `npx expo run:ios`:
+**Never pass complex JS objects through `runOnJS()` in Reanimated worklet callbacks.**
 
-**Error:** `You have not agreed to the Xcode license. Please resolve this by running: sudo xcodebuild -license accept`
+The `withTiming` / `withSpring` completion callback runs as a worklet on the UI thread. Complex objects (with string properties, nested objects, etc.) fail to serialize across the worklet-JS boundary, causing silent crashes.
 
-**Root cause:** CocoaPods requires Xcode license agreement before it can run. Without sudo access, this can't be automated.
+```typescript
+// WRONG: Passing complex object through worklet boundary
+rotation.value = withTiming(target, config, (finished) => {
+  if (finished) {
+    runOnJS(callback)(complexObject); // CRASHES - silent serialization failure
+  }
+});
 
-**Solution (requires admin access):**
-```bash
-sudo xcode build -license accept
-# Then run:
-npx expo run:ios
+// CORRECT: Pass primitives (numbers, booleans), look up objects on JS side
+rotation.value = withTiming(target, config, (finished) => {
+  if (finished) {
+    runOnJS(callback)(index); // Pass number, look up object in JS callback
+  }
+});
 ```
 
-**Workaround (no admin needed):**
-- ✅ Use unit tests to validate logic: `npm test` (17 tests all passing)
-- ✅ Validate game reducer thoroughly before native builds
-- ✅ Test web version once logic is proven: `cd ../app && npm run dev`
+Also applies to `clearInterval` — wrap it in a named callback rather than passing native builtins directly to `runOnJS`.
 
-**Resolved issue (was blocking):**
-- ✅ ~~Worklets Version Mismatch~~ - Fixed by upgrading react-native-reanimated to 4.1.1
-- ✅ Package versions now aligned with Expo SDK 54
-- ✅ expo-dev-client installed as fallback
+#### SVG Text Rendering: Use TextPath for Radial Text
 
-#### Design: Standard Wheel Component
+`react-native-svg` supports `<TextPath>` for text along a path, matching the web SVG approach:
 
-[StandardWheel.tsx](file:///Users/sjarmak/WheelOfFortune/ios/src/components/StandardWheel.tsx)
+1. Define invisible radial paths in `<Defs>` (outer edge to inner edge along wedge midline)
+2. Render text using `<TextPath href="#path-id">` with `startOffset="50%"` for centering
+3. Use `<TSpan textAnchor="middle">` for horizontal centering on the path
+4. Use smaller font for long labels (BANKRUPT, LOSE A TURN, FREE PLAY)
 
-- Uses `react-native-svg` for 24-wedge wheel rendering (no animations, just rotation)
-- Uses `react-native-reanimated` for smooth spin animation (Animated.View)
-- Gesture handling with `react-native-gesture-handler` (swipe to spin)
-- Haptic feedback for spin results and tick sounds during spin
+This produces radially-oriented text identical to the web version.
 
-**Important:** The wheel SVG is deterministic (not animated individually). Only the entire wheel container rotates.
+#### Modal TextInput Focus
 
-### Next Agent Instructions
+`ScrollView` inside modals must have `keyboardShouldPersistTaps="handled"` or `TextInput` children won't receive focus/taps. This is a common React Native gotcha.
 
-When working on the iOS Standard Mode port:
+### Running the App
 
-1. **Check running status first:**
-   ```bash
-   cd ios && npx expo start --clear
-   ```
-   If you see "runtime not ready" error → See "Known Issues & Blockers" above
+```bash
+cd ios && npx expo start --clear
+```
 
-2. **If you can't run the app:** Try custom dev client:
-   ```bash
-   npx expo run:ios --dev-client
-   ```
+- Scan QR with Expo Go on physical device, or press `i` for iOS Simulator
+- If Xcode license error: `sudo xcodebuild -license accept`
+- Dev client fallback: `npx expo run:ios --device`
+- Unit tests: `cd ios && npx vitest run` (17 tests passing)
 
-3. **Reference the web version** (`app/src/App.tsx`) for:
-   - Game logic patterns (already ported to `ios/src/engine/game.ts`)
-   - UI/UX flow (you may need to adapt for mobile)
-   - Test examples (web app doesn't have tests yet, but logic is proven)
+### Architecture: Standard Wheel Component
 
-4. **Focus areas for next work:**
-   - ✅ Game reducer logic (fully ported from web)
-   - ✅ Wheel component (working in isolation)
-   - ❓ Integration testing (can't verify without running app)
-   - ❓ iOS-specific optimizations (once app runs)
-   - ❓ Kid Mode port (lower priority, web version exists)
+`StandardWheel.tsx` — 24-wedge wheel with spin animation:
 
-5. **Testing:** Currently cannot run tests due to runtime issues. Once the app runs:
-   ```bash
-   npm test  # (when test suite is configured)
-   ```
+- `react-native-svg` for wedge rendering (deterministic SVG, not animated)
+- `react-native-reanimated` for smooth 4-second spin (Animated.View rotation)
+- `react-native-gesture-handler` for swipe-to-spin gesture
+- `expo-haptics` for tick sounds during spin, result feedback on completion
+- Radial text via `<Defs>` + `<TextPath>` (matches web version)
+
+The wheel SVG is static. Only the entire `AnimatedView` container rotates.
+
+### Next Agent: Focus Areas
+
+- ✅ Game reducer logic (fully ported, 17 tests passing)
+- ✅ Wheel rendering with radial text (matches web version)
+- ✅ Spin animation with haptics (crash fixed)
+- ✅ Solve puzzle modal (TextInput focus fixed)
+- ✅ Project renamed to "WoF Practice" / `com.wofpractice.standard`
+- Reference web version at `app/src/App.tsx` for UI/UX patterns
 
 ## Agent Best Practices
 

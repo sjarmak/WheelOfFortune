@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Wheel of Fortune",
-    "slug": "wheel-of-fortune",
+    "name": "WoF Practice",
+    "slug": "wof-practice",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.wheeloffortune.kids",
+      "bundleIdentifier": "com.wofpractice.standard",
       "buildNumber": "1",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "This app does not use the microphone.",
@@ -26,7 +26,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#581c87"
       },
-      "package": "com.wheeloffortune.kids"
+      "package": "com.wofpractice.standard"
     },
     "plugins": [
       [
@@ -38,7 +38,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "wheel-of-fortune-kids"
+        "projectId": "wof-practice-standard"
       }
     }
   }

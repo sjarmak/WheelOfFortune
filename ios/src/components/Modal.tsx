@@ -9,7 +9,7 @@ import {
   Modal as RNModal,
   View,
   StyleSheet,
-  TouchableWithoutFeedback,
+  Pressable,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -50,37 +50,34 @@ export function Modal({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <TouchableWithoutFeedback
+        <Pressable
+          style={styles.backdrop}
           onPress={closeOnBackdrop ? onClose : undefined}
         >
-          <View style={styles.backdrop}>
-            <TouchableWithoutFeedback>
-              <View style={[styles.container, { maxHeight: maxHeight as number }]}>
-                {(title || showCloseButton) && (
-                  <View style={styles.header}>
-                    {title && <Text style={styles.title}>{title}</Text>}
-                    {showCloseButton && (
-                      <TouchableOpacity
-                        onPress={onClose}
-                        style={styles.closeButton}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        <X size={24} color={colors.slate[400]} />
-                      </TouchableOpacity>
-                    )}
-                  </View>
+          <Pressable style={[styles.container, { maxHeight: maxHeight as number }]}>
+            {(title || showCloseButton) && (
+              <View style={styles.header}>
+                {title && <Text style={styles.title}>{title}</Text>}
+                {showCloseButton && (
+                  <TouchableOpacity
+                    onPress={onClose}
+                    style={styles.closeButton}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <X size={24} color={colors.slate[400]} />
+                  </TouchableOpacity>
                 )}
-                <ScrollView
-                  style={styles.content}
-                  contentContainerStyle={styles.contentContainer}
-                  showsVerticalScrollIndicator={false}
-                >
-                  {children}
-                </ScrollView>
               </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
+            )}
+            <ScrollView
+              contentContainerStyle={styles.contentContainer}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              {children}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
       </KeyboardAvoidingView>
     </RNModal>
   );
@@ -123,9 +120,6 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: spacing[1],
     marginLeft: spacing[2],
-  },
-  content: {
-    flex: 1,
   },
   contentContainer: {
     padding: spacing[4],
