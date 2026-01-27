@@ -35,14 +35,18 @@ export const DRESS_COLOR = '#DC2626';
 export const DRESS_STRIPE_COLOR = 'rgba(255, 255, 255, 0.4)';
 export const FLESH_COLOR = '#FEF08A';
 export const SHOE_COLOR = '#1F2937';
-export const SPARKLE_COLOR = '#FFD700';
+
+// Celebration constants
+export const CONFETTI_COLORS = ['#EF4444', '#3B82F6', '#EAB308', '#22C55E', '#D946EF', '#06B6D4'];
+export const FIREWORK_COLORS = ['#EF4444', '#3B82F6', '#EAB308', '#22C55E', '#D946EF'];
+
+export const CONFETTI_COUNT = 20;
+export const FIREWORK_COUNT = 5;
+export const FIREWORK_DURATION = 400; // ms
 
 // Animation timing constants
 export const DANCE_FRAME_TIME = 120; // ms per frame during dance
 export const FRAME_COUNT = 4;
-export const SPARKLE_COUNT = 6;
-export const SPARKLE_DURATION = 600; // ms
-export const SPARKLE_RADIUS = 20; // px from center
 
 // Base pixel size for 8-bit scaling
 export const PIXEL = 3;
@@ -85,37 +89,43 @@ export function getLimbOffset(
 }
 
 /**
- * Calculate sparkle position for a given index.
- * 6 sparkles evenly distributed in a circle.
+ * Get configuration for a confetti particle based on its index.
+ * Returns deterministic pseudo-random values for visual variety.
  */
-export function calculateSparkleAngle(index: number): number {
-  return (index / SPARKLE_COUNT) * Math.PI * 2;
+export function getConfettiConfig(index: number) {
+  // Pseudo-random based on index
+  const r1 = (index * 13 + 7) % 100 / 100;
+  const r2 = (index * 29 + 3) % 100 / 100;
+  const r3 = (index * 47 + 11) % 100 / 100;
+  
+  return {
+    color: CONFETTI_COLORS[index % CONFETTI_COLORS.length],
+    startX: (r1 * 60) - 30, // -30 to 30 spread
+    startY: -30 - (r2 * 20), // -30 to -50
+    endY: 20 + (r2 * 60), // 20 to 80
+    drift: (r3 * 20) - 10, // -10 to +10
+    rotation: r1 * 360,
+    delay: r3 * 0.2 // 0 to 0.2s delay
+  };
 }
 
 /**
- * Calculate sparkle x/y position from angle and progress.
+ * Get configuration for a firework burst based on its index.
  */
-export function calculateSparklePosition(
-  angle: number,
-  progress: number,
-  delay: number,
-): { x: number; y: number; opacity: number; scale: number } {
-  const adjustedProgress = Math.max(0, Math.min(1, progress - delay));
-  const x = Math.cos(angle) * SPARKLE_RADIUS * adjustedProgress;
-  const y = Math.sin(angle) * SPARKLE_RADIUS * adjustedProgress;
-
-  // Opacity fades from 1 to 0 over the animation
-  const opacity = adjustedProgress <= 0.5
-    ? 1 - adjustedProgress * 0.4
-    : 0.8 - (adjustedProgress - 0.5) * 1.6;
-
-  // Scale pulses up then shrinks to 0
-  let scale: number;
-  if (adjustedProgress <= 0.3) {
-    scale = 1 + adjustedProgress * (0.2 / 0.3);
-  } else {
-    scale = 1.2 * (1 - (adjustedProgress - 0.3) / 0.7);
-  }
-
-  return { x, y, opacity: Math.max(0, opacity), scale: Math.max(0, scale) };
+export function getFireworkConfig(index: number) {
+  // Pseudo-random based on index
+  const r1 = (index * 17 + 5) % 100 / 100;
+  const r2 = (index * 31 + 13) % 100 / 100;
+  
+  // Position around character (radius 20-35)
+  const angle = (index / FIREWORK_COUNT) * Math.PI * 2 + (r1 * 1);
+  const radius = 25 + (r2 * 10);
+  
+  return {
+    color: FIREWORK_COLORS[index % FIREWORK_COLORS.length],
+    x: Math.cos(angle) * radius,
+    y: Math.sin(angle) * radius,
+    delay: index * 0.15, // Staggered
+    scale: 0.5 + (r1 * 0.5)
+  };
 }

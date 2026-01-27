@@ -7,17 +7,19 @@ import {
   DRESS_COLOR,
   FLESH_COLOR,
   SHOE_COLOR,
-  SPARKLE_COLOR,
   PIXEL,
   DANCE_FRAME_TIME,
   FRAME_COUNT,
-  SPARKLE_COUNT,
-  SPARKLE_RADIUS,
+  CONFETTI_COUNT,
+  FIREWORK_COUNT,
+  FIREWORK_DURATION,
+  CONFETTI_COLORS,
+  FIREWORK_COLORS,
   calculateDanceBounce,
   getFrameIndex,
   getLimbOffset,
-  calculateSparkleAngle,
-  calculateSparklePosition,
+  getConfettiConfig,
+  getFireworkConfig,
 } from '../engine/vannaAnimation';
 
 describe('vannaAnimation', () => {
@@ -94,10 +96,6 @@ describe('vannaAnimation', () => {
     it('shoes are dark (#1F2937)', () => {
       expect(SHOE_COLOR).toBe('#1F2937');
     });
-
-    it('sparkles are gold (#FFD700)', () => {
-      expect(SPARKLE_COLOR).toBe('#FFD700');
-    });
   });
 
   describe('animation constants', () => {
@@ -114,12 +112,24 @@ describe('vannaAnimation', () => {
       expect(DANCE_FRAME_TIME).toBe(120);
     });
 
-    it('SPARKLE_COUNT is 6', () => {
-      expect(SPARKLE_COUNT).toBe(6);
+    it('CONFETTI_COUNT is 20', () => {
+      expect(CONFETTI_COUNT).toBe(20);
     });
 
-    it('SPARKLE_RADIUS is 20px', () => {
-      expect(SPARKLE_RADIUS).toBe(20);
+    it('FIREWORK_COUNT is 5', () => {
+      expect(FIREWORK_COUNT).toBe(5);
+    });
+
+    it('FIREWORK_DURATION is 400ms', () => {
+      expect(FIREWORK_DURATION).toBe(400);
+    });
+
+    it('CONFETTI_COLORS has 6 colors', () => {
+      expect(CONFETTI_COLORS).toHaveLength(6);
+    });
+
+    it('FIREWORK_COLORS has 5 colors', () => {
+      expect(FIREWORK_COLORS).toHaveLength(5);
     });
   });
 
@@ -142,7 +152,6 @@ describe('vannaAnimation', () => {
 
     it('produces sinusoidal pattern over full cycle (0→4→0→-4→0)', () => {
       const values = [0, 1, 2, 3, 4].map(calculateDanceBounce);
-      // Frame 0: ~0, Frame 1: ~4, Frame 2: ~0, Frame 3: ~-4, Frame 4: ~0
       expect(values[0]).toBeCloseTo(0, 5);
       expect(values[1]).toBeCloseTo(4, 5);
       expect(values[2]).toBeCloseTo(0, 5);
@@ -152,7 +161,6 @@ describe('vannaAnimation', () => {
 
     it('handles fractional frame progress smoothly', () => {
       const mid = calculateDanceBounce(0.5);
-      // sin(0.5 * PI/2) = sin(PI/4) ≈ 0.707 * 4 ≈ 2.828
       expect(mid).toBeCloseTo(Math.sin(0.5 * Math.PI / 2) * 4, 10);
     });
   });
@@ -208,16 +216,12 @@ describe('vannaAnimation', () => {
     });
 
     it('doubles arm offsets in dance mode', () => {
-      // Frame 0: leftArm = -2, so dance = -2 * 2 = -4
       expect(getLimbOffset(0, 'leftArm', true)).toBe(-4);
-      // Frame 0: rightArm = 1, so dance = 1 * 2 = 2
       expect(getLimbOffset(0, 'rightArm', true)).toBe(2);
     });
 
     it('multiplies leg offsets by 1.5 in dance mode', () => {
-      // Frame 0: leftLeg = -2, so dance = -2 * 1.5 = -3
       expect(getLimbOffset(0, 'leftLeg', true)).toBe(-3);
-      // Frame 0: rightLeg = 1, so dance = 1 * 1.5 = 1.5
       expect(getLimbOffset(0, 'rightLeg', true)).toBe(1.5);
     });
 
@@ -227,96 +231,86 @@ describe('vannaAnimation', () => {
     });
 
     it('handles frame wrapping via getFrameIndex', () => {
-      // Frame 4 wraps to 0
       expect(getLimbOffset(4, 'leftLeg', false)).toBe(getLimbOffset(0, 'leftLeg', false));
     });
   });
 
-  describe('calculateSparkleAngle', () => {
-    it('first sparkle at 0 radians', () => {
-      expect(calculateSparkleAngle(0)).toBeCloseTo(0, 10);
+  describe('getConfettiConfig', () => {
+    it('returns deterministic config for same index', () => {
+      const config1 = getConfettiConfig(5);
+      const config2 = getConfettiConfig(5);
+      expect(config1).toEqual(config2);
     });
 
-    it('sparkles are evenly distributed around the circle', () => {
-      const angles = Array.from({ length: 6 }, (_, i) => calculateSparkleAngle(i));
-      const expectedStep = (Math.PI * 2) / 6;
-
-      for (let i = 1; i < angles.length; i++) {
-        expect(angles[i] - angles[i - 1]).toBeCloseTo(expectedStep, 10);
-      }
+    it('returns different configs for different indices', () => {
+      const config1 = getConfettiConfig(1);
+      const config2 = getConfettiConfig(2);
+      expect(config1).not.toEqual(config2);
     });
 
-    it('last sparkle is just before 2*PI (full circle)', () => {
-      const lastAngle = calculateSparkleAngle(5);
-      expect(lastAngle).toBeCloseTo((5 / 6) * Math.PI * 2, 10);
-      expect(lastAngle).toBeLessThan(Math.PI * 2);
+    it('config has all required fields', () => {
+      const config = getConfettiConfig(0);
+      expect(config).toHaveProperty('color');
+      expect(config).toHaveProperty('startX');
+      expect(config).toHaveProperty('startY');
+      expect(config).toHaveProperty('endY');
+      expect(config).toHaveProperty('drift');
+      expect(config).toHaveProperty('rotation');
+      expect(config).toHaveProperty('delay');
     });
 
-    it('produces 6 unique angles', () => {
-      const angles = Array.from({ length: 6 }, (_, i) => calculateSparkleAngle(i));
-      const unique = new Set(angles.map(a => a.toFixed(6)));
-      expect(unique.size).toBe(6);
+    it('values are within expected ranges', () => {
+      const config = getConfettiConfig(0);
+      
+      expect(config.startX).toBeGreaterThanOrEqual(-30);
+      expect(config.startX).toBeLessThanOrEqual(30);
+
+      expect(config.startY).toBeGreaterThanOrEqual(-50);
+      expect(config.startY).toBeLessThanOrEqual(-30);
+
+      expect(config.endY).toBeGreaterThanOrEqual(20);
+      expect(config.endY).toBeLessThanOrEqual(80);
+
+      expect(config.drift).toBeGreaterThanOrEqual(-10);
+      expect(config.drift).toBeLessThanOrEqual(10);
+
+      expect(config.delay).toBeGreaterThanOrEqual(0);
+      expect(config.delay).toBeLessThanOrEqual(0.2);
     });
   });
 
-  describe('calculateSparklePosition', () => {
-    it('at progress 0 with no delay, position is at center', () => {
-      const pos = calculateSparklePosition(0, 0, 0);
-      expect(pos.x).toBeCloseTo(0, 10);
-      expect(pos.y).toBeCloseTo(0, 10);
+  describe('getFireworkConfig', () => {
+    it('returns deterministic config for same index', () => {
+      const config1 = getFireworkConfig(3);
+      const config2 = getFireworkConfig(3);
+      expect(config1).toEqual(config2);
     });
 
-    it('at full progress, position is at radius along angle', () => {
-      const angle = 0;
-      const pos = calculateSparklePosition(angle, 1, 0);
-      expect(pos.x).toBeCloseTo(SPARKLE_RADIUS, 5);
-      expect(pos.y).toBeCloseTo(0, 5);
+    it('returns different configs for different indices', () => {
+      const config1 = getFireworkConfig(1);
+      const config2 = getFireworkConfig(2);
+      expect(config1).not.toEqual(config2);
     });
 
-    it('at full progress with 90-degree angle, moves in y direction', () => {
-      const angle = Math.PI / 2;
-      const pos = calculateSparklePosition(angle, 1, 0);
-      expect(pos.x).toBeCloseTo(0, 5);
-      expect(pos.y).toBeCloseTo(SPARKLE_RADIUS, 5);
+    it('config has all required fields', () => {
+      const config = getFireworkConfig(0);
+      expect(config).toHaveProperty('color');
+      expect(config).toHaveProperty('x');
+      expect(config).toHaveProperty('y');
+      expect(config).toHaveProperty('delay');
+      expect(config).toHaveProperty('scale');
     });
 
-    it('opacity starts at 1 and ends at 0', () => {
-      const start = calculateSparklePosition(0, 0, 0);
-      const end = calculateSparklePosition(0, 1, 0);
-      expect(start.opacity).toBe(1);
-      expect(end.opacity).toBe(0);
+    it('delay increases with index (staggered)', () => {
+      const config1 = getFireworkConfig(1);
+      const config2 = getFireworkConfig(2);
+      expect(config2.delay).toBeGreaterThan(config1.delay);
     });
 
-    it('scale starts at 1 and ends at 0', () => {
-      const start = calculateSparklePosition(0, 0, 0);
-      const end = calculateSparklePosition(0, 1, 0);
-      expect(start.scale).toBe(1);
-      expect(end.scale).toBe(0);
-    });
-
-    it('delay shifts the animation start', () => {
-      const delay = 0.2;
-      // At progress = delay, sparkle is still at start
-      const atDelay = calculateSparklePosition(0, delay, delay);
-      expect(atDelay.x).toBeCloseTo(0, 5);
-      expect(atDelay.opacity).toBe(1);
-    });
-
-    it('delay does not produce negative progress', () => {
-      // Progress < delay means sparkle hasn't started yet
-      const pos = calculateSparklePosition(0, 0.1, 0.5);
-      expect(pos.x).toBeCloseTo(0, 10);
-      expect(pos.y).toBeCloseTo(0, 10);
-      expect(pos.opacity).toBe(1);
-      expect(pos.scale).toBe(1);
-    });
-
-    it('progress capped at 1 even when progress - delay > 1', () => {
-      const pos = calculateSparklePosition(0, 2.0, 0);
-      // adjustedProgress capped at 1
-      expect(pos.x).toBeCloseTo(SPARKLE_RADIUS, 5);
-      expect(pos.opacity).toBe(0);
-      expect(pos.scale).toBe(0);
+    it('scale is in range 0.5 to 1.0', () => {
+      const config = getFireworkConfig(0);
+      expect(config.scale).toBeGreaterThanOrEqual(0.5);
+      expect(config.scale).toBeLessThanOrEqual(1.0);
     });
   });
 });

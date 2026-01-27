@@ -13,10 +13,10 @@ import Animated, {
   useAnimatedStyle,
   withRepeat,
   withTiming,
+  withDelay,
   cancelAnimation,
   Easing,
   interpolate,
-  SharedValue,
 } from 'react-native-reanimated';
 import {
   WALK_FRAMES,
@@ -27,13 +27,15 @@ import {
   DRESS_STRIPE_COLOR,
   FLESH_COLOR,
   SHOE_COLOR,
-  SPARKLE_COLOR,
   PIXEL,
   DANCE_FRAME_TIME,
   FRAME_COUNT,
-  SPARKLE_COUNT,
-  SPARKLE_DURATION,
-  SPARKLE_RADIUS,
+  CONFETTI_COLORS,
+  CONFETTI_COUNT,
+  FIREWORK_COUNT,
+  FIREWORK_DURATION,
+  getConfettiConfig,
+  getFireworkConfig,
 } from '../engine/vannaAnimation';
 
 interface VannaProps {
@@ -43,9 +45,6 @@ interface VannaProps {
 export function Vanna({ isDancing }: VannaProps): React.JSX.Element {
   // Shared value cycles 0→4 continuously; floor(value) % 4 gives frame index
   const frameProgress = useSharedValue(0);
-
-  // Sparkle radiate-out animation progress (0→1, repeating)
-  const sparkleProgress = useSharedValue(0);
 
   useEffect(() => {
     if (isDancing) {
@@ -59,21 +58,11 @@ export function Vanna({ isDancing }: VannaProps): React.JSX.Element {
         -1,
         false,
       );
-
-      // Sparkle: pulse outward repeatedly
-      sparkleProgress.value = 0;
-      sparkleProgress.value = withRepeat(
-        withTiming(1, { duration: SPARKLE_DURATION, easing: Easing.out(Easing.quad) }),
-        -1,
-        false,
-      );
     } else {
       cancelAnimation(frameProgress);
-      cancelAnimation(sparkleProgress);
       frameProgress.value = 0;
-      sparkleProgress.value = 0;
     }
-  }, [isDancing, frameProgress, sparkleProgress]);
+  }, [isDancing, frameProgress]);
 
   // Dance bounce: vertical sine-wave translateY(sin(frame * PI/2) * 4)
   const bodyStyle = useAnimatedStyle(() => {
@@ -158,41 +147,112 @@ export function Vanna({ isDancing }: VannaProps): React.JSX.Element {
         </View>
       </Animated.View>
 
-      {/* 6 golden sparkles radiating outward during dance */}
-      {isDancing &&
-        Array.from({ length: SPARKLE_COUNT }, (_, i) => (
-          <SparkleView
-            key={`sparkle-${i}`}
-            angle={(i / SPARKLE_COUNT) * Math.PI * 2}
-            delay={i * 0.05}
-            progress={sparkleProgress}
-          />
-        ))}
+      {/* Confetti and Fireworks Animations */}
+      {isDancing && (
+        <>
+          {Array.from({ length: CONFETTI_COUNT }, (_, i) => (
+            <ConfettiView key={`confetti-${i}`} index={i} isDancing={isDancing} />
+          ))}
+          {Array.from({ length: FIREWORK_COUNT }, (_, i) => (
+            <FireworkView key={`firework-${i}`} index={i} isDancing={isDancing} />
+          ))}
+        </>
+      )}
     </View>
   );
 }
 
-// Individual sparkle view that radiates outward with opacity fade
-interface SparkleViewProps {
-  readonly angle: number;
-  readonly delay: number;
-  readonly progress: SharedValue<number>;
+interface CelebrationViewProps {
+  readonly index: number;
+  readonly isDancing: boolean;
 }
 
-function SparkleView({ angle, delay, progress }: SparkleViewProps): React.JSX.Element {
-  const sparkleStyle = useAnimatedStyle(() => {
-    const adjustedProgress = Math.max(0, Math.min(1, progress.value - delay));
-    const x = Math.cos(angle) * SPARKLE_RADIUS * adjustedProgress;
-    const y = Math.sin(angle) * SPARKLE_RADIUS * adjustedProgress;
-    const opacity = interpolate(adjustedProgress, [0, 0.5, 1], [1, 0.8, 0]);
-    const scale = interpolate(adjustedProgress, [0, 0.3, 1], [1, 1.2, 0]);
+function ConfettiView({ index, isDancing }: CelebrationViewProps): React.JSX.Element {
+  const config = getConfettiConfig(index);
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    if (isDancing) {
+      progress.value = 0;
+      progress.value = withDelay(
+        config.delay * 1000, // delay is in seconds in config, withDelay takes ms? Wait, reanimated withDelay usually takes ms.
+        // Checking getConfettiConfig in web: delay: r3 * 0.2 // 0 to 0.2s delay.
+        // Wait, 0.2s is 200ms.
+        // Let's re-check getConfettiConfig in vannaAnimation.ts
+        withTiming(1, { duration: 800, easing: Easing.linear })
+      );
+    } else {
+      cancelAnimation(progress);
+      progress.value = 0;
+    }
+  }, [isDancing, config.delay]);
+
+  const style = useAnimatedStyle(() => {
+    const val = progress.value;
+    const x = interpolate(val, [0, 1], [config.startX, config.startX + config.drift]);
+    const y = interpolate(val, [0, 1], [config.startY, config.endY]);
+    const opacity = interpolate(val, [0, 0.8, 1], [1, 1, 0]);
+    const rotate = interpolate(val, [0, 1], [0, config.rotation]);
+
     return {
-      transform: [{ translateX: x }, { translateY: y }, { scale }],
+      transform: [
+        { translateX: x },
+        { translateY: y },
+        { rotate: `${rotate}deg` }
+      ],
+      opacity,
+      backgroundColor: config.color,
+    };
+  });
+
+  // Note: config.delay is likely small (0-0.2), so treating it as seconds makes sense if passed to standard CSS animation,
+  // but Reanimated withDelay takes milliseconds.
+  // In getConfettiConfig: `delay: r3 * 0.2` (where r3 is 0-1). So max delay is 0.2.
+  // If this is seconds, it is 200ms.
+  // I will multiply by 1000 for withDelay.
+
+  return <Animated.View style={[styles.confetti, style]} />;
+}
+
+function FireworkView({ index, isDancing }: CelebrationViewProps): React.JSX.Element {
+  const config = getFireworkConfig(index);
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    if (isDancing) {
+      progress.value = 0;
+      progress.value = withDelay(
+        config.delay * 1000, // delay is ~0.15 * index. Max index 4 -> 0.6s.
+        withTiming(1, { duration: FIREWORK_DURATION, easing: Easing.out(Easing.quad) })
+      );
+    } else {
+      cancelAnimation(progress);
+      progress.value = 0;
+    }
+  }, [isDancing, config.delay]);
+
+  const style = useAnimatedStyle(() => {
+    const val = progress.value;
+    const x = interpolate(val, [0, 1], [config.x * 0.2, config.x]);
+    const y = interpolate(val, [0, 1], [config.y * 0.2, config.y]);
+    const scale = interpolate(val, [0, 1], [0, config.scale]);
+    const opacity = interpolate(val, [0, 0.5, 1], [1, 1, 0]);
+
+    return {
+      transform: [
+        { translateX: x },
+        { translateY: y },
+        { scale }
+      ],
       opacity,
     };
   });
 
-  return <Animated.View style={[styles.sparkle, sparkleStyle]} />;
+  return (
+    <Animated.View style={[styles.fireworkContainer, style]}>
+       <View style={[styles.fireworkStar, { backgroundColor: config.color }]} />
+    </Animated.View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -286,16 +346,28 @@ const styles = StyleSheet.create({
     height: PIXEL,
     backgroundColor: SHOE_COLOR,
   },
-  // Sparkle: golden circle
-  sparkle: {
+  // Confetti: small colored rectangle
+  confetti: {
     position: 'absolute',
-    width: 6,
+    width: 4,
     height: 6,
-    borderRadius: 3,
-    backgroundColor: SPARKLE_COLOR,
     top: '50%',
     left: '50%',
     marginTop: -3,
-    marginLeft: -3,
+    marginLeft: -2,
+  },
+  // Firework container: centers the star
+  fireworkContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Firework star: rotated square
+  fireworkStar: {
+    width: 8,
+    height: 8,
+    transform: [{ rotate: '45deg' }],
   },
 });

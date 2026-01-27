@@ -44,6 +44,41 @@ interface VannaHandProps {
 const DEFAULT_HAIR_COLOR = '#FACC15'; // yellow-400
 const DEFAULT_DRESS_COLOR = '#DC2626'; // red-600
 
+// Celebration constants
+const CONFETTI_COLORS = ['#EF4444', '#3B82F6', '#EAB308', '#22C55E', '#D946EF', '#06B6D4'];
+const FIREWORK_COLORS = ['#EF4444', '#3B82F6', '#EAB308', '#22C55E', '#D946EF'];
+const CONFETTI_COUNT = 20;
+const FIREWORK_COUNT = 5;
+
+const getConfettiConfig = (index: number) => {
+  const r1 = (index * 13 + 7) % 100 / 100;
+  const r2 = (index * 29 + 3) % 100 / 100;
+  const r3 = (index * 47 + 11) % 100 / 100;
+  return {
+    color: CONFETTI_COLORS[index % CONFETTI_COLORS.length],
+    startX: (r1 * 60) - 30, // -30 to 30 spread
+    startY: -30 - (r2 * 20), // -30 to -50
+    endY: 20 + (r2 * 60), // 20 to 80
+    drift: (r3 * 20) - 10, // -10 to +10
+    rotation: r1 * 360,
+    delay: r3 * 0.2 // 0 to 0.2s delay
+  };
+};
+
+const getFireworkConfig = (index: number) => {
+  const r1 = (index * 17 + 5) % 100 / 100;
+  const r2 = (index * 31 + 13) % 100 / 100;
+  const angle = (index / FIREWORK_COUNT) * Math.PI * 2 + (r1 * 1);
+  const radius = 25 + (r2 * 10);
+  return {
+    color: FIREWORK_COLORS[index % FIREWORK_COLORS.length],
+    x: Math.cos(angle) * radius,
+    y: Math.sin(angle) * radius,
+    delay: index * 0.15, // Staggered
+    scale: 0.5 + (r1 * 0.5)
+  };
+};
+
 const VannaHand: React.FC<VannaHandProps> = ({
   isAnimating,
   facing = 'front',
@@ -84,16 +119,6 @@ const VannaHand: React.FC<VannaHandProps> = ({
         transition: 'transform 0.15s ease-out'
       }}
     >
-      {/* Sparkle burst - only when animating */}
-      {isAnimating && (
-        <motion.div
-          initial={{ scale: 0, opacity: 1 }}
-          animate={{ scale: 1.5, opacity: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400"
-          style={{ filter: 'blur(8px)' }}
-        />
-      )}
 
       {/* 8-bit Pixelated Woman Character */}
       <div className="absolute inset-0 flex items-center justify-center">
@@ -214,41 +239,37 @@ const VannaHand: React.FC<VannaHandProps> = ({
           </div>
         )}
 
-        {/* Sparkles - only when animating */}
+        {/* Celebration Effects - Confetti & Fireworks */}
         {isAnimating && (
           <>
-            {[...Array(6)].map((_, i) => {
-              const angle = (i / 6) * Math.PI * 2;
-              const x = Math.cos(angle) * 20;
-              const y = Math.sin(angle) * 20;
+            {/* Confetti */}
+            {[...Array(CONFETTI_COUNT)].map((_, i) => {
+              const config = getConfettiConfig(i);
               return (
                 <motion.div
-                  key={`sparkle-${i}`}
-                  initial={{ 
-                    x: 0, 
-                    y: 0,
-                    opacity: 1,
-                    scale: 1
-                  }}
-                  animate={{ 
-                    x,
-                    y,
-                    opacity: 0,
-                    scale: 0
-                  }}
-                  transition={{ 
-                    duration: 0.6,
-                    ease: "easeOut",
-                    delay: i * 0.05
-                  }}
-                  className="absolute top-1/2 left-1/2 w-1.5 h-1.5 rounded-full shadow-md"
-                  style={{
-                    backgroundColor: '#FFD700',
-                    marginLeft: '-3px',
-                    marginTop: '-3px',
-                    boxShadow: '0 0 4px #FFD700'
-                  }}
+                  key={`confetti-${i}`}
+                  initial={{ x: config.startX, y: config.startY, opacity: 1, rotate: 0 }}
+                  animate={{ x: config.startX + config.drift, y: config.endY, opacity: 0, rotate: config.rotation }}
+                  transition={{ duration: 0.8, ease: "linear", delay: config.delay }}
+                  className="absolute top-0 left-1/2 w-1 h-1.5"
+                  style={{ backgroundColor: config.color }}
                 />
+              );
+            })}
+
+            {/* Fireworks */}
+            {[...Array(FIREWORK_COUNT)].map((_, i) => {
+              const config = getFireworkConfig(i);
+              return (
+                <motion.div
+                  key={`firework-${i}`}
+                  initial={{ x: config.x * 0.2, y: config.y * 0.2, opacity: 1, scale: 0 }}
+                  animate={{ x: config.x, y: config.y, opacity: 0, scale: config.scale }}
+                  transition={{ duration: 0.4, ease: "easeOut", delay: config.delay }}
+                  className="absolute top-1/2 left-1/2"
+                >
+                  <div className="w-2 h-2 rotate-45" style={{ backgroundColor: config.color }} />
+                </motion.div>
               );
             })}
           </>
