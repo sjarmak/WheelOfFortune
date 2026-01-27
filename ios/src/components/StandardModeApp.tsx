@@ -22,6 +22,8 @@ import {
   ScrollView,
   Dimensions,
   AppState,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -1124,7 +1126,11 @@ export function StandardModeApp(): React.JSX.Element {
                 </TouchableOpacity>
               </View>
             ) : isBonusSolving ? (
-              <View style={styles.bonusSolveArea}>
+              <KeyboardAvoidingView
+                style={styles.bonusSolveArea}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={120}
+              >
                 {/* Bonus Round timed solve phase */}
                 <View style={styles.bonusBanner}>
                   <Text style={styles.bonusBannerTitle}>BONUS ROUND</Text>
@@ -1145,7 +1151,29 @@ export function StandardModeApp(): React.JSX.Element {
                   </Text>
                   <Text style={styles.bonusTimerLabel}>SECONDS</Text>
                 </View>
-              </View>
+
+                {/* Solve input with shake animation */}
+                <Animated.View
+                  style={[styles.bonusSolveInputRow, bonusSolveShakeStyle]}
+                >
+                  <TextInput
+                    ref={bonusSolveInputRef}
+                    style={styles.bonusSolveInput}
+                    value={bonusSolveInput}
+                    onChangeText={setBonusSolveInput}
+                    placeholder="Type your answer..."
+                    placeholderTextColor={colors.slate[400]}
+                    autoCapitalize="characters"
+                    onSubmitEditing={handleBonusSolve}
+                    returnKeyType="go"
+                  />
+                  <TouchableOpacity onPress={handleBonusSolve}>
+                    <View style={styles.bonusSolveButton}>
+                      <Text style={styles.bonusSolveButtonText}>SOLVE</Text>
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+              </KeyboardAvoidingView>
             ) : isBonusMode ? (
               <View style={styles.bonusSolveArea}>
                 <View style={styles.bonusBanner}>
@@ -1336,47 +1364,6 @@ export function StandardModeApp(): React.JSX.Element {
               <Text style={styles.cancelButton}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleTossUpSolve}>
-              <View style={styles.solveButton}>
-                <Text style={styles.solveButtonText}>SOLVE</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </Modal>
-
-        {/* Bonus Round Solve Modal */}
-        <Modal
-          visible={isBonusSolving}
-          onClose={() => {}}
-          title="Solve the Puzzle"
-          showCloseButton={false}
-          closeOnBackdrop={false}
-        >
-          <View style={styles.bonusModalTimerContainer}>
-            <Text
-              style={[
-                styles.bonusModalTimerText,
-                bonusTimerIsLow && styles.bonusTimerTextLow,
-              ]}
-            >
-              {bonusTimerDisplay}
-            </Text>
-            <Text style={styles.bonusTimerLabel}>SECONDS</Text>
-          </View>
-          <Animated.View style={bonusSolveShakeStyle}>
-            <TextInput
-              ref={bonusSolveInputRef}
-              style={styles.solveInput}
-              value={bonusSolveInput}
-              onChangeText={setBonusSolveInput}
-              placeholder="Type your answer..."
-              placeholderTextColor={colors.slate[400]}
-              autoCapitalize="characters"
-              onSubmitEditing={handleBonusSolve}
-              returnKeyType="go"
-            />
-          </Animated.View>
-          <View style={styles.modalButtons}>
-            <TouchableOpacity onPress={handleBonusSolve}>
               <View style={styles.solveButton}>
                 <Text style={styles.solveButtonText}>SOLVE</Text>
               </View>
@@ -2069,17 +2056,6 @@ const styles = StyleSheet.create({
     color: colors.slate[400],
     fontSize: typography.sizes.xs,
     letterSpacing: 2,
-  },
-  bonusModalTimerContainer: {
-    alignItems: "center",
-    gap: spacing[1],
-    marginBottom: spacing[4],
-  },
-  bonusModalTimerText: {
-    color: colors.white,
-    fontSize: typography.sizes["4xl"],
-    fontWeight: typography.weights.bold,
-    fontVariant: ["tabular-nums"],
   },
   bonusSolveInputRow: {
     flexDirection: "row",
