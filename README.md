@@ -1,78 +1,58 @@
-# Wheel Practice App & Pipeline
+# Wheel Practice App
 
-A professional-grade, mobile-first Wheel of Fortune practice application with a robust data ingestion pipeline.
+A Wheel of Fortune practice app built with React Native and Expo.
 
 ## Features
 
-- **Mobile-First UI**: Optimized for iPhone Safari with touch targets and safe area handling.
+- **Three Game Modes**: Standard Game (spin the wheel), Toss-Up (buzz in to solve), Bonus Round (pick letters, beat the clock).
+- **Real TV Show Puzzles**: Puzzle packs from Seasons 1-42 with accurate round type labels (MAIN, TOSSUP, BONUS).
 - **Seeded Determinism**: Repeatable games for practice or competitions.
 - **Data Pipeline**: Ingests Kaggle CSVs, text files, and custom JSON to create puzzle packs.
-- **Game Modes**: Main Game, Toss-Up (auto-reveal), and Bonus Round (RSTLNE auto-reveal).
 - **Privacy First**: Local storage only. No tracking.
-- **Legal Safe**: Ships with original, non-infringing puzzles. User can import their own data.
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
-- pnpm or npm
+- Expo CLI (`npx expo`)
+- Xcode (for iOS Simulator) or Expo Go on a physical device
 
 ### Running the App
 
-1. Navigate to `app/`:
-   ```bash
-   cd app
-   npm install
-   npm run dev
-   ```
-2. Open `http://localhost:5173` (or port shown).
+```bash
+cd ios && npx expo start --clear
+```
+
+- Scan QR with Expo Go on physical device, or press `i` for iOS Simulator
+- If Xcode license error: `sudo xcodebuild -license accept`
+- Dev client fallback: `npx expo run:ios --device`
 
 ### Using the Pipeline
 
-The pipeline allows you to create puzzle packs from raw text or CSV files.
+The pipeline creates puzzle packs from raw text or CSV files.
 
-1. Navigate to `pipeline/`:
-   ```bash
-   cd pipeline
-   npm install
-   ```
-2. Run the ingestion script:
-   ```bash
-   # Ingest a simple text file (Format: "CATEGORY: PHRASE")
-   npm run ingest -- -i ../data/raw/puzzles.txt -n "My Pack" -o ../data/packs/my_pack.json
-
-   # Ingest a Kaggle CSV
-   npm run ingest -- -i path/to/kaggle.csv -n "Kaggle Import" -o ../data/packs/kaggle.json
-   ```
-
-3. Import the generated JSON file in the App settings.
-
-### File Formats
-
-**Text File (.txt)**
+```bash
+cd pipeline
+npm install
+npm run ingest -- -i ../data/raw/puzzles.txt -n "My Pack" -o ../data/packs/my_pack.json
 ```
-PHRASE: HELLO WORLD
-THING: REACT COMPONENT
-BONUS: RSTLNE GIVEN
-```
-
-**Kaggle CSV**
-Expected columns (flexible): `category`, `phrase` (or `answer`), `round`.
 
 ## Architecture
 
-- **App**: Vite + React + TypeScript + Zustand/Reducer + TailwindCSS.
+- **iOS App**: React Native + Expo + TypeScript + Reanimated + react-native-svg.
 - **Pipeline**: Node.js + TypeScript + CSV Parse + Zod.
 - **Engine**: Pure functional game logic with seeded RNG (Mulberry32).
 
 ## Testing
 
-Run unit tests for the game engine:
 ```bash
-cd app
-npm run test
+cd ios && npx vitest run
 ```
+
+## Archive
+
+The original web version (React + Tailwind CSS) is preserved in `archive/web-app/` for historical reference.
 
 ## License
 

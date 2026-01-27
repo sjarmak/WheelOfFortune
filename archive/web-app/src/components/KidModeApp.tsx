@@ -49,7 +49,6 @@ import {
   Music,
   TrendingUp
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { StrategyDashboard } from './StrategyDashboard';
 import { analyzePuzzlePack } from '../engine/strategyAnalytics';
 
@@ -208,14 +207,6 @@ export const KidModeApp: React.FC<KidModeAppProps> = ({ onModeChange }) => {
   // Handle round over
   useEffect(() => {
     if (state.turnState === 'ROUND_OVER') {
-      // Celebrate!
-      confetti({
-        particleCount: 150,
-        spread: 100,
-        origin: { y: 0.6 },
-        colors: ['#FFD700', '#FF69B4', '#00CED1', '#98FB98']
-      });
-
       if (settings.readAloud && isTTSAvailable()) {
         speakCelebration(state.kidState.starsThisRound);
       }

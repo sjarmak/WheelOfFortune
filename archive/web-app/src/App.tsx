@@ -10,7 +10,6 @@ import { ALL_PACKS, PuzzlePack } from './engine/packs';
 import { DEFAULT_PUZZLES } from './engine/defaultPack';
 import { VOWELS, WheelWedge, GameMode } from './engine/types';
 import { Settings as SettingsIcon, RotateCcw, X, Eye, EyeOff, Library, TrendingUp } from 'lucide-react';
-import confetti from 'canvas-confetti';
 import { StrategyDashboard } from './components/StrategyDashboard';
 import { analyzePuzzlePack } from './engine/strategyAnalytics';
 
@@ -289,7 +288,6 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
     
     // Easter egg: "MAGNIFICENT SUNSET"
     if (solveInput.toUpperCase() === 'MAGNIFICENT SUNSET') {
-      confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
       setShowSunsetEasterEgg(true);
       setSolveInput('');
       setShowSolveModal(false);
@@ -308,7 +306,6 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
 
   useEffect(() => {
     if (state.turnState === 'ROUND_OVER') {
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       showToast('PUZZLE SOLVED!', 'success');
     }
   }, [state.turnState]);

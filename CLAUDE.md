@@ -348,25 +348,25 @@ AI assistants often create planning and design documents during development:
 - ❌ Do NOT duplicate tracking systems
 - ❌ Do NOT clutter repo root with planning documents
 
-## Project Context: Standard Mode iOS Port
+## Project Context: iOS App
 
 ### Overview
 
-This project is a **Wheel of Fortune practice app** with two game modes:
+This project is a **Wheel of Fortune practice app** built with React Native/Expo, with two game modes:
 
 - **Kid Mode**: Simplified, kid-friendly version
 - **Standard Mode**: Full adult experience with 24-wedge wheel, BANKRUPT/LOSE_TURN, vowel purchases, and puzzle solving
 
-**Current focus: Port Standard Mode from web to iOS using React Native/Expo**
+Standard Mode supports three round types: **Main Game**, **Toss-Up**, and **Bonus Round**, with puzzles filtered by their `round_type` label from TV show data.
 
 ### Directory Structure
 
-- `app/` - Web version (React, Tailwind CSS) - **reference implementation**
-- `ios/` - React Native/Expo version - **in active development**
-  - `src/engine/` - Shared game logic (reducer, types, RNG, puzzle packs)
+- `ios/` - React Native/Expo app - **primary codebase**
+  - `src/engine/` - Game logic (reducer, types, RNG, puzzle packs)
   - `src/components/` - React Native UI components (wheel, keyboard, board, modals)
   - `src/styles/` - Theme configuration (colors, spacing, typography)
 - `data/` - Puzzle packs and game data
+- `archive/web-app/` - Archived web version (React, Tailwind CSS) - historical reference only
 
 ### Resolved Issues (Learnings for Future Agents)
 
@@ -396,14 +396,12 @@ Also applies to `clearInterval` — wrap it in a named callback rather than pass
 
 #### SVG Text Rendering: Use TextPath for Radial Text
 
-`react-native-svg` supports `<TextPath>` for text along a path, matching the web SVG approach:
+`react-native-svg` supports `<TextPath>` for text along a path:
 
 1. Define invisible radial paths in `<Defs>` (outer edge to inner edge along wedge midline)
 2. Render text using `<TextPath href="#path-id">` with `startOffset="50%"` for centering
 3. Use `<TSpan textAnchor="middle">` for horizontal centering on the path
 4. Use smaller font for long labels (BANKRUPT, LOSE A TURN, FREE PLAY)
-
-This produces radially-oriented text identical to the web version.
 
 #### Modal TextInput Focus
 
@@ -428,18 +426,18 @@ cd ios && npx expo start --clear
 - `react-native-reanimated` for smooth 4-second spin (Animated.View rotation)
 - `react-native-gesture-handler` for swipe-to-spin gesture
 - `expo-haptics` for tick sounds during spin, result feedback on completion
-- Radial text via `<Defs>` + `<TextPath>` (matches web version)
+- Radial text via `<Defs>` + `<TextPath>`
 
 The wheel SVG is static. Only the entire `AnimatedView` container rotates.
 
-### Next Agent: Focus Areas
+### Completed Milestones
 
-- ✅ Game reducer logic (fully ported, 17 tests passing)
-- ✅ Wheel rendering with radial text (matches web version)
-- ✅ Spin animation with haptics (crash fixed)
-- ✅ Solve puzzle modal (TextInput focus fixed)
-- ✅ Project renamed to "WoF Practice" / `com.wofpractice.standard`
-- Reference web version at `app/src/App.tsx` for UI/UX patterns
+- Game reducer logic (fully ported, tests passing)
+- Wheel rendering with radial text
+- Spin animation with haptics
+- Solve puzzle modal (TextInput focus fixed)
+- Project renamed to "WoF Practice" / `com.wofpractice.standard`
+- Toss-Up and Bonus Round modes with round_type-based puzzle filtering
 
 ## Agent Best Practices
 

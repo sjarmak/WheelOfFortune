@@ -123,8 +123,8 @@ const VannaHand: React.FC<VannaHandProps> = ({
       {/* 8-bit Pixelated Woman Character */}
       <div className="absolute inset-0 flex items-center justify-center">
         {isSideView ? (
-          /* SIDE VIEW SPRITE */
-          <div className="relative w-10 h-16" style={{ imageRendering: 'pixelated' }}>
+          /* SIDE VIEW SPRITE (enlarged 30% for better visibility) */
+          <div className="relative w-13 h-20" style={{ imageRendering: 'pixelated' }}>
             {/* Hair - side view (ponytail effect) */}
             <div className="absolute top-0 left-1 w-6 h-3" style={{ backgroundColor: hairColor }} />
             <div className="absolute top-1 right-0 w-2 h-4" style={{ backgroundColor: hairColor }} /> {/* Hair flowing back */}
@@ -173,8 +173,8 @@ const VannaHand: React.FC<VannaHandProps> = ({
             <div className="absolute bottom-0 left-3.5 w-2 h-1 bg-gray-800" />
           </div>
         ) : (
-          /* FRONT VIEW SPRITE (original) */
-          <div className="relative w-14 h-16" style={{ imageRendering: 'pixelated' }}>
+          /* FRONT VIEW SPRITE (enlarged 30% for better visibility) */
+          <div className="relative w-18 h-20" style={{ imageRendering: 'pixelated' }}>
             {/* Hair - wavy top */}
             <div className="absolute top-0 left-0 w-full h-3">
               <div className="flex gap-0.5 h-full">
@@ -250,7 +250,7 @@ const VannaHand: React.FC<VannaHandProps> = ({
                   key={`confetti-${i}`}
                   initial={{ x: config.startX, y: config.startY, opacity: 1, rotate: 0 }}
                   animate={{ x: config.startX + config.drift, y: config.endY, opacity: 0, rotate: config.rotation }}
-                  transition={{ duration: 0.8, ease: "linear", delay: config.delay }}
+                  transition={{ duration: 0.8, ease: "linear", delay: config.delay, repeat: Infinity }}
                   className="absolute top-0 left-1/2 w-1 h-1.5"
                   style={{ backgroundColor: config.color }}
                 />
@@ -265,7 +265,7 @@ const VannaHand: React.FC<VannaHandProps> = ({
                   key={`firework-${i}`}
                   initial={{ x: config.x * 0.2, y: config.y * 0.2, opacity: 1, scale: 0 }}
                   animate={{ x: config.x, y: config.y, opacity: 0, scale: config.scale }}
-                  transition={{ duration: 0.4, ease: "easeOut", delay: config.delay }}
+                  transition={{ duration: 0.4, ease: "easeOut", delay: config.delay, repeat: Infinity }}
                   className="absolute top-1/2 left-1/2"
                 >
                   <div className="w-2 h-2 rotate-45" style={{ backgroundColor: config.color }} />
