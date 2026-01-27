@@ -15,7 +15,6 @@ export interface Puzzle {
   round_type: RoundType;
   difficulty?: PuzzleDifficulty;
   season?: number;
-  allowed_modes?: RoundType[];
 }
 
 export type PlayerState = {
