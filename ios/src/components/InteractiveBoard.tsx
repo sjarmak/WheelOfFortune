@@ -180,9 +180,12 @@ export function InteractiveBoard({
     });
   }, [revealedPositions]);
 
-  // Reset visible positions when puzzle changes
+  // Reset visible positions when puzzle changes, preserving any
+  // already-revealed positions (e.g. RSTLNE in bonus round).
+  // Without this, a race between the reset and reveal effects can
+  // clear the RSTLNE letters that START_ROUND pre-reveals.
   React.useEffect(() => {
-    setVisiblePositions([]);
+    setVisiblePositions(revealedPositions);
   }, [puzzleId, phrase]);
 
   // Handle letter tap - speak the phonetic sound
@@ -316,7 +319,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     gap: spacing[1],
-    flexWrap: "wrap",
   },
   tile: {
     backgroundColor: colors.white,
