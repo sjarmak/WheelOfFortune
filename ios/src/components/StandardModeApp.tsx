@@ -46,7 +46,6 @@ import Animated, {
   withSequence,
   Easing,
 } from "react-native-reanimated";
-import ConfettiCannon from "react-native-confetti-cannon";
 
 import { Vanna } from "./Vanna";
 import { gameReducer, INITIAL_STATE } from "../engine/game";
@@ -111,7 +110,6 @@ export function StandardModeApp(): React.JSX.Element {
   const [solveInput, setSolveInput] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const solveInputRef = useRef<TextInput>(null);
-  const confettiRef = useRef<ConfettiCannon>(null);
   const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [hideGuessedLetters, setHideGuessedLetters] = useState(false);
   const keyboardTranslateY = useSharedValue(200);
@@ -146,7 +144,7 @@ export function StandardModeApp(): React.JSX.Element {
   // Background/foreground timer catch-up
   const backgroundTimestampRef = useRef<number | null>(null);
 
-  // Trigger confetti + Vanna on successful puzzle solve (or loss feedback for toss-up/bonus)
+  // Trigger confetti + Vanna on successful MAIN mode puzzle solve only (not toss-up/bonus)
   useEffect(() => {
     const wasNotRoundOver = prevTurnStateRef.current !== "ROUND_OVER";
     const isNowRoundOver = state.turnState === "ROUND_OVER";
@@ -154,16 +152,23 @@ export function StandardModeApp(): React.JSX.Element {
     // Entering ROUND_OVER state
     if (wasNotRoundOver && isNowRoundOver) {
       const isWin = state.roundResult === "win" || state.roundResult === null;
-      if (isWin) {
+      const isMainMode = selectedRoundMode === "MAIN";
+
+      // Only show celebration (Vanna) for MAIN mode wins
+      if (isWin && isMainMode) {
         setShowCelebration(true);
         setCelebrationReady(false);
-        confettiRef.current?.start();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
         // Allow Next Round after 3 seconds for wins
         celebrationTimerRef.current = setTimeout(() => {
           setCelebrationReady(true);
         }, 3000);
+      } else if (isWin) {
+        // Toss-up/bonus win — success sound but no full celebration
+        setShowCelebration(false);
+        setCelebrationReady(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
         // Loss — no celebration, show Next Puzzle immediately
         setShowCelebration(false);
@@ -191,7 +196,7 @@ export function StandardModeApp(): React.JSX.Element {
     }
 
     prevTurnStateRef.current = state.turnState;
-  }, [state.turnState, state.roundResult]);
+  }, [state.turnState, state.roundResult, selectedRoundMode]);
 
   // Focus the solve input after modal animation completes
   useEffect(() => {
@@ -428,6 +433,18 @@ export function StandardModeApp(): React.JSX.Element {
       puzzle: { ...next, round_type: selectedRoundMode },
     });
   }, [activePack, puzzleIndex, selectedRoundMode]);
+
+  // Clear celebration when leaving game screen
+  useEffect(() => {
+    if (activeScreen !== "game") {
+      setShowCelebration(false);
+      setCelebrationReady(false);
+      if (celebrationTimerRef.current) {
+        clearTimeout(celebrationTimerRef.current);
+        celebrationTimerRef.current = null;
+      }
+    }
+  }, [activeScreen]);
 
   // Navigate to pack selection for a specific round mode
   const startMode = useCallback((mode: RoundType) => {
@@ -927,8 +944,16 @@ export function StandardModeApp(): React.JSX.Element {
                     onPress={() => startGameWithPack(pack)}
                   >
                     <View style={styles.navCardContent}>
-                      <BookOpen size={24} color={isActive ? colors.gold[500] : colors.slate[400]} />
-                      <Text style={[styles.navCardTitle, isActive && styles.navCardTitleActive]}>
+                      <BookOpen
+                        size={24}
+                        color={isActive ? colors.gold[500] : colors.slate[400]}
+                      />
+                      <Text
+                        style={[
+                          styles.navCardTitle,
+                          isActive && styles.navCardTitleActive,
+                        ]}
+                      >
                         {pack.name}
                       </Text>
                       <Text style={styles.navCardDesc}>
@@ -1120,28 +1145,6 @@ export function StandardModeApp(): React.JSX.Element {
                   </Text>
                   <Text style={styles.bonusTimerLabel}>SECONDS</Text>
                 </View>
-
-                {/* Solve input with shake animation */}
-                <Animated.View
-                  style={[styles.bonusSolveInputRow, bonusSolveShakeStyle]}
-                >
-                  <TextInput
-                    ref={bonusSolveInputRef}
-                    style={styles.bonusSolveInput}
-                    value={bonusSolveInput}
-                    onChangeText={setBonusSolveInput}
-                    placeholder="Type your answer..."
-                    placeholderTextColor={colors.slate[400]}
-                    autoCapitalize="characters"
-                    onSubmitEditing={handleBonusSolve}
-                    returnKeyType="go"
-                  />
-                  <TouchableOpacity onPress={handleBonusSolve}>
-                    <View style={styles.bonusSolveButton}>
-                      <Text style={styles.bonusSolveButtonText}>SOLVE</Text>
-                    </View>
-                  </TouchableOpacity>
-                </Animated.View>
               </View>
             ) : isBonusMode ? (
               <View style={styles.bonusSolveArea}>
@@ -1340,6 +1343,47 @@ export function StandardModeApp(): React.JSX.Element {
           </View>
         </Modal>
 
+        {/* Bonus Round Solve Modal */}
+        <Modal
+          visible={isBonusSolving}
+          onClose={() => {}}
+          title="Solve the Puzzle"
+          showCloseButton={false}
+          closeOnBackdrop={false}
+        >
+          <View style={styles.bonusModalTimerContainer}>
+            <Text
+              style={[
+                styles.bonusModalTimerText,
+                bonusTimerIsLow && styles.bonusTimerTextLow,
+              ]}
+            >
+              {bonusTimerDisplay}
+            </Text>
+            <Text style={styles.bonusTimerLabel}>SECONDS</Text>
+          </View>
+          <Animated.View style={bonusSolveShakeStyle}>
+            <TextInput
+              ref={bonusSolveInputRef}
+              style={styles.solveInput}
+              value={bonusSolveInput}
+              onChangeText={setBonusSolveInput}
+              placeholder="Type your answer..."
+              placeholderTextColor={colors.slate[400]}
+              autoCapitalize="characters"
+              onSubmitEditing={handleBonusSolve}
+              returnKeyType="go"
+            />
+          </Animated.View>
+          <View style={styles.modalButtons}>
+            <TouchableOpacity onPress={handleBonusSolve}>
+              <View style={styles.solveButton}>
+                <Text style={styles.solveButtonText}>SOLVE</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+
         {/* Pack Browser Modal */}
         <Modal
           visible={showPackBrowserModal}
@@ -1366,20 +1410,7 @@ export function StandardModeApp(): React.JSX.Element {
           />
         </Modal>
 
-        {/* Celebration Overlays — Confetti + Vanna */}
-        {showCelebration && (
-          <View style={styles.confettiContainer} pointerEvents="none">
-            <ConfettiCannon
-              ref={confettiRef}
-              count={100}
-              origin={{ x: Dimensions.get("window").width / 2, y: -10 }}
-              fadeOut
-              autoStart={false}
-              fallSpeed={3000}
-              explosionSpeed={350}
-            />
-          </View>
-        )}
+        {/* Celebration Overlay — Vanna with custom confetti/fireworks */}
         {showCelebration && (
           <View style={styles.vannaOverlay} pointerEvents="none">
             <Vanna isDancing />
@@ -2039,6 +2070,17 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     letterSpacing: 2,
   },
+  bonusModalTimerContainer: {
+    alignItems: "center",
+    gap: spacing[1],
+    marginBottom: spacing[4],
+  },
+  bonusModalTimerText: {
+    color: colors.white,
+    fontSize: typography.sizes["4xl"],
+    fontWeight: typography.weights.bold,
+    fontVariant: ["tabular-nums"],
+  },
   bonusSolveInputRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -2070,14 +2112,10 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
     fontSize: typography.sizes.lg,
   },
-  confettiContainer: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 100,
-  },
   vannaOverlay: {
     position: "absolute",
     bottom: 40,
     alignSelf: "center",
-    zIndex: 101,
+    zIndex: 100,
   },
 });
