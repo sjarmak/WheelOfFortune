@@ -1,6 +1,20 @@
 import { GameState, Puzzle, VOWELS, CONSONANTS, WheelWedge } from "./types";
 import { SeededRNG } from "./rng";
 
+/**
+ * Normalize a phrase for solve comparison: trim whitespace, collapse
+ * multiple spaces, uppercase, and replace typographic quotes/apostrophes
+ * with straight ASCII apostrophe so iOS keyboard input matches puzzle data.
+ */
+export function normalizePhraseForComparison(phrase: string): string {
+  return phrase
+    .trim()
+    .replace(/[\u2018\u2019\u2032\u02BC]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\s+/g, " ")
+    .toUpperCase();
+}
+
 export const INITIAL_STATE: GameState = {
   currentPuzzle: null,
   guessedLetters: [],
@@ -36,6 +50,7 @@ export type GameAction =
   | { type: "TOSS_UP_TICK"; dtMs: number }
   | { type: "BUZZ_IN" }
   | { type: "TOSS_UP_SOLVE_ATTEMPT"; phrase: string }
+  | { type: "CANCEL_TOSS_UP_ATTEMPT" }
   | { type: "ADD_TO_ROUND_SCORE"; points: number }
   | { type: "CLEAR_ROUND_SCORE" }
   | { type: "RESET_GAME" }
@@ -275,8 +290,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         return state;
       }
       const correct =
-        action.phrase.toUpperCase() ===
-        state.currentPuzzle?.phrase.toUpperCase();
+        normalizePhraseForComparison(action.phrase) ===
+        normalizePhraseForComparison(state.currentPuzzle?.phrase ?? "");
       if (correct) {
         const allPositions = Array.from(
           { length: state.currentPuzzle!.phrase.length },
@@ -293,6 +308,16 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         turnState: "TOSSUP_LOCKED_OUT",
         tossUpLockoutMs: state.tossUpLockoutDurationMs,
+      };
+    }
+
+    case "CANCEL_TOSS_UP_ATTEMPT": {
+      if (state.turnState !== "TOSSUP_BUZZED") {
+        return state;
+      }
+      return {
+        ...state,
+        turnState: "TOSSUP_REVEALING",
       };
     }
 
@@ -386,8 +411,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         return state;
       }
       const correct =
-        action.phrase.toUpperCase() ===
-        state.currentPuzzle?.phrase.toUpperCase();
+        normalizePhraseForComparison(action.phrase) ===
+        normalizePhraseForComparison(state.currentPuzzle?.phrase ?? "");
       if (correct) {
         const allPositions = Array.from(
           { length: state.currentPuzzle!.phrase.length },
@@ -405,8 +430,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "SOLVE_ATTEMPT": {
       const correct =
-        action.phrase.toUpperCase() ===
-        state.currentPuzzle?.phrase.toUpperCase();
+        normalizePhraseForComparison(action.phrase) ===
+        normalizePhraseForComparison(state.currentPuzzle?.phrase ?? "");
       if (correct) {
         return {
           ...state,

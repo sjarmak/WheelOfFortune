@@ -174,12 +174,13 @@ function ConfettiView({ index, isDancing }: CelebrationViewProps): React.JSX.Ele
   useEffect(() => {
     if (isDancing) {
       progress.value = 0;
-      progress.value = withDelay(
-        config.delay * 1000, // delay is in seconds in config, withDelay takes ms? Wait, reanimated withDelay usually takes ms.
-        // Checking getConfettiConfig in web: delay: r3 * 0.2 // 0 to 0.2s delay.
-        // Wait, 0.2s is 200ms.
-        // Let's re-check getConfettiConfig in vannaAnimation.ts
-        withTiming(1, { duration: 800, easing: Easing.linear })
+      progress.value = withRepeat(
+        withDelay(
+          config.delay * 1000,
+          withTiming(1, { duration: 800, easing: Easing.linear })
+        ),
+        -1, // Infinite loop
+        false // Don't reverse, restart from beginning
       );
     } else {
       cancelAnimation(progress);
@@ -221,9 +222,13 @@ function FireworkView({ index, isDancing }: CelebrationViewProps): React.JSX.Ele
   useEffect(() => {
     if (isDancing) {
       progress.value = 0;
-      progress.value = withDelay(
-        config.delay * 1000, // delay is ~0.15 * index. Max index 4 -> 0.6s.
-        withTiming(1, { duration: FIREWORK_DURATION, easing: Easing.out(Easing.quad) })
+      progress.value = withRepeat(
+        withDelay(
+          config.delay * 1000,
+          withTiming(1, { duration: FIREWORK_DURATION, easing: Easing.out(Easing.quad) })
+        ),
+        -1,
+        false
       );
     } else {
       cancelAnimation(progress);

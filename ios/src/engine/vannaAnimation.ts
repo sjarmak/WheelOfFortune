@@ -48,8 +48,8 @@ export const FIREWORK_DURATION = 400; // ms
 export const DANCE_FRAME_TIME = 120; // ms per frame during dance
 export const FRAME_COUNT = 4;
 
-// Base pixel size for 8-bit scaling
-export const PIXEL = 3;
+// Base pixel size for 8-bit scaling (increased from 3 to 4 for better visibility)
+export const PIXEL = 4;
 
 /**
  * Calculate dance bounce offset using sine wave.

@@ -269,3 +269,42 @@ Started: Sun Jan 26 2026 — Toss-Up & Bonus Round Modes
   - No new tests needed — this is a UI integration story. The reducer's large dtMs handling is already tested in tossUpEngine.test.ts and bonusEngine.test.ts
   - Typecheck passes, all 299 tests pass
 ---
+
+## 2026-01-26 - US-014
+- Verified TOSS_UP_TICK handler already has multi-reveal while loop (from US-003) and recursive lockout overflow handling
+- Added 3 new tests to ios/src/__tests__/tossUpEngine.test.ts:
+  1. dtMs=5000 reveals exactly 5 letters with verified positions matching seeded reveal order
+  2. dtMs=50000 on short puzzle ("HI", 2 letters) exhausts all letters and triggers ROUND_OVER with roundResult 'loss'
+  3. Lockout expiry with 3000ms leftover reveals 3 letters via recursive reducer call
+- No implementation changes needed — the multi-reveal loop and lockout overflow were already correctly implemented
+- Files changed: ios/src/__tests__/tossUpEngine.test.ts
+- **Learnings for future iterations:**
+  - The multi-reveal while loop in TOSS_UP_TICK correctly handles background resume: dtMs=5000 with 1000ms interval reveals 5 letters in a single dispatch
+  - Short puzzles (e.g., "HI" = 2 letters) with huge dtMs (50000) correctly trigger ROUND_OVER and reveal all positions including non-letter characters
+  - Lockout overflow with large leftover time (3500ms = 500ms lockout + 3000ms reveal) correctly chains through recursive reducer call to reveal 3 letters
+  - Typecheck passes, all 302 tests pass (299 existing + 3 new)
+---
+
+## 2026-01-26 - US-015
+- Ran full test suite: 308 tests pass across 8 test files (302 existing + 6 new regression tests)
+- Typecheck passes with no errors
+- Verified Standard mode MAIN round flow unchanged: START_ROUND with MAIN puzzle sets turnState to IDLE, SPIN_WHEEL/SPIN_RESULT/GUESS_LETTER/BUY_VOWEL/SOLVE_ATTEMPT all work identically to pre-mode-addition behavior
+- Verified puzzle packs load correctly: ALL_PACKS builds successfully (validated via test suite imports)
+- Verified StandardModeApp renders home screen with 3 mode cards: Standard Game (green), Toss-Up (orange), Bonus Round (purple) — each calls startMode() with correct RoundType
+- Added 6 regression tests to ios/src/__tests__/gameReducer.test.ts:
+  1. Full MAIN round flow: start → spin → guess consonant → buy vowel → solve → verify score/state
+  2. BANKRUPT clears round score and sets mustSpin
+  3. LOSE_TURN sets mustSpin without clearing score
+  4. Wrong consonant guess clears spinResult and sets mustSpin
+  5. Wrong SOLVE_ATTEMPT returns state unchanged (referential identity)
+  6. All new mode actions (TOSS_UP_TICK, BUZZ_IN, TOSS_UP_SOLVE_ATTEMPT, BONUS_CHOOSE_LETTERS, BONUS_TICK, BONUS_SOLVE_ATTEMPT) are no-ops during standard MAIN flow
+- Files changed: ios/src/__tests__/gameReducer.test.ts
+- **Learnings for future iterations:**
+  - All new mode actions correctly guard on turnState — they return `state` (referential identity) when turnState doesn't match their expected state
+  - Standard mode fields (roundResult, tossUpElapsedMs, bonusTimerMs, etc.) are initialized by START_ROUND but never mutated during MAIN flow
+  - The regression test confirms backward compatibility: adding 5 new TurnState values and 6 new GameAction types caused zero behavioral changes to the existing MAIN round flow
+  - Typecheck passes, all 308 tests pass (302 existing + 6 new regression tests)
+
+## ALL STORIES COMPLETE
+All 15 user stories pass. Total: 308 tests across 8 test files. Typecheck clean.
+---

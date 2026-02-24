@@ -4,7 +4,11 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { gameReducer, INITIAL_STATE } from "./game";
+import {
+  gameReducer,
+  INITIAL_STATE,
+  normalizePhraseForComparison,
+} from "./game";
 import { Puzzle, GameState } from "./types";
 
 // Test puzzle
@@ -15,6 +19,42 @@ const testPuzzle: Puzzle = {
   difficulty: { score: 0.5, reasons: [] },
   round_type: "MAIN",
 };
+
+describe("normalizePhraseForComparison", () => {
+  it("uppercases and trims", () => {
+    expect(normalizePhraseForComparison("  hello world  ")).toBe("HELLO WORLD");
+  });
+
+  it("replaces right single curly quote with straight apostrophe", () => {
+    expect(normalizePhraseForComparison("PEOPLE\u2019S")).toBe("PEOPLE'S");
+  });
+
+  it("replaces left single curly quote with straight apostrophe", () => {
+    expect(normalizePhraseForComparison("PEOPLE\u2018S")).toBe("PEOPLE'S");
+  });
+
+  it("replaces prime character with straight apostrophe", () => {
+    expect(normalizePhraseForComparison("PEOPLE\u2032S")).toBe("PEOPLE'S");
+  });
+
+  it("replaces modifier letter apostrophe with straight apostrophe", () => {
+    expect(normalizePhraseForComparison("PEOPLE\u02BCS")).toBe("PEOPLE'S");
+  });
+
+  it("replaces curly double quotes with straight double quotes", () => {
+    expect(normalizePhraseForComparison("\u201CHello\u201D")).toBe('"HELLO"');
+  });
+
+  it("collapses multiple spaces into one", () => {
+    expect(normalizePhraseForComparison("HELLO   WORLD")).toBe("HELLO WORLD");
+  });
+
+  it("handles combined normalization", () => {
+    expect(
+      normalizePhraseForComparison("  the people\u2019s republic of china  "),
+    ).toBe("THE PEOPLE'S REPUBLIC OF CHINA");
+  });
+});
 
 describe("gameReducer - Standard Mode", () => {
   describe("START_ROUND", () => {
@@ -293,6 +333,24 @@ describe("gameReducer - Standard Mode", () => {
 
       expect(newState.turnState).toBe("ROUND_OVER");
     });
+
+    it("accepts answer with trailing spaces", () => {
+      const newState = gameReducer(stateWithPuzzle, {
+        type: "SOLVE_ATTEMPT",
+        phrase: "WHEEL OF FORTUNE   ",
+      });
+
+      expect(newState.turnState).toBe("ROUND_OVER");
+    });
+
+    it("accepts answer with leading spaces", () => {
+      const newState = gameReducer(stateWithPuzzle, {
+        type: "SOLVE_ATTEMPT",
+        phrase: "  WHEEL OF FORTUNE",
+      });
+
+      expect(newState.turnState).toBe("ROUND_OVER");
+    });
   });
 
   describe("BUY_VOWEL", () => {
@@ -302,6 +360,52 @@ describe("gameReducer - Standard Mode", () => {
       });
 
       expect(newState.turnState).toBe("BUYING_VOWEL");
+    });
+  });
+
+  describe("SOLVE_ATTEMPT with apostrophes", () => {
+    const apostrophePuzzle: Puzzle = {
+      id: "test-apos",
+      phrase: "THE PEOPLE\u2019S REPUBLIC OF CHINA",
+      category: "PLACE",
+      difficulty: { score: 0.5, reasons: [] },
+      round_type: "MAIN",
+    };
+
+    let stateWithApostrophe: GameState;
+
+    beforeEach(() => {
+      stateWithApostrophe = gameReducer(INITIAL_STATE, {
+        type: "START_ROUND",
+        puzzle: apostrophePuzzle,
+      });
+    });
+
+    it("accepts straight apostrophe when puzzle has curly quote", () => {
+      const newState = gameReducer(stateWithApostrophe, {
+        type: "SOLVE_ATTEMPT",
+        phrase: "THE PEOPLE'S REPUBLIC OF CHINA",
+      });
+
+      expect(newState.turnState).toBe("ROUND_OVER");
+    });
+
+    it("accepts curly apostrophe when puzzle has curly quote", () => {
+      const newState = gameReducer(stateWithApostrophe, {
+        type: "SOLVE_ATTEMPT",
+        phrase: "THE PEOPLE\u2019S REPUBLIC OF CHINA",
+      });
+
+      expect(newState.turnState).toBe("ROUND_OVER");
+    });
+
+    it("accepts answer with extra trailing space and apostrophe mismatch", () => {
+      const newState = gameReducer(stateWithApostrophe, {
+        type: "SOLVE_ATTEMPT",
+        phrase: "the people's republic of china ",
+      });
+
+      expect(newState.turnState).toBe("ROUND_OVER");
     });
   });
 

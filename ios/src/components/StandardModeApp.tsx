@@ -50,7 +50,11 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { Vanna } from "./Vanna";
-import { gameReducer, INITIAL_STATE } from "../engine/game";
+import {
+  gameReducer,
+  INITIAL_STATE,
+  normalizePhraseForComparison,
+} from "../engine/game";
 import {
   Puzzle,
   RoundType,
@@ -146,7 +150,7 @@ export function StandardModeApp(): React.JSX.Element {
   // Background/foreground timer catch-up
   const backgroundTimestampRef = useRef<number | null>(null);
 
-  // Trigger confetti + Vanna on successful MAIN mode puzzle solve only (not toss-up/bonus)
+  // Trigger confetti + Vanna on successful puzzle solve (all modes: toss-up, bonus, main)
   useEffect(() => {
     const wasNotRoundOver = prevTurnStateRef.current !== "ROUND_OVER";
     const isNowRoundOver = state.turnState === "ROUND_OVER";
@@ -154,10 +158,9 @@ export function StandardModeApp(): React.JSX.Element {
     // Entering ROUND_OVER state
     if (wasNotRoundOver && isNowRoundOver) {
       const isWin = state.roundResult === "win" || state.roundResult === null;
-      const isMainMode = selectedRoundMode === "MAIN";
 
-      // Only show celebration (Vanna) for MAIN mode wins
-      if (isWin && isMainMode) {
+      // Show celebration (Vanna) for ALL wins (toss-up, bonus, and main)
+      if (isWin) {
         setShowCelebration(true);
         setCelebrationReady(false);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -166,11 +169,6 @@ export function StandardModeApp(): React.JSX.Element {
         celebrationTimerRef.current = setTimeout(() => {
           setCelebrationReady(true);
         }, 3000);
-      } else if (isWin) {
-        // Toss-up/bonus win — success sound but no full celebration
-        setShowCelebration(false);
-        setCelebrationReady(true);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
         // Loss — no celebration, show Next Puzzle immediately
         setShowCelebration(false);
@@ -557,7 +555,8 @@ export function StandardModeApp(): React.JSX.Element {
     dispatch({ type: "SOLVE_ATTEMPT", phrase: solveInput });
 
     const correct =
-      solveInput.toUpperCase() === state.currentPuzzle?.phrase.toUpperCase();
+      normalizePhraseForComparison(solveInput) ===
+      normalizePhraseForComparison(state.currentPuzzle?.phrase ?? "");
     if (!correct) {
       showToast("Wrong! Try again.");
     }
@@ -575,8 +574,8 @@ export function StandardModeApp(): React.JSX.Element {
 
   const handleTossUpSolve = useCallback(() => {
     const correct =
-      tossUpSolveInput.toUpperCase() ===
-      state.currentPuzzle?.phrase.toUpperCase();
+      normalizePhraseForComparison(tossUpSolveInput) ===
+      normalizePhraseForComparison(state.currentPuzzle?.phrase ?? "");
     dispatch({ type: "TOSS_UP_SOLVE_ATTEMPT", phrase: tossUpSolveInput });
 
     if (correct) {
@@ -643,8 +642,8 @@ export function StandardModeApp(): React.JSX.Element {
   const handleBonusSolve = useCallback(() => {
     if (!bonusSolveInput.trim()) return;
     const correct =
-      bonusSolveInput.toUpperCase().trim() ===
-      state.currentPuzzle?.phrase.toUpperCase();
+      normalizePhraseForComparison(bonusSolveInput) ===
+      normalizePhraseForComparison(state.currentPuzzle?.phrase ?? "");
     dispatch({ type: "BONUS_SOLVE_ATTEMPT", phrase: bonusSolveInput });
 
     if (correct) {
@@ -834,70 +833,54 @@ export function StandardModeApp(): React.JSX.Element {
             <Text style={styles.homeSubtitle}>Choose an activity</Text>
 
             <View style={styles.navCards}>
-              <TouchableOpacity
-                style={styles.navCard}
-                onPress={() => startMode("MAIN")}
-              >
-                <View style={styles.navCardContent}>
-                  <Play size={40} color={colors.gold[500]} />
-                  <Text style={styles.navCardTitle}>Standard Game</Text>
-                  <Text style={styles.navCardDesc}>
-                    Spin the wheel, guess letters, solve the puzzle
-                  </Text>
-                </View>
-              </TouchableOpacity>
+              <Text style={styles.sectionLabel}>GAME MODES</Text>
+              <View style={styles.navGrid}>
+                <TouchableOpacity
+                  style={[styles.navButton, styles.navButtonGold]}
+                  onPress={() => startMode("MAIN")}
+                >
+                  <Play size={22} color={colors.gold[500]} />
+                  <Text style={styles.navButtonTitle}>Standard Game</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.navButton, styles.navButtonGold]}
+                  onPress={() => startMode("TOSSUP")}
+                >
+                  <Zap size={22} color={colors.gold[500]} />
+                  <Text style={styles.navButtonTitle}>Toss-Up</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.navGridSingle}>
+                <TouchableOpacity
+                  style={[
+                    styles.navButton,
+                    styles.navButtonGold,
+                    styles.navButtonWide,
+                  ]}
+                  onPress={() => startMode("BONUS")}
+                >
+                  <Trophy size={22} color={colors.gold[500]} />
+                  <Text style={styles.navButtonTitle}>Bonus Round</Text>
+                </TouchableOpacity>
+              </View>
 
-              <TouchableOpacity
-                style={styles.navCard}
-                onPress={() => startMode("TOSSUP")}
-              >
-                <View style={styles.navCardContent}>
-                  <Zap size={40} color={colors.gold[500]} />
-                  <Text style={styles.navCardTitle}>Toss-Up</Text>
-                  <Text style={styles.navCardDesc}>
-                    Letters reveal one by one — buzz in to solve!
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.navCard}
-                onPress={() => startMode("BONUS")}
-              >
-                <View style={styles.navCardContent}>
-                  <Trophy size={40} color={colors.gold[500]} />
-                  <Text style={styles.navCardTitle}>Bonus Round</Text>
-                  <Text style={styles.navCardDesc}>
-                    Pick your letters, solve before time runs out
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.navCard}
-                onPress={() => setActiveScreen("packBrowser")}
-              >
-                <View style={styles.navCardContent}>
-                  <BookOpen size={40} color={colors.blue[400]} />
-                  <Text style={styles.navCardTitle}>Puzzle Packs</Text>
-                  <Text style={styles.navCardDesc}>
-                    Browse and select puzzle packs
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.navCard}
-                onPress={() => setActiveScreen("strategy")}
-              >
-                <View style={styles.navCardContent}>
-                  <BarChart3 size={40} color={colors.blue[400]} />
-                  <Text style={styles.navCardTitle}>Strategy</Text>
-                  <Text style={styles.navCardDesc}>
-                    Analyze letter frequencies and patterns
-                  </Text>
-                </View>
-              </TouchableOpacity>
+              <Text style={styles.sectionLabel}>TOOLS</Text>
+              <View style={styles.navGrid}>
+                <TouchableOpacity
+                  style={[styles.navButton, styles.navButtonBlue]}
+                  onPress={() => setActiveScreen("packBrowser")}
+                >
+                  <BookOpen size={22} color={colors.blue[400]} />
+                  <Text style={styles.navButtonTitle}>Puzzle Packs</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.navButton, styles.navButtonBlue]}
+                  onPress={() => setActiveScreen("strategy")}
+                >
+                  <BarChart3 size={22} color={colors.blue[400]} />
+                  <Text style={styles.navButtonTitle}>Strategy</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         )}
@@ -1342,6 +1325,7 @@ export function StandardModeApp(): React.JSX.Element {
           onClose={() => {
             setShowTossUpSolveModal(false);
             setTossUpSolveInput("");
+            dispatch({ type: "CANCEL_TOSS_UP_ATTEMPT" });
           }}
           title="Solve the Puzzle"
         >
@@ -1359,6 +1343,7 @@ export function StandardModeApp(): React.JSX.Element {
               onPress={() => {
                 setShowTossUpSolveModal(false);
                 setTossUpSolveInput("");
+                dispatch({ type: "CANCEL_TOSS_UP_ATTEMPT" });
               }}
             >
               <Text style={styles.cancelButton}>Cancel</Text>
@@ -1853,8 +1838,8 @@ const styles = StyleSheet.create({
   homeContainer: {
     flex: 1,
     paddingHorizontal: spacing[4],
-    paddingTop: spacing[8],
     alignItems: "center",
+    justifyContent: "center",
   },
   homeTitle: {
     color: colors.gold[500],
@@ -1866,11 +1851,11 @@ const styles = StyleSheet.create({
   homeSubtitle: {
     color: colors.slate[400],
     fontSize: typography.sizes.base,
-    marginBottom: spacing[8],
+    marginBottom: spacing[5],
   },
   navCards: {
     width: "100%",
-    gap: spacing[4],
+    gap: spacing[5],
   },
   navCard: {
     borderRadius: borderRadius.xl,
@@ -1892,6 +1877,50 @@ const styles = StyleSheet.create({
   navCardDesc: {
     color: "rgba(255, 255, 255, 0.8)",
     fontSize: typography.sizes.sm,
+  },
+  sectionLabel: {
+    color: colors.slate[400],
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    letterSpacing: 2,
+    marginTop: spacing[4],
+    marginBottom: spacing[2],
+  },
+  navGrid: {
+    flexDirection: "row",
+    gap: spacing[4],
+  },
+  navGridSingle: {
+    flexDirection: "row",
+    justifyContent: "center",
+  },
+  navButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing[3],
+    paddingVertical: spacing[4],
+    paddingHorizontal: spacing[5],
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.slate[800],
+    borderWidth: 1,
+    borderColor: colors.slate[700],
+  },
+  navButtonGold: {
+    borderColor: "rgba(212, 168, 67, 0.3)",
+  },
+  navButtonBlue: {
+    borderColor: "rgba(59, 130, 196, 0.3)",
+  },
+  navButtonWide: {
+    flex: undefined,
+    width: "65%",
+    justifyContent: "center",
+  },
+  navButtonTitle: {
+    color: colors.white,
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
   },
   packSelectScroll: {
     flex: 1,

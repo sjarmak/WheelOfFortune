@@ -1,0 +1,33 @@
+Continuing previous work session.
+
+@ios/src/components/StandardModeApp.tsx @ios/src/components/Vanna.tsx @ios/src/engine/vannaAnimation.ts @ios/src/components/StandardWheel.tsx
+
+Other relevant files: ios/src/components/InteractiveBoard.tsx, ios/src/engine/reducer.ts, ios/src/styles/theme.ts
+
+Session Context - Recent Celebration Animation Fixes:
+
+- I fixed multiple celebration animation bugs in the iOS app using delegated agents (Cursor and Gemini)
+- I fixed the bug where dancing Vanna sprite persisted across screens by adding a useEffect in StandardModeApp.tsx that watches activeScreen and clears celebration state when navigating away
+- I removed the screen-filling confetti cannon (react-native-confetti-cannon on iOS, canvas-confetti on web) and kept only Vanna's custom confetti/fireworks that loop with her dance
+- I increased Vanna sprite size by 30% (changed PIXEL constant from 3 to 4 in vannaAnimation.ts for iOS, updated Tailwind classes for web)
+- I made Vanna's custom confetti and fireworks loop continuously using withRepeat(-1, false) for iOS and repeat: Infinity for web
+- I restored celebration for ALL puzzle solves (toss-up, bonus, main) not just main puzzles - removed the selectedRoundMode === "MAIN" restriction
+- The celebration lifecycle properly clears when transitioning away from ROUND_OVER state and when changing screens
+- All tests passing (318+ tests)
+
+Key Architecture Notes:
+
+- This is a React Native/Expo Wheel of Fortune practice app with Kid Mode and Standard Mode
+- Standard Mode supports three round types: Main Game, Toss-Up, and Bonus Round
+- The web version is archived (archive/web-app/) - iOS is the primary codebase
+- StandardModeApp.tsx manages game state and celebration lifecycle
+- Vanna.tsx renders the 8-bit dancing sprite with custom animations using react-native-reanimated
+- Celebration shows for 3 seconds before "Next Puzzle" button appears
+
+Important Patterns:
+
+- Used delegate skill to route tasks to optimal agents (Cursor for debugging, Gemini for code generation)
+- Never pass complex objects through runOnJS in Reanimated worklet callbacks (causes silent crashes)
+- ScrollView in modals needs keyboardShouldPersistTaps="handled" for TextInput focus
+
+Now we are working on a visual issue in the bonus round where the letters wrap around.
