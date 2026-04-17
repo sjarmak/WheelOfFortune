@@ -22,25 +22,53 @@ export type PlayerState = {
   totalScore: number;
 };
 
+export type TurnState =
+  | 'IDLE'
+  | 'SPINNING'
+  | 'GUESSING_CONSONANT'
+  | 'BUYING_VOWEL'
+  | 'SOLVING'
+  | 'ROUND_OVER'
+  | 'TOSSUP_REVEALING'
+  | 'TOSSUP_BUZZED'
+  | 'TOSSUP_LOCKED_OUT'
+  | 'BONUS_PICKING'
+  | 'BONUS_SOLVE_TIMER';
+
 export type GameState = {
   currentPuzzle: Puzzle | null;
   guessedLetters: string[]; // All guesses
   revealedPositions: number[]; // Indices of letters visible
-  
+
   // Turn state
   spinResult: string | number | null; // 'BANKRUPT', 'LOSE_TURN', or cash value
-  turnState: 'IDLE' | 'SPINNING' | 'GUESSING_CONSONANT' | 'BUYING_VOWEL' | 'SOLVING' | 'ROUND_OVER';
-  
+  turnState: TurnState;
+  /**
+   * True after wrong guess / BANKRUPT / LOSE_TURN — player must spin before
+   * buying a vowel. Set to false after a successful SPIN_RESULT on a VALUE
+   * wedge. BUY_VOWEL is rejected (returns same state) when mustSpin === true.
+   */
+  mustSpin: boolean;
+
   player: PlayerState;
-  
+
   // Toss-up specific
   tossUpRevealOrder: number[];
   tossUpIndex: number; // How many revealed so far
-  
+  tossUpElapsedMs: number;
+  tossUpRevealIntervalMs: number;
+  tossUpLockoutMs: number;
+  tossUpLockoutDurationMs: number;
+
   // Bonus specific
-  bonusTimer: number;
-  bonusPicks: string[]; // RSTLNE + 3 + 1
-  
+  bonusTimer: number; // Legacy countdown seconds (kept for back-compat)
+  bonusTimerMs: number; // iOS-parity bonus timer in ms
+  bonusTimerDurationMs: number; // Duration for bonus timer
+  bonusPicks: string[]; // RSTLNE + 3 consonants + 1 vowel
+
+  // Round result
+  roundResult: 'win' | 'loss' | null;
+
   // Meta
   packId: string;
   seed: number;

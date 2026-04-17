@@ -71,3 +71,35 @@ against a hand-written object literal and normalize non-deterministic fields
   test entirely (wedge type no longer exists). Updated wedge-union snapshot
   test to assert the new 3-type union. This is an intentional, documented
   behavior change — the PRD mandates iOS parity.
+- `2026-04-17` — Additive re-snapshot after `reducer-port` unit. The reducer
+  now ports iOS behavior for toss-up and bonus rounds plus `mustSpin`
+  semantics. Changes are **additive** to existing actions:
+  - `INITIAL_STATE` shape gains `mustSpin: true`, `tossUpElapsedMs: 0`,
+    `tossUpRevealIntervalMs: 1000`, `tossUpLockoutMs: 0`,
+    `tossUpLockoutDurationMs: 3000`, `bonusTimerMs: 20000`,
+    `bonusTimerDurationMs: 20000`, `roundResult: null`. The snapshot test
+    was updated to assert the new fields.
+  - `START_ROUND` on TOSSUP puzzles now enters `TOSSUP_REVEALING` (was
+    `IDLE`). On BONUS puzzles now enters `BONUS_PICKING` (was `IDLE`). The
+    existing `START_ROUND on TOSSUP` test was updated to assert the new
+    turnState, and a new `START_ROUND on BONUS` test asserts the
+    `BONUS_PICKING` transition.
+  - `TOSS_UP_TICK` now takes a `dtMs: number` payload. The existing test
+    was updated to pass `dtMs: 1000` at each tick so the semantics are
+    preserved (one reveal per second).
+  - `GameAction` union was extended with 10 new actions (`BUZZ_IN`,
+    `TOSS_UP_SOLVE_ATTEMPT`, `CANCEL_TOSS_UP_ATTEMPT`,
+    `BONUS_CHOOSE_LETTERS`, `BONUS_TICK`, `BONUS_SOLVE_ATTEMPT`,
+    `RESET_ROUND`, `RANDOM_PUZZLE`, `SELECT_PUZZLE`, and the payload
+    upgrade on `TOSS_UP_TICK`). `TurnState` union was extended with 5 new
+    values (`TOSSUP_REVEALING`, `TOSSUP_BUZZED`, `TOSSUP_LOCKED_OUT`,
+    `BONUS_PICKING`, `BONUS_SOLVE_TIMER`).
+  - `SPIN_RESULT` behavior is unchanged except for the additive `mustSpin`
+    side-effect (true for BANKRUPT/LOSE_TURN, false for VALUE).
+  - `GUESS_LETTER` behavior is unchanged except for the additive `mustSpin`
+    side-effect (false on correct guess, true on wrong guess). `spinResult`
+    is still preserved on wrong guess to match existing web behavior
+    (characterization baseline).
+  - `BUY_VOWEL` now rejects (returns same state) when `mustSpin === true`.
+    No existing characterization test exercised this path, so no existing
+    assertion changes.

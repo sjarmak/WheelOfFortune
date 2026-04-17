@@ -266,7 +266,7 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
   useEffect(() => {
     if (state.currentPuzzle?.round_type === 'TOSSUP' && state.turnState !== 'ROUND_OVER') {
       const interval = setInterval(() => {
-        dispatch({ type: 'TOSS_UP_TICK' });
+        dispatch({ type: 'TOSS_UP_TICK', dtMs: 1000 });
       }, 1000); 
       return () => clearInterval(interval);
     }

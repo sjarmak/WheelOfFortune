@@ -65,11 +65,19 @@ describe('Characterization: current web reducer behavior', () => {
       revealedPositions: [],
       spinResult: null,
       turnState: 'IDLE',
+      mustSpin: true,
       player: { currentRoundScore: 0, totalScore: 0 },
       tossUpRevealOrder: [],
       tossUpIndex: 0,
+      tossUpElapsedMs: 0,
+      tossUpRevealIntervalMs: 1000,
+      tossUpLockoutMs: 0,
+      tossUpLockoutDurationMs: 3000,
       bonusTimer: 10,
+      bonusTimerMs: 20000,
+      bonusTimerDurationMs: 20000,
       bonusPicks: [],
+      roundResult: null,
       packId: 'default',
       seed: 0,
       roundCount: 0,
@@ -118,15 +126,27 @@ describe('Characterization: current web reducer behavior', () => {
     expect(state.guessedLetters).toEqual(['R', 'S', 'T', 'L', 'N', 'E']);
   });
 
-  test('START_ROUND on TOSSUP puzzle leaves revealedPositions empty and turnState IDLE', () => {
+  test('START_ROUND on TOSSUP puzzle leaves revealedPositions empty and enters TOSSUP_REVEALING', () => {
     const state = gameReducer(INITIAL_STATE, {
       type: 'START_ROUND',
       puzzle: tossupPuzzle,
       seed: 7,
     });
     expect(state.revealedPositions).toEqual([]);
-    expect(state.turnState).toBe('IDLE');
+    // iOS-parity: TOSSUP rounds auto-enter the revealing state (new behavior
+    // added by the reducer-port unit; logged in SNAPSHOT_LOCK.md).
+    expect(state.turnState).toBe('TOSSUP_REVEALING');
     expect(state.guessedLetters).toEqual([]);
+  });
+
+  test('START_ROUND on BONUS puzzle enters BONUS_PICKING', () => {
+    const state = gameReducer(INITIAL_STATE, {
+      type: 'START_ROUND',
+      puzzle: bonusPuzzle,
+      seed: 1,
+    });
+    // iOS-parity: BONUS rounds auto-enter the picking state.
+    expect(state.turnState).toBe('BONUS_PICKING');
   });
 
   // ---------------------------------------------------------------------------
@@ -317,11 +337,12 @@ describe('Characterization: current web reducer behavior', () => {
     const order = state.tossUpRevealOrder;
     expect(order.length).toBeGreaterThan(0);
 
-    state = gameReducer(state, { type: 'TOSS_UP_TICK' });
+    // iOS-parity: TOSS_UP_TICK now takes a dtMs payload (1000ms interval).
+    state = gameReducer(state, { type: 'TOSS_UP_TICK', dtMs: 1000 });
     expect(state.tossUpIndex).toBe(1);
     expect(state.revealedPositions).toEqual([order[0]]);
 
-    state = gameReducer(state, { type: 'TOSS_UP_TICK' });
+    state = gameReducer(state, { type: 'TOSS_UP_TICK', dtMs: 1000 });
     expect(state.tossUpIndex).toBe(2);
     expect(state.revealedPositions).toEqual([order[0], order[1]]);
   });
