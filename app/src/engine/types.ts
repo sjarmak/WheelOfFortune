@@ -30,13 +30,23 @@ export type GameState = {
   
   // Turn state
   spinResult: string | number | null; // 'BANKRUPT', 'LOSE_TURN', or cash value
-  turnState: 'IDLE' | 'SPINNING' | 'GUESSING_CONSONANT' | 'BUYING_VOWEL' | 'SOLVING' | 'ROUND_OVER';
-  
+  turnState:
+    | 'IDLE'
+    | 'SPINNING'
+    | 'GUESSING_CONSONANT'
+    | 'BUYING_VOWEL'
+    | 'SOLVING'
+    | 'ROUND_OVER'
+    | 'TOSSUP_REVEALING'
+    | 'TOSSUP_BUZZED'
+    | 'TOSSUP_LOCKED_OUT';
+
   player: PlayerState;
-  
+
   // Toss-up specific
   tossUpRevealOrder: number[];
   tossUpIndex: number; // How many revealed so far
+  roundResult?: 'WIN' | 'LOSS' | null;
   
   // Bonus specific
   bonusTimer: number;

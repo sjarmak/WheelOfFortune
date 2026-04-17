@@ -9,6 +9,7 @@ import { ModeSelector, ModeIndicator } from './components/ModeSelector';
 import { ALL_PACKS, PuzzlePack } from './engine/packs';
 import { DEFAULT_PUZZLES } from './engine/defaultPack';
 import { VOWELS, WheelWedge, GameMode } from './engine/types';
+import { TossUpScreen } from './screens/TossUpScreen';
 import { Settings as SettingsIcon, RotateCcw, X, Eye, EyeOff, Library, TrendingUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { StrategyDashboard } from './components/StrategyDashboard';
@@ -186,7 +187,25 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
 
   const nextRound = useCallback(() => {
     const seed = customSeed ? parseInt(customSeed) + state.roundCount : undefined;
-    const puzzles = activePack.puzzles;
+    let puzzles = activePack.puzzles;
+    // Test hook: `?tossup=1` forces the next puzzle to be a TOSSUP round so
+    // Playwright e2e tests can reliably drive the toss-up flow regardless
+    // of which pack is active. Searches across ALL_PACKS for any TOSSUP
+    // puzzle. Safe no-op when the query param is absent.
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tossup') === '1') {
+        const ownTossups = puzzles.filter(p => p.round_type === 'TOSSUP');
+        if (ownTossups.length > 0) {
+          puzzles = ownTossups;
+        } else {
+          const anyTossup = ALL_PACKS
+            .flatMap(p => p.puzzles)
+            .filter(p => p.round_type === 'TOSSUP');
+          if (anyTossup.length > 0) puzzles = anyTossup;
+        }
+      }
+    }
     const next = puzzles[Math.floor(Math.random() * puzzles.length)];
     dispatch({ type: 'START_ROUND', puzzle: next, seed });
   }, [activePack, customSeed, state.roundCount]);
@@ -206,6 +225,19 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
       nextRound();
     }
   }, [state.currentPuzzle, activePack]);
+
+  // Test hook: if `?tossup=1` is present but the current puzzle isn't a
+  // TOSSUP (e.g. stale localStorage from a previous session), force a fresh
+  // toss-up round. Runs once on mount and is a no-op when the param is absent.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tossup') !== '1') return;
+    if (state.currentPuzzle && state.currentPuzzle.round_type !== 'TOSSUP') {
+      nextRound();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Vowel Logic - check which puzzle vowels haven't been guessed yet
   const puzzleVowels = useMemo(() => {
@@ -314,6 +346,23 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
   }, [state.turnState]);
 
   if (!state.currentPuzzle) return <div className="h-screen flex items-center justify-center">Loading...</div>;
+
+  // Toss-Up rounds render a dedicated screen. The reducer places the game
+  // into TOSSUP_REVEALING on START_ROUND for TOSSUP puzzles, and the
+  // existing TOSS_UP_TICK effect drives the reveal animation.
+  if (
+    state.turnState === 'TOSSUP_REVEALING' ||
+    state.turnState === 'TOSSUP_BUZZED' ||
+    state.turnState === 'TOSSUP_LOCKED_OUT'
+  ) {
+    return (
+      <TossUpScreen
+        gameState={state}
+        dispatch={dispatch}
+        onRoundComplete={nextRound}
+      />
+    );
+  }
 
   return (
     <div className="h-screen bg-game-bg flex flex-col text-white pb-safe overflow-hidden">

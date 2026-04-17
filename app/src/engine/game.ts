@@ -15,10 +15,11 @@ export const INITIAL_STATE: GameState = {
   packId: 'default',
   seed: Date.now(),
   roundCount: 0,
-  spinCount: 0
+  spinCount: 0,
+  roundResult: null,
 };
 
-export type GameAction = 
+export type GameAction =
   | { type: 'START_ROUND'; puzzle: Puzzle; seed?: number }
   | { type: 'SPIN_WHEEL' }
   | { type: 'SPIN_RESULT'; wedge: WheelWedge }
@@ -26,6 +27,9 @@ export type GameAction =
   | { type: 'BUY_VOWEL' }
   | { type: 'SOLVE_ATTEMPT'; phrase: string }
   | { type: 'TOSS_UP_TICK' }
+  | { type: 'BUZZ_IN' }
+  | { type: 'TOSS_UP_SOLVE_ATTEMPT'; phrase: string }
+  | { type: 'CANCEL_TOSS_UP_ATTEMPT' }
   | { type: 'ADD_TO_ROUND_SCORE'; points: number }
   | { type: 'CLEAR_ROUND_SCORE' }
   | { type: 'RESET_GAME' };
@@ -55,18 +59,22 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
 
+      const initialTurnState: GameState['turnState'] =
+        puzzle.round_type === 'TOSSUP' ? 'TOSSUP_REVEALING' : 'IDLE';
+
       return {
         ...state,
         currentPuzzle: puzzle,
         guessedLetters: puzzle.round_type === 'BONUS' ? ['R','S','T','L','N','E'] : [],
-        revealedPositions: revealed, 
+        revealedPositions: revealed,
         spinResult: null,
-        turnState: puzzle.round_type === 'TOSSUP' ? 'IDLE' : 'IDLE',
+        turnState: initialTurnState,
         tossUpRevealOrder: shuffledReveal,
         tossUpIndex: 0,
         player: { ...state.player, currentRoundScore: 0, freePlay: false },
         roundCount: state.roundCount + 1,
-        spinCount: 0
+        spinCount: 0,
+        roundResult: null,
       };
     }
 
@@ -149,12 +157,57 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'TOSS_UP_TICK': {
+      // Only reveal while actively in the reveal phase
+      if (state.turnState !== 'TOSSUP_REVEALING') return state;
       if (state.tossUpIndex >= state.tossUpRevealOrder.length) return state;
       const nextPos = state.tossUpRevealOrder[state.tossUpIndex];
       return {
         ...state,
         revealedPositions: [...state.revealedPositions, nextPos],
         tossUpIndex: state.tossUpIndex + 1
+      };
+    }
+
+    case 'BUZZ_IN': {
+      // Only valid during an active toss-up reveal
+      if (state.turnState !== 'TOSSUP_REVEALING') return state;
+      return {
+        ...state,
+        turnState: 'TOSSUP_BUZZED',
+      };
+    }
+
+    case 'CANCEL_TOSS_UP_ATTEMPT': {
+      // Return from buzzed back to the reveal phase so the player can retry
+      if (state.turnState !== 'TOSSUP_BUZZED') return state;
+      return {
+        ...state,
+        turnState: 'TOSSUP_REVEALING',
+      };
+    }
+
+    case 'TOSS_UP_SOLVE_ATTEMPT': {
+      if (state.turnState !== 'TOSSUP_BUZZED') return state;
+      const puzzle = state.currentPuzzle;
+      if (!puzzle) return state;
+      const correct = action.phrase.trim().toUpperCase() === puzzle.phrase.toUpperCase();
+      if (correct) {
+        return {
+          ...state,
+          turnState: 'ROUND_OVER',
+          revealedPositions: Array.from({ length: puzzle.phrase.length }, (_, i) => i),
+          player: {
+            ...state.player,
+            totalScore: state.player.totalScore + state.player.currentRoundScore,
+          },
+          roundResult: 'WIN',
+        };
+      }
+      // Incorrect: player is locked out of this toss-up
+      return {
+        ...state,
+        turnState: 'TOSSUP_LOCKED_OUT',
+        roundResult: 'LOSS',
       };
     }
 
