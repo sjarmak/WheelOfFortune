@@ -6,7 +6,7 @@ import { Keyboard } from './components/Keyboard';
 import { PackSelector } from './components/PackSelector';
 import { KidModeApp } from './components/KidModeApp';
 import { ModeSelector, ModeIndicator } from './components/ModeSelector';
-import { ALL_PACKS, PuzzlePack } from './engine/packs';
+import { ALL_PACKS, PuzzlePack, getPuzzlesForMode } from './engine/packs';
 import { DEFAULT_PUZZLES } from './engine/defaultPack';
 import { VOWELS, WheelWedge, GameMode } from './engine/types';
 import { Settings as SettingsIcon, RotateCcw, X, Eye, EyeOff, Library, TrendingUp } from 'lucide-react';
@@ -186,7 +186,11 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
 
   const nextRound = useCallback(() => {
     const seed = customSeed ? parseInt(customSeed) + state.roundCount : undefined;
-    const puzzles = activePack.puzzles;
+    // Filter to MAIN round puzzles only — TOSSUP/BONUS puzzles must not appear
+    // in the Main Game flow. Fall back to the full pack if a pack has no MAIN
+    // puzzles tagged (some older packs lack round_type metadata — treated as MAIN by the filter).
+    const mainPuzzles = getPuzzlesForMode(activePack.puzzles, 'MAIN');
+    const puzzles = mainPuzzles.length > 0 ? mainPuzzles : activePack.puzzles;
     const next = puzzles[Math.floor(Math.random() * puzzles.length)];
     dispatch({ type: 'START_ROUND', puzzle: next, seed });
   }, [activePack, customSeed, state.roundCount]);
@@ -194,9 +198,11 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
   const selectPack = useCallback((pack: PuzzlePack) => {
     setActivePack(pack);
     setShowPackSelector(false);
-    // Start a new round from the new pack
+    // Start a new round from the new pack (MAIN puzzles only, same rationale as nextRound)
     const seed = customSeed ? parseInt(customSeed) + state.roundCount : undefined;
-    const next = pack.puzzles[Math.floor(Math.random() * pack.puzzles.length)];
+    const mainPuzzles = getPuzzlesForMode(pack.puzzles, 'MAIN');
+    const puzzles = mainPuzzles.length > 0 ? mainPuzzles : pack.puzzles;
+    const next = puzzles[Math.floor(Math.random() * puzzles.length)];
     dispatch({ type: 'START_ROUND', puzzle: next, seed });
   }, [customSeed, state.roundCount]);
   

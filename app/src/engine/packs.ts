@@ -231,3 +231,20 @@ export const ALL_PACKS = buildPacks();
 export function getPackById(id: string): PuzzlePack | undefined {
   return ALL_PACKS.find(p => p.id === id);
 }
+
+/**
+ * Filter puzzles by round_type for a given mode.
+ *
+ * Puzzles missing a round_type are treated as 'MAIN' for backwards compatibility
+ * with older data that predates the TOSSUP/BONUS labeling.
+ *
+ * This prevents TOSSUP/BONUS puzzles from appearing in Main Game rounds and
+ * vice-versa — a latent bug in the web app where `activePack.puzzles` was used
+ * directly without filtering.
+ */
+export function getPuzzlesForMode(puzzles: Puzzle[], mode: RoundType): Puzzle[] {
+  return puzzles.filter(p => {
+    const roundType = p.round_type ?? 'MAIN';
+    return roundType === mode;
+  });
+}
