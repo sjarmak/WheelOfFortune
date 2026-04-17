@@ -57,12 +57,12 @@ describe('TossUpScreen integration', () => {
     render(<Harness onRef={(a) => { api = a; }} />);
 
     const before = api.getState().revealedPositions.length;
-    act(() => { api.dispatch({ type: 'TOSS_UP_TICK' }); });
+    act(() => { api.dispatch({ type: 'TOSS_UP_TICK', dtMs: 1000 }); });
     const afterOne = api.getState().revealedPositions.length;
     expect(afterOne).toBe(before + 1);
 
-    act(() => { api.dispatch({ type: 'TOSS_UP_TICK' }); });
-    act(() => { api.dispatch({ type: 'TOSS_UP_TICK' }); });
+    act(() => { api.dispatch({ type: 'TOSS_UP_TICK', dtMs: 1000 }); });
+    act(() => { api.dispatch({ type: 'TOSS_UP_TICK', dtMs: 1000 }); });
     expect(api.getState().revealedPositions.length).toBe(before + 3);
   });
 
@@ -141,12 +141,12 @@ describe('TossUpScreen integration', () => {
     let api: any;
     render(<Harness onRef={(a) => { api = a; }} />);
 
-    act(() => { api.dispatch({ type: 'TOSS_UP_TICK' }); });
+    act(() => { api.dispatch({ type: 'TOSS_UP_TICK', dtMs: 1000 }); });
     const revealedBeforeBuzz = api.getState().revealedPositions.length;
 
     act(() => { api.dispatch({ type: 'BUZZ_IN' }); });
-    act(() => { api.dispatch({ type: 'TOSS_UP_TICK' }); });
-    act(() => { api.dispatch({ type: 'TOSS_UP_TICK' }); });
+    act(() => { api.dispatch({ type: 'TOSS_UP_TICK', dtMs: 1000 }); });
+    act(() => { api.dispatch({ type: 'TOSS_UP_TICK', dtMs: 1000 }); });
 
     // While BUZZED, ticks must be frozen
     expect(api.getState().revealedPositions.length).toBe(revealedBeforeBuzz);

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>StandardWheel e2e harness</title>
+    <style>
+      body { margin: 0; padding: 24px; background: #1a1a2e; color: white; font-family: system-ui, sans-serif; }
+      #wheel-mount { width: 360px; height: 360px; margin: 24px auto; }
+      #log { font-family: monospace; font-size: 12px; max-width: 640px; margin: 0 auto; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <h1 style="text-align:center">Wheel spin harness</h1>
+    <div id="wheel-mount"></div>
+    <div id="log"></div>
+    <script type="module" src="/tests/e2e/fixtures/wheel-harness.tsx"></script>
+  </body>
+</html>
