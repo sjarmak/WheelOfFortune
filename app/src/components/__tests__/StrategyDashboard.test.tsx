@@ -33,8 +33,7 @@ const mockAnalytics: PuzzleCorpusAnalytics = {
     expectedValue: 680,
     bankruptProbability: 8.33,
     loseTurnProbability: 4.17,
-    freePlayProbability: 4.17,
-    cashProbability: 83.33,
+    cashProbability: 87.5,
     avgCashValue: 705
   }
 };
@@ -119,7 +118,6 @@ describe('StrategyDashboard', () => {
     expect(screen.getByText('💰 Cash')).toBeInTheDocument();
     expect(screen.getByText('💥 Bankrupt')).toBeInTheDocument();
     expect(screen.getByText('🚫 Lose Turn')).toBeInTheDocument();
-    expect(screen.getByText('🎁 Free Play')).toBeInTheDocument();
   });
 
   it('should display category insights', () => {

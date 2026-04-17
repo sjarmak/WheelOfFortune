@@ -64,7 +64,7 @@ describe('BANKRUPT and LOSE_TURN Handling', () => {
 
     // Spin $500, guess 'L' (appears 3 times = 1500 points)
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const cashWedge = { id: '1', type: 'CASH' as const, value: 500, label: '$500', color: 'red', weight: 1 };
+    const cashWedge = { id: '1', type: 'VALUE' as const, value: 500, label: '$500', color: 'red', weight: 1 };
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
       wedge: cashWedge
@@ -99,7 +99,7 @@ describe('BANKRUPT and LOSE_TURN Handling', () => {
 
     // Earn 2000 points
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const cashWedge = { id: '1', type: 'CASH' as const, value: 500, label: '$500', color: 'red', weight: 1 };
+    const cashWedge = { id: '1', type: 'VALUE' as const, value: 500, label: '$500', color: 'red', weight: 1 };
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
       wedge: cashWedge
@@ -133,7 +133,7 @@ describe('BANKRUPT and LOSE_TURN Handling', () => {
 
     // Spin $600
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const cashWedge = { id: '1', type: 'CASH' as const, value: 600, label: '$600', color: 'red', weight: 1 };
+    const cashWedge = { id: '1', type: 'VALUE' as const, value: 600, label: '$600', color: 'red', weight: 1 };
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
       wedge: cashWedge

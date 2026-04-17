@@ -7,7 +7,7 @@ export const INITIAL_STATE: GameState = {
   revealedPositions: [],
   spinResult: null,
   turnState: 'IDLE',
-  player: { currentRoundScore: 0, totalScore: 0, freePlay: false },
+  player: { currentRoundScore: 0, totalScore: 0 },
   tossUpRevealOrder: [],
   tossUpIndex: 0,
   bonusTimer: 10,
@@ -64,7 +64,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         turnState: puzzle.round_type === 'TOSSUP' ? 'IDLE' : 'IDLE',
         tossUpRevealOrder: shuffledReveal,
         tossUpIndex: 0,
-        player: { ...state.player, currentRoundScore: 0, freePlay: false },
+        player: { ...state.player, currentRoundScore: 0 },
         roundCount: state.roundCount + 1,
         spinCount: 0
       };
@@ -93,8 +93,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         spinResult: wedge.value,
-        turnState: 'GUESSING_CONSONANT',
-        player: { ...state.player, freePlay: wedge.type === 'FREE_PLAY' }
+        turnState: 'GUESSING_CONSONANT'
       };
     }
 
@@ -125,7 +124,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       }
 
       // Add money if consonant and not buying
-      if (!isVowel && typeof state.spinResult === 'number' && !state.player.freePlay) {
+      if (!isVowel && typeof state.spinResult === 'number') {
         newScore += (state.spinResult * count);
       }
       

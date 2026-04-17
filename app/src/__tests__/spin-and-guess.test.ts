@@ -20,7 +20,7 @@ describe('Spin and Guess Flow', () => {
     expect(state.canSpin).toBeUndefined(); // No canSpin in state
 
     // Spin completes with cash
-    const cashWedge = WHEEL_CONFIG.find(w => w.type === 'CASH');
+    const cashWedge = WHEEL_CONFIG.find(w => w.type === 'VALUE');
     state = gameReducer(state, { type: 'SPIN_RESULT', wedge: cashWedge! });
     expect(state.turnState).toBe('GUESSING_CONSONANT');
     expect(state.spinResult).toBe(cashWedge!.value);
@@ -42,7 +42,7 @@ describe('Spin and Guess Flow', () => {
 
     // Spin and land on $500
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const cashWedge = WHEEL_CONFIG.find(w => w.type === 'CASH' && w.value === 500)!;
+    const cashWedge = WHEEL_CONFIG.find(w => w.type === 'VALUE' && w.value === 500)!;
     state = gameReducer(state, { type: 'SPIN_RESULT', wedge: cashWedge });
 
     expect(state.turnState).toBe('GUESSING_CONSONANT');
@@ -57,15 +57,4 @@ describe('Spin and Guess Flow', () => {
     expect(state.spinResult).toBe(500); // Keep the spin value
   });
 
-  it('should handle FREE_PLAY flag', () => {
-    let state = gameReducer(INITIAL_STATE, { type: 'START_ROUND', puzzle: testPuzzle });
-
-    // Spin and land on FREE_PLAY
-    state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const freePlayWedge = WHEEL_CONFIG.find(w => w.type === 'FREE_PLAY')!;
-    state = gameReducer(state, { type: 'SPIN_RESULT', wedge: freePlayWedge });
-
-    expect(state.player.freePlay).toBe(true);
-    expect(state.spinResult).toBe(freePlayWedge.value);
-  });
 });

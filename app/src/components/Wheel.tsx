@@ -188,7 +188,7 @@ export const Wheel: React.FC<WheelProps> = ({
           </defs>
 
           {WHEEL_CONFIG.map((wedge) => {
-            const isSpecial = wedge.type === 'BANKRUPT' || wedge.type === 'LOSE_TURN' || wedge.type === 'FREE_PLAY';
+            const isSpecial = wedge.type === 'BANKRUPT' || wedge.type === 'LOSE_TURN';
             const textColor = wedge.type === 'BANKRUPT' ? '#fff' : 
                               wedge.type === 'LOSE_TURN' ? '#000' : '#000';
             return (

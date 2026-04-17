@@ -28,7 +28,6 @@ export interface WheelAnalysis {
   expectedValue: number;
   bankruptProbability: number;
   loseTurnProbability: number;
-  freePlayProbability: number;
   cashProbability: number;
   avgCashValue: number;
 }
@@ -195,12 +194,11 @@ function calculateWheelAnalysis(): WheelAnalysis {
   let cashWedges = 0;
   let bankruptWedges = 0;
   let loseTurnWedges = 0;
-  let freePlayWedges = 0;
   let totalCashValue = 0;
 
   for (const wedge of WHEEL_CONFIG) {
     switch (wedge.type) {
-      case 'CASH':
+      case 'VALUE':
         cashWedges++;
         totalCashValue += wedge.value;
         break;
@@ -210,16 +208,12 @@ function calculateWheelAnalysis(): WheelAnalysis {
       case 'LOSE_TURN':
         loseTurnWedges++;
         break;
-      case 'FREE_PLAY':
-        freePlayWedges++;
-        break;
     }
   }
 
   const cashProbability = (cashWedges / totalWedges) * 100;
   const bankruptProbability = (bankruptWedges / totalWedges) * 100;
   const loseTurnProbability = (loseTurnWedges / totalWedges) * 100;
-  const freePlayProbability = (freePlayWedges / totalWedges) * 100;
 
   const avgCashValue = totalCashValue / cashWedges;
 
@@ -230,7 +224,6 @@ function calculateWheelAnalysis(): WheelAnalysis {
     expectedValue,
     bankruptProbability,
     loseTurnProbability,
-    freePlayProbability,
     cashProbability,
     avgCashValue
   };
