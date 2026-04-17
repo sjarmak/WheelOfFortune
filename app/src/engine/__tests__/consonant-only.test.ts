@@ -19,7 +19,7 @@ describe('Consonant-Only Guessing after Spin', () => {
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
     expect(state.turnState).toBe('SPINNING');
 
-    const cashWedge = { id: '1', type: 'CASH' as const, value: 500, label: '$500', color: 'red', weight: 1 };
+    const cashWedge = { id: '1', type: 'VALUE' as const, value: 500, label: '$500', color: 'red', weight: 1 };
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
       wedge: cashWedge
@@ -51,7 +51,7 @@ describe('Consonant-Only Guessing after Spin', () => {
     });
 
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const cashWedge = { id: '1', type: 'CASH' as const, value: 500, label: '$500', color: 'red', weight: 1 };
+    const cashWedge = { id: '1', type: 'VALUE' as const, value: 500, label: '$500', color: 'red', weight: 1 };
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
       wedge: cashWedge
@@ -92,31 +92,4 @@ describe('Consonant-Only Guessing after Spin', () => {
     expect(VOWELS).not.toContain('Y');
   });
 
-  test('After guessing consonant in free play, returns to IDLE', () => {
-    let state = gameReducer(INITIAL_STATE, {
-      type: 'START_ROUND',
-      puzzle: mockPuzzle
-    });
-
-    state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const freePlayWedge = { id: '10', type: 'FREE_PLAY' as const, value: 500, label: 'FREE PLAY', color: 'yellow', weight: 1 };
-    state = gameReducer(state, {
-      type: 'SPIN_RESULT',
-      wedge: freePlayWedge
-    });
-
-    expect(state.player.freePlay).toBe(true);
-    expect(state.turnState).toBe('GUESSING_CONSONANT');
-
-    // Guess consonant
-    state = gameReducer(state, {
-      type: 'GUESS_LETTER',
-      letter: 'H',
-      cost: 0
-    });
-
-    expect(state.turnState).toBe('IDLE'); // Back to choice state even with free play
-    expect(state.player.freePlay).toBe(true);
-    expect(state.spinResult).toBe(500); // Keep spin value
-  });
 });

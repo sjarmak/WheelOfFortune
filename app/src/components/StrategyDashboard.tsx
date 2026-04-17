@@ -258,12 +258,6 @@ export const StrategyDashboard: React.FC<StrategyDashboardProps> = ({
                     {analytics.wheelAnalysis.loseTurnProbability.toFixed(1)}%
                   </span>
                 </div>
-                <div className="flex items-center justify-between p-4 bg-blue-900/30 rounded-lg">
-                  <span className="font-medium">🎁 Free Play</span>
-                  <span className="text-2xl font-bold text-blue-400">
-                    {analytics.wheelAnalysis.freePlayProbability.toFixed(1)}%
-                  </span>
-                </div>
               </div>
             </div>
 

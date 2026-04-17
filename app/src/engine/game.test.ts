@@ -23,7 +23,7 @@ describe('Game Reducer - Turn Flow', () => {
     // Get spin result (cash value)
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
-      wedge: { id: '1', type: 'CASH', value: 500, label: '$500', color: '#999' }
+      wedge: { id: '1', type: 'VALUE', value: 500, label: '$500', color: '#999' }
     });
     expect(state.turnState).toBe('GUESSING_CONSONANT');
     expect(state.spinResult).toBe(500);
@@ -40,7 +40,7 @@ describe('Game Reducer - Turn Flow', () => {
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
-      wedge: { id: '1', type: 'CASH', value: 500, label: '$500', color: '#999' }
+      wedge: { id: '1', type: 'VALUE', value: 500, label: '$500', color: '#999' }
     });
 
     // Guess another consonant that IS in phrase (L) - appears 3 times at positions 2, 3, 9
@@ -66,7 +66,7 @@ describe('Game Reducer - Turn Flow', () => {
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
-      wedge: { id: '1', type: 'CASH', value: 500, label: '$500', color: '#999' }
+      wedge: { id: '1', type: 'VALUE', value: 500, label: '$500', color: '#999' }
     });
     expect(state.turnState).toBe('GUESSING_CONSONANT');
     expect(state.spinResult).toBe(500);
@@ -88,21 +88,4 @@ describe('Game Reducer - Turn Flow', () => {
     expect(state.player.currentRoundScore).toBe(250); // 500 - 250 (vowel cost)
   });
 
-  it('should return to IDLE even with FREE_PLAY on missed letter', () => {
-    let state = gameReducer(INITIAL_STATE, { type: 'START_ROUND', puzzle, seed: 42 });
-
-    state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    state = gameReducer(state, {
-      type: 'SPIN_RESULT',
-      wedge: { id: '12', type: 'FREE_PLAY', value: 500, label: 'FREE PLAY', color: '#999' }
-    });
-    expect(state.player.freePlay).toBe(true);
-    expect(state.turnState).toBe('GUESSING_CONSONANT');
-
-    // Guess letter not in phrase - still goes to IDLE (but in real game, FREE_PLAY might have different rules)
-    state = gameReducer(state, { type: 'GUESS_LETTER', letter: 'B', cost: 0 });
-    expect(state.turnState).toBe('IDLE'); // Returns to choice state
-    expect(state.player.freePlay).toBe(true); // But free play status stays
-    expect(state.player.currentRoundScore).toBe(0); // No money for missing
-  });
 });

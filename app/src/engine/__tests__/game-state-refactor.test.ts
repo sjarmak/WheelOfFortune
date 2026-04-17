@@ -66,7 +66,7 @@ describe('GameState Refactor - Round vs Total Scores', () => {
   test('CLEAR_ROUND_SCORE zeros currentRoundScore but preserves totalScore', () => {
     let state = {
       ...INITIAL_STATE,
-      player: { currentRoundScore: 1500, totalScore: 5000, freePlay: false }
+      player: { currentRoundScore: 1500, totalScore: 5000 }
     };
 
     const afterBankrupt = gameReducer(state, {

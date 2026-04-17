@@ -269,14 +269,13 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
     dispatch({ type: 'SPIN_RESULT', wedge });
     if (wedge.type === 'BANKRUPT') showToast('BANKRUPT!', 'error');
     if (wedge.type === 'LOSE_TURN') showToast('LOSE TURN!', 'error');
-    if (wedge.type === 'FREE_PLAY') showToast('FREE PLAY!', 'success');
   };
 
   const handleGuess = (letter: string) => {
     const isVowel = VOWELS.includes(letter);
     const cost = isVowel ? vowelCost : 0; 
 
-    if (isVowel && state.player.currentRoundScore < cost && !state.player.freePlay) {
+    if (isVowel && state.player.currentRoundScore < cost) {
       showToast('Not enough money to buy vowel!', 'error');
       return;
     }
@@ -403,16 +402,16 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
                     </button>
                     <button 
                       onClick={() => {
-                        if (state.player.currentRoundScore < vowelCost && !state.player.freePlay) {
+                        if (state.player.currentRoundScore < vowelCost) {
                           showToast('Not enough money to buy vowel!', 'error');
                           return;
                         }
                         dispatch({ type: 'BUY_VOWEL' });
                       }}
-                      disabled={!vowelsLeft || (state.player.currentRoundScore < vowelCost && !state.player.freePlay)}
+                      disabled={!vowelsLeft || state.player.currentRoundScore < vowelCost}
                       className="px-3 py-1.5 sm:px-4 sm:py-2 bg-purple-600 rounded-lg font-bold text-sm sm:text-base shadow-md hover:bg-purple-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
                     >
-                      {vowelsLeft && state.player.currentRoundScore >= vowelCost || state.player.freePlay ? `VOWEL $${vowelCost}` : vowelsLeft ? 'NEED $$$' : 'NO VOWELS'}
+                      {vowelsLeft && state.player.currentRoundScore >= vowelCost ? `VOWEL $${vowelCost}` : vowelsLeft ? 'NEED $$$' : 'NO VOWELS'}
                     </button>
                   </div>
                )}

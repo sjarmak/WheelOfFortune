@@ -18,7 +18,7 @@ describe('Multiple Letter Rule - Points × Letter Count', () => {
 
     // Spin $500
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const cashWedge = { id: '1', type: 'CASH' as const, value: 500, label: '$500', color: 'red', weight: 1 };
+    const cashWedge = { id: '1', type: 'VALUE' as const, value: 500, label: '$500', color: 'red', weight: 1 };
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
       wedge: cashWedge
@@ -47,7 +47,7 @@ describe('Multiple Letter Rule - Points × Letter Count', () => {
     });
 
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const cashWedge = { id: '1', type: 'CASH' as const, value: 600, label: '$600', color: 'red', weight: 1 };
+    const cashWedge = { id: '1', type: 'VALUE' as const, value: 600, label: '$600', color: 'red', weight: 1 };
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
       wedge: cashWedge
@@ -70,7 +70,7 @@ describe('Multiple Letter Rule - Points × Letter Count', () => {
     });
 
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const cashWedge = { id: '1', type: 'CASH' as const, value: 500, label: '$500', color: 'red', weight: 1 };
+    const cashWedge = { id: '1', type: 'VALUE' as const, value: 500, label: '$500', color: 'red', weight: 1 };
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
       wedge: cashWedge
@@ -86,7 +86,7 @@ describe('Multiple Letter Rule - Points × Letter Count', () => {
     expect(state.player.currentRoundScore).toBe(0);
   });
 
-  test('Buying vowel with multiple occurrences multiplies points', () => {
+  test('Vowel guess does not earn spin-value points', () => {
     let state = gameReducer(INITIAL_STATE, {
       type: 'START_ROUND',
       puzzle: mockPuzzle
@@ -96,22 +96,21 @@ describe('Multiple Letter Rule - Points × Letter Count', () => {
     state = { ...state, player: { ...state.player, currentRoundScore: 500 } };
 
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const freePlayWedge = { id: '10', type: 'FREE_PLAY' as const, value: 0, label: 'FREE PLAY', color: 'yellow', weight: 1 };
+    const cashWedge = { id: '1', type: 'VALUE' as const, value: 500, label: '$500', color: 'red', weight: 1 };
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
-      wedge: freePlayWedge
+      wedge: cashWedge
     });
 
     // Buy vowel 'E' - appears 1 time in HELLO WORLD
-    // Cost is 250, but we're in free play so no cost
     state = gameReducer(state, {
       type: 'GUESS_LETTER',
       letter: 'E',
-      cost: 0 // Free play removes cost
+      cost: 250
     });
 
-    // No points added for vowel in free play (no wheel value)
-    expect(state.player.currentRoundScore).toBe(500);
+    // Vowels never earn spin-value points, only deduct their cost
+    expect(state.player.currentRoundScore).toBe(250); // 500 - 250 vowel cost
   });
 
   test('After revealing letters, they are included in revealedPositions', () => {
@@ -121,7 +120,7 @@ describe('Multiple Letter Rule - Points × Letter Count', () => {
     });
 
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const cashWedge = { id: '1', type: 'CASH' as const, value: 500, label: '$500', color: 'red', weight: 1 };
+    const cashWedge = { id: '1', type: 'VALUE' as const, value: 500, label: '$500', color: 'red', weight: 1 };
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
       wedge: cashWedge
@@ -146,7 +145,7 @@ describe('Multiple Letter Rule - Points × Letter Count', () => {
     });
 
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    const cashWedge = { id: '1', type: 'CASH' as const, value: 500, label: '$500', color: 'red', weight: 1 };
+    const cashWedge = { id: '1', type: 'VALUE' as const, value: 500, label: '$500', color: 'red', weight: 1 };
     state = gameReducer(state, {
       type: 'SPIN_RESULT',
       wedge: cashWedge

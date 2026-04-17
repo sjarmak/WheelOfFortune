@@ -107,10 +107,9 @@ describe('strategyAnalytics', () => {
       const analytics = analyzePuzzlePack(puzzles);
 
       expect(analytics.wheelAnalysis).toBeDefined();
-      expect(analytics.wheelAnalysis.cashProbability).toBeCloseTo(83.33, 1); // 20/24 ≈ 83.33%
+      expect(analytics.wheelAnalysis.cashProbability).toBeCloseTo(87.5, 1); // 21/24 = 87.5%
       expect(analytics.wheelAnalysis.bankruptProbability).toBeCloseTo(8.33, 1); // 2/24 ≈ 8.33%
       expect(analytics.wheelAnalysis.loseTurnProbability).toBeCloseTo(4.17, 1); // 1/24 ≈ 4.17%
-      expect(analytics.wheelAnalysis.freePlayProbability).toBeCloseTo(4.17, 1); // 1/24 ≈ 4.17%
       expect(analytics.wheelAnalysis.expectedValue).toBeGreaterThan(0);
       expect(analytics.wheelAnalysis.avgCashValue).toBeGreaterThan(0);
     });
