@@ -12,14 +12,15 @@ const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [['list'], ['html', { open: 'never' }]],
+  timeout: 30_000,
   use: {
-    baseURL: DEV_SERVER_URL,
-    trace: 'on-first-retry',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || DEV_SERVER_URL,
+    trace: 'retain-on-failure',
   },
   projects: [
     {
