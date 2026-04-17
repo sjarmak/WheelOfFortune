@@ -36,7 +36,7 @@ const tossupPuzzle: Puzzle = {
 
 // Helper: build a minimally valid wedge. Uses `as const` for literal type on `type`.
 function cashWedge(value: number): WheelWedge {
-  return { id: 'w-cash', type: 'CASH', value, label: `$${value}`, color: '#000' };
+  return { id: 'w-cash', type: 'VALUE', value, label: `$${value}`, color: '#000' };
 }
 const bankruptWedge: WheelWedge = {
   id: 'w-bk',
@@ -52,14 +52,6 @@ const loseTurnWedge: WheelWedge = {
   label: 'LOSE A TURN',
   color: '#FFF',
 };
-const freePlayWedge: WheelWedge = {
-  id: 'w-fp',
-  type: 'FREE_PLAY',
-  value: 500,
-  label: 'FREE PLAY',
-  color: '#0F0',
-};
-
 describe('Characterization: current web reducer behavior', () => {
   // ---------------------------------------------------------------------------
   // Initial state shape
@@ -73,7 +65,7 @@ describe('Characterization: current web reducer behavior', () => {
       revealedPositions: [],
       spinResult: null,
       turnState: 'IDLE',
-      player: { currentRoundScore: 0, totalScore: 0, freePlay: false },
+      player: { currentRoundScore: 0, totalScore: 0 },
       tossUpRevealOrder: [],
       tossUpIndex: 0,
       bonusTimer: 10,
@@ -103,7 +95,6 @@ describe('Characterization: current web reducer behavior', () => {
     expect(state.spinResult).toBeNull();
     expect(state.turnState).toBe('IDLE');
     expect(state.player.currentRoundScore).toBe(0);
-    expect(state.player.freePlay).toBe(false);
     expect(state.roundCount).toBe(INITIAL_STATE.roundCount + 1);
     expect(state.spinCount).toBe(0);
     expect(state.tossUpIndex).toBe(0);
@@ -160,23 +151,12 @@ describe('Characterization: current web reducer behavior', () => {
   // ---------------------------------------------------------------------------
   // SPIN_RESULT wedge-type branches
   // ---------------------------------------------------------------------------
-  test('SPIN_RESULT on CASH wedge sets spinResult to value and enters GUESSING_CONSONANT (freePlay=false)', () => {
+  test('SPIN_RESULT on VALUE wedge sets spinResult to value and enters GUESSING_CONSONANT', () => {
     let state = gameReducer(INITIAL_STATE, { type: 'START_ROUND', puzzle: mainPuzzle, seed: 1 });
     state = gameReducer(state, { type: 'SPIN_WHEEL' });
     state = gameReducer(state, { type: 'SPIN_RESULT', wedge: cashWedge(500) });
 
     expect(state.spinResult).toBe(500);
-    expect(state.turnState).toBe('GUESSING_CONSONANT');
-    expect(state.player.freePlay).toBe(false);
-  });
-
-  test('SPIN_RESULT on FREE_PLAY wedge sets freePlay=true and enters GUESSING_CONSONANT', () => {
-    let state = gameReducer(INITIAL_STATE, { type: 'START_ROUND', puzzle: mainPuzzle, seed: 1 });
-    state = gameReducer(state, { type: 'SPIN_WHEEL' });
-    state = gameReducer(state, { type: 'SPIN_RESULT', wedge: freePlayWedge });
-
-    expect(state.spinResult).toBe(500);
-    expect(state.player.freePlay).toBe(true);
     expect(state.turnState).toBe('GUESSING_CONSONANT');
   });
 
@@ -399,22 +379,13 @@ describe('Characterization: current web reducer behavior', () => {
   // ---------------------------------------------------------------------------
   // Current wedge types snapshot
   // ---------------------------------------------------------------------------
-  test('WheelWedge.type supports CASH, BANKRUPT, LOSE_TURN, FREE_PLAY, PRIZE (documented union)', () => {
-    // Compile-time + runtime assertion that these type literals are valid wedge types.
+  test('WheelWedge.type supports VALUE, BANKRUPT, LOSE_TURN (documented union after remove-free-play)', () => {
     const wedges: WheelWedge[] = [
-      { id: '1', type: 'CASH', value: 500, label: '$500', color: '#000' },
+      { id: '1', type: 'VALUE', value: 500, label: '$500', color: '#000' },
       { id: '2', type: 'BANKRUPT', value: 0, label: 'BANKRUPT', color: '#000' },
       { id: '3', type: 'LOSE_TURN', value: 0, label: 'LOSE A TURN', color: '#FFF' },
-      { id: '4', type: 'FREE_PLAY', value: 500, label: 'FREE PLAY', color: '#0F0' },
-      { id: '5', type: 'PRIZE', value: 0, label: 'PRIZE', color: '#F0F' },
     ];
-    expect(wedges.map((w) => w.type)).toEqual([
-      'CASH',
-      'BANKRUPT',
-      'LOSE_TURN',
-      'FREE_PLAY',
-      'PRIZE',
-    ]);
+    expect(wedges.map((w) => w.type)).toEqual(['VALUE', 'BANKRUPT', 'LOSE_TURN']);
   });
 });
 

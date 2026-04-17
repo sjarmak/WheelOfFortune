@@ -1,0 +1,318 @@
+[
+  {
+    "id": "r3-roundtype-fix",
+    "name": "R3: Filter MAIN puzzles in App.tsx",
+    "description": "Fix latent round_type bug in web. Call getPuzzlesForMode(puzzles, 'MAIN') before nextRound() selection in app/src/App.tsx so TOSSUP/BONUS puzzles don't appear in Main Game. Add unit test asserting filter returns only MAIN puzzles.",
+    "deps": [],
+    "tier": "small",
+    "acceptance": [
+      "app/src/App.tsx calls getPuzzlesForMode(puzzles, 'MAIN') before nextRound() is called in the main game flow",
+      "New unit test in app/src/engine/__tests__/packs.test.ts asserts getPuzzlesForMode filter returns only puzzles with round_type === 'MAIN' (or missing round_type treated as MAIN)",
+      "Running `cd app && npx vitest run` passes with the new test included",
+      "Running `cd app && npx tsc --noEmit` passes with zero type errors"
+    ],
+    "layer": 0,
+    "scope": ["app/src/App.tsx", "app/src/engine/__tests__/packs.test.ts", "app/src/engine/packs.ts"],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  },
+  {
+    "id": "drift-check-script",
+    "name": "Engine drift check CI script",
+    "description": "Create a 10-line bash script scripts/check-engine-drift.sh that hashes ios/src/engine/game.ts and app/src/engine/game.ts (and types.ts) and warns on divergence. Serves as interim guardrail until /shared/engine/ extraction.",
+    "deps": [],
+    "tier": "trivial",
+    "acceptance": [
+      "scripts/check-engine-drift.sh exists, is executable, and uses sha256sum or shasum to compare ios/src/engine/game.ts and app/src/engine/game.ts (plus types.ts)",
+      "Running `bash scripts/check-engine-drift.sh` prints a clear WARN message when hashes differ and exits with nonzero code, or prints OK and exits 0 when identical",
+      "Script has an informative header comment explaining its purpose and that it's an interim guardrail for engine drift"
+    ],
+    "layer": 0,
+    "scope": ["scripts/check-engine-drift.sh"],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  },
+  {
+    "id": "playwright-webkit-gate",
+    "name": "Playwright WebKit smoke test gate",
+    "description": "Set up Playwright with WebKit browser as the primary target (iPad Safari). One smoke test that boots `vite dev`, loads the homepage in WebKit, and asserts no console errors.",
+    "deps": [],
+    "tier": "medium",
+    "acceptance": [
+      "app/playwright.config.ts exists and configures WebKit as the primary project/browser",
+      "app/tests/e2e/smoke.spec.ts exists and loads http://localhost:5173 (or configured port), waits for the root app container, and asserts no console errors/warnings with severity error",
+      "app/package.json has a script like `test:e2e` that runs `playwright test`",
+      "Playwright dependencies are installed in app/package.json (`@playwright/test`) and browsers are installable via `npx playwright install webkit`",
+      "Running `cd app && npx playwright test --project=webkit` passes against the current main branch (homepage should render without console errors)"
+    ],
+    "layer": 0,
+    "scope": [
+      "app/playwright.config.ts",
+      "app/tests/e2e/smoke.spec.ts",
+      "app/package.json",
+      "app/.gitignore"
+    ],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  },
+  {
+    "id": "safety-infra",
+    "name": "Safety infrastructure (ErrorBoundary, dist cleanup, gitignore)",
+    "description": "Add React ErrorBoundary at root of App.tsx so hydration failures don't produce white screens. Remove tracked app/dist/ from git and add to .gitignore. Show a stack banner on dev builds only.",
+    "deps": ["r3-roundtype-fix"],
+    "tier": "small",
+    "acceptance": [
+      "app/src/components/ErrorBoundary.tsx exists with React class component implementing componentDidCatch and rendering a fallback UI including the error message (only in dev mode) and a Reload button",
+      "app/src/main.tsx or app/src/App.tsx wraps the root <App /> in <ErrorBoundary>",
+      "app/dist/ is added to app/.gitignore (or root .gitignore) and no longer tracked in git (`git ls-files app/dist` returns empty)",
+      "Running `cd app && npx vitest run` passes with any new ErrorBoundary unit tests",
+      "Running `cd app && npx tsc --noEmit` passes"
+    ],
+    "layer": 1,
+    "scope": [
+      "app/src/components/ErrorBoundary.tsx",
+      "app/src/main.tsx",
+      "app/src/App.tsx",
+      "app/.gitignore",
+      ".gitignore"
+    ],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  },
+  {
+    "id": "characterization-tests",
+    "name": "Characterization test suite on current web reducer",
+    "description": "Snapshot current web reducer behavior before modifying. Covers: main-game dispatch flows (spin, buy vowel, guess consonant, solve), kid-mode rehydrate (KID_HYDRATE_STATE), and current wedge types. Add SNAPSHOT_LOCK.md documenting the reducer SHA at time of capture and rules for updating snapshots.",
+    "deps": ["r3-roundtype-fix"],
+    "tier": "medium",
+    "acceptance": [
+      "app/src/engine/__tests__/characterization.test.ts exists with 10+ test cases covering current reducer behavior for main game flow (at least: INIT, SPIN, GUESS_CONSONANT correct/incorrect, BUY_VOWEL, SOLVE correct/incorrect, RESET)",
+      "Tests also cover KID_HYDRATE_STATE action if present in current kidGame reducer",
+      "app/src/engine/__tests__/SNAPSHOT_LOCK.md exists documenting: (1) the git SHA of app/src/engine/game.ts at time of snapshot capture; (2) rules that snapshots may not be updated without investigation; (3) pinned `snapshotFormat` or equivalent",
+      "All characterization tests pass on current main-branch reducer: `cd app && npx vitest run characterization` exits 0",
+      "Running `cd app && npx tsc --noEmit` passes"
+    ],
+    "layer": 1,
+    "scope": [
+      "app/src/engine/__tests__/characterization.test.ts",
+      "app/src/engine/__tests__/SNAPSHOT_LOCK.md"
+    ],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  },
+  {
+    "id": "remove-free-play",
+    "name": "Drop FREE_PLAY from web",
+    "description": "Remove FREE_PLAY and PRIZE wedge types from web to match iOS. Delete wedge id 12, update types.ts, game.ts, App.tsx, strategyAnalytics.ts, StrategyDashboard.tsx, every consonant/vowel cost check. Update existing tests referencing type: 'CASH'. Characterization tests must remain green.",
+    "deps": ["characterization-tests"],
+    "tier": "medium",
+    "acceptance": [
+      "`grep -r \"FREE_PLAY\\|freePlay\\|'PRIZE'\" app/src` returns zero matches",
+      "app/src/engine/types.ts wedge union is exactly {VALUE, BANKRUPT, LOSE_TURN} matching iOS shared/engine/types.ts (or equivalent ios/src/engine/types.ts)",
+      "app/src/engine/game.ts, app/src/components/StrategyDashboard.tsx, app/src/engine/strategyAnalytics.ts and any other file that referenced FREE_PLAY are updated and `cd app && npx tsc --noEmit` passes",
+      "All existing tests (including characterization) still pass: `cd app && npx vitest run` exits 0",
+      "Any test that asserted wedge `type: 'CASH'` is updated to match the current/canonical type (likely 'VALUE')"
+    ],
+    "layer": 2,
+    "scope": [
+      "app/src/engine/types.ts",
+      "app/src/engine/game.ts",
+      "app/src/engine/strategyAnalytics.ts",
+      "app/src/engine/wheelSpin.ts",
+      "app/src/App.tsx",
+      "app/src/components/StrategyDashboard.tsx",
+      "app/src/components/Wheel.tsx",
+      "app/src/engine/__tests__/"
+    ],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  },
+  {
+    "id": "schema-migration",
+    "name": "Schema migration harness for localStorage",
+    "description": "Insert SCHEMA_VERSION=2, Zod schema for new GameState, migrateState() returning null on legacy blob, hydration try/catch in App.tsx falling back to INITIAL_STATE. Include legacy localStorage fixture test. Critical for returning users who have pre-migration state.",
+    "deps": ["remove-free-play"],
+    "tier": "medium",
+    "acceptance": [
+      "app/src/engine/schema.ts (or similar) exports SCHEMA_VERSION = 2, a Zod schema for GameState, and a migrateState(blob: unknown) function that returns a valid state or null",
+      "app/src/App.tsx (or kid-mode hydration code paths) wrap localStorage reads in try/catch that call migrateState() and fall back to INITIAL_STATE on null or parse failure",
+      "app/src/engine/__tests__/schema-migration.test.ts exists with at least 3 fixture tests: (1) valid new-schema blob parses, (2) legacy/unversioned blob returns null/INITIAL_STATE, (3) corrupted JSON string returns null/INITIAL_STATE",
+      "All tests pass: `cd app && npx vitest run` exits 0",
+      "Running `cd app && npx tsc --noEmit` passes"
+    ],
+    "layer": 3,
+    "scope": [
+      "app/src/engine/schema.ts",
+      "app/src/engine/__tests__/schema-migration.test.ts",
+      "app/src/App.tsx",
+      "app/package.json"
+    ],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  },
+  {
+    "id": "reducer-port",
+    "name": "Port iOS reducer deltas to web (actions, turnStates, mustSpin)",
+    "description": "Port iOS reducer deltas piecemeal into app/src/engine/game.ts + types.ts. Add 11 new actions (TOSS_UP_TICK {dtMs}, BUZZ_IN, TOSS_UP_SOLVE_ATTEMPT, CANCEL_TOSS_UP_ATTEMPT, BONUS_CHOOSE_LETTERS, BONUS_TICK, BONUS_SOLVE_ATTEMPT, RESET_ROUND, RANDOM_PUZZLE, SELECT_PUZZLE) + 7 new turnState values (TOSSUP_REVEALING, TOSSUP_BUZZED, TOSSUP_LOCKED_OUT, BONUS_PICKING, BONUS_SOLVE_TIMER, etc.) + mustSpin semantics. Characterization tests stay green.",
+    "deps": ["schema-migration", "characterization-tests"],
+    "tier": "large",
+    "acceptance": [
+      "app/src/engine/types.ts union of action types contains all of: TOSS_UP_TICK, BUZZ_IN, TOSS_UP_SOLVE_ATTEMPT, CANCEL_TOSS_UP_ATTEMPT, BONUS_CHOOSE_LETTERS, BONUS_TICK, BONUS_SOLVE_ATTEMPT, RESET_ROUND, RANDOM_PUZZLE, SELECT_PUZZLE",
+      "app/src/engine/types.ts turnState union contains all of: TOSSUP_REVEALING, TOSSUP_BUZZED, TOSSUP_LOCKED_OUT, BONUS_PICKING, BONUS_SOLVE_TIMER (and any other iOS turnStates)",
+      "app/src/engine/game.ts reducer handles every action above; any unsolicited action type triggers a TypeScript never-branch / exhaustive check",
+      "`mustSpin` boolean (or equivalent flag) exists on GameState and is set to true after wrong guess / BANKRUPT / LOSE_TURN and reset after SPIN_RESOLVE. Vowel-buy actions are rejected when mustSpin === true",
+      "Ported from iOS: app/src/engine/__tests__/bonusEngine.test.ts, tossUpEngine.test.ts, tossUpCancel.test.ts, wheelSpin.test.ts, puzzleModes.test.ts exist and pass",
+      "Running `cd app && npx vitest run` passes ALL tests including previously-written characterization tests (unchanged snapshots)",
+      "Running `cd app && npx tsc --noEmit` passes"
+    ],
+    "layer": 4,
+    "scope": [
+      "app/src/engine/types.ts",
+      "app/src/engine/game.ts",
+      "app/src/engine/wheelSpin.ts",
+      "app/src/engine/__tests__/bonusEngine.test.ts",
+      "app/src/engine/__tests__/tossUpEngine.test.ts",
+      "app/src/engine/__tests__/tossUpCancel.test.ts",
+      "app/src/engine/__tests__/wheelSpin.test.ts",
+      "app/src/engine/__tests__/puzzleModes.test.ts"
+    ],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  },
+  {
+    "id": "standard-wheel-geometry",
+    "name": "StandardWheel static SVG geometry",
+    "description": "Create app/src/components/StandardWheel.tsx rendering 24 wedges as static SVG. No animation yet. Use manual per-glyph <text x y rotate> (NOT textPath startOffset — Safari bug). Radial text. Component accepts wedges prop and currentWedgeIndex.",
+    "deps": ["reducer-port"],
+    "tier": "medium",
+    "acceptance": [
+      "app/src/components/StandardWheel.tsx exists and renders 24 wedges as native SVG",
+      "Labels are positioned using manual per-glyph <text x y rotate> calculation, NOT <textPath startOffset>",
+      "Component exports named TS types for props (wedges, currentWedgeIndex, onSpinComplete etc)",
+      "app/src/components/__tests__/StandardWheel.test.tsx unit test renders the component and asserts 24 <text> or wedge <path> elements exist",
+      "Running `cd app && npx vitest run StandardWheel` passes",
+      "Running `cd app && npx tsc --noEmit` passes"
+    ],
+    "layer": 5,
+    "scope": [
+      "app/src/components/StandardWheel.tsx",
+      "app/src/components/__tests__/StandardWheel.test.tsx"
+    ],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  },
+  {
+    "id": "dark-theme",
+    "name": "Dark theme + home mode selector + PackBrowser",
+    "description": "Implement Tailwind dark theme matching iOS (see ios/src/styles/theme.ts). Home screen with three cards (Main Game, Toss-Up, Bonus Round). PackBrowser screen listing available packs. Kid-mode contrast gate.",
+    "deps": ["reducer-port"],
+    "tier": "large",
+    "acceptance": [
+      "app/tailwind.config.js theme extension mirrors iOS theme tokens from ios/src/styles/theme.ts (colors.primary, colors.background, gradients)",
+      "app/src/screens/Home.tsx (or HomeScreen.tsx) exists with three selectable mode cards: Main Game, Toss-Up, Bonus Round",
+      "app/src/screens/PackBrowser.tsx exists, lists packs from the puzzle pack source, and invokes a callback when a pack is selected",
+      "app/src/App.tsx wires Home -> PackBrowser -> Game flow",
+      "app/src/components/__tests__/HomeScreen.test.tsx asserts three mode cards render",
+      "Running `cd app && npx vitest run` passes",
+      "Running `cd app && npx tsc --noEmit` passes"
+    ],
+    "layer": 5,
+    "scope": [
+      "app/tailwind.config.js",
+      "app/src/screens/Home.tsx",
+      "app/src/screens/PackBrowser.tsx",
+      "app/src/App.tsx",
+      "app/src/components/__tests__/HomeScreen.test.tsx"
+    ],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  },
+  {
+    "id": "tossup-ui",
+    "name": "Toss-Up vertical slice (UI + e2e)",
+    "description": "app/src/screens/TossUpScreen.tsx showing auto-revealing puzzle board with buzz-in button when turnState === 'TOSSUP_REVEALING'. Wire up BUZZ_IN, TOSS_UP_SOLVE_ATTEMPT, CANCEL_TOSS_UP_ATTEMPT. Playwright WebKit e2e test driving reveal -> buzz -> solve flow.",
+    "deps": ["reducer-port", "playwright-webkit-gate"],
+    "tier": "large",
+    "acceptance": [
+      "app/src/screens/TossUpScreen.tsx renders when gameState.turnState is one of TOSSUP_REVEALING / TOSSUP_BUZZED / TOSSUP_LOCKED_OUT",
+      "Clicking Buzz dispatches BUZZ_IN; incorrect solve transitions to TOSSUP_LOCKED_OUT; correct solve sets roundResult to 'win'",
+      "app/src/__tests__/tossup-integration.test.tsx (Testing Library) drives full reveal -> buzz -> solve flow and asserts expected state transitions",
+      "app/tests/e2e/tossup.spec.ts Playwright WebKit e2e test drives the same flow end-to-end against the running dev server",
+      "Running `cd app && npx vitest run` passes",
+      "Running `cd app && npx playwright test --project=webkit tossup` passes",
+      "Running `cd app && npx tsc --noEmit` passes"
+    ],
+    "layer": 6,
+    "scope": [
+      "app/src/screens/TossUpScreen.tsx",
+      "app/src/__tests__/tossup-integration.test.tsx",
+      "app/tests/e2e/tossup.spec.ts",
+      "app/src/App.tsx"
+    ],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  },
+  {
+    "id": "bonus-ui",
+    "name": "Bonus Round vertical slice (UI + e2e)",
+    "description": "app/src/screens/BonusRoundScreen.tsx that reveals RSTLNE, prompts user to pick 3 consonants + 1 vowel, shows countdown timer, dispatches BONUS_CHOOSE_LETTERS / BONUS_TICK / BONUS_SOLVE_ATTEMPT. Playwright WebKit e2e test drives RSTLNE -> pick -> timer -> solve flow.",
+    "deps": ["reducer-port", "playwright-webkit-gate"],
+    "tier": "large",
+    "acceptance": [
+      "app/src/screens/BonusRoundScreen.tsx renders when gameState.turnState is one of BONUS_PICKING / BONUS_SOLVE_TIMER",
+      "RSTLNE letters are pre-revealed on mount; user picks 3 consonants + 1 vowel then dispatches BONUS_CHOOSE_LETTERS",
+      "Visible countdown timer driven by BONUS_TICK; timer expiry or correct solve ends the round",
+      "app/src/__tests__/bonus-integration.test.tsx drives full RSTLNE -> pick -> timer -> solve flow",
+      "app/tests/e2e/bonus.spec.ts Playwright WebKit e2e test drives same flow end-to-end",
+      "Running `cd app && npx vitest run` passes",
+      "Running `cd app && npx playwright test --project=webkit bonus` passes",
+      "Running `cd app && npx tsc --noEmit` passes"
+    ],
+    "layer": 6,
+    "scope": [
+      "app/src/screens/BonusRoundScreen.tsx",
+      "app/src/__tests__/bonus-integration.test.tsx",
+      "app/tests/e2e/bonus.spec.ts",
+      "app/src/App.tsx"
+    ],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  },
+  {
+    "id": "wheel-spin-labels",
+    "name": "StandardWheel spin animation (Web Animations API)",
+    "description": "Add spin animation to StandardWheel using element.animate(...).finished Promise — NOT CSS transitionend (Safari compositor drops). Dispatch-once guard by spinId. Touch events tuned for iPad (touchstart/move/end). Playwright WebKit e2e test spins 10x without hanging.",
+    "deps": ["standard-wheel-geometry", "playwright-webkit-gate"],
+    "tier": "large",
+    "acceptance": [
+      "StandardWheel spin uses element.animate(...).finished Promise (Web Animations API) rather than CSS transition + transitionend event",
+      "Spin is dispatched-once guarded by a spinId or isAnimating flag; rapid re-clicks are ignored until previous animation completes",
+      "Touch events (onTouchStart/Move/End with passive handling + touch-action CSS) drive swipe-to-spin on iPad",
+      "app/tests/e2e/wheel-spin.spec.ts Playwright WebKit e2e test spins the wheel 10 times consecutively and asserts final wedge result is recorded each time, no hangs",
+      "Running `cd app && npx vitest run StandardWheel` passes",
+      "Running `cd app && npx playwright test --project=webkit wheel-spin` passes",
+      "Running `cd app && npx tsc --noEmit` passes"
+    ],
+    "layer": 6,
+    "scope": [
+      "app/src/components/StandardWheel.tsx",
+      "app/src/components/__tests__/StandardWheel.test.tsx",
+      "app/tests/e2e/wheel-spin.spec.ts"
+    ],
+    "status": "pending",
+    "branch": null,
+    "pass_number": 1
+  }
+]

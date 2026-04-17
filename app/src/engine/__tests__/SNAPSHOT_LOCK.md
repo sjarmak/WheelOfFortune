@@ -63,3 +63,11 @@ against a hand-written object literal and normalize non-deterministic fields
   `GameAction` union, wedge-type branches, and wedge-type snapshot. One
   intentionally-skipped `describe` block for the absent `KID_HYDRATE_STATE`
   action.
+- `2026-04-17` — Re-snapshot after `remove-free-play` unit (PRD
+  `history/prd_ios_to_web_migration.md`, R4 + final commit sequence item 3).
+  Wedge union is now `VALUE | BANKRUPT | LOSE_TURN` to match iOS (`CASH`
+  renamed to `VALUE`, `FREE_PLAY` and `PRIZE` removed). `PlayerState` no
+  longer carries `freePlay`. Removed the `SPIN_RESULT on FREE_PLAY wedge`
+  test entirely (wedge type no longer exists). Updated wedge-union snapshot
+  test to assert the new 3-type union. This is an intentional, documented
+  behavior change — the PRD mandates iOS parity.
