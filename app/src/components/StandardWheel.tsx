@@ -201,28 +201,42 @@ export const StandardWheel: React.FC<StandardWheelProps> = ({
   }, [spin]);
 
   // --- Wedge geometry (static SVG; only the outer element rotates) ---
+  // Wedges end at r=47 so the gold rim (r=48, strokeWidth=3) sits just
+  // outside and wraps the wheel. Mirrors ios/src/components/StandardWheel.tsx
+  // (normalized from 200→100 viewBox): text path r=45.5→r=11.5 along a line
+  // shifted -5° from the wedge midline, with per-label startOffset tuning
+  // (35% for $ values pushes them outward; 42% BANKRUPT / 50% LOSE A TURN
+  // recenter the longer words).
   const wedges = WHEEL_CONFIG.map((wedge, i) => {
     const startAngle = (i * WEDGE_ANGLE - 90) * (Math.PI / 180);
     const endAngle = ((i + 1) * WEDGE_ANGLE - 90) * (Math.PI / 180);
-    const x1 = 50 + 50 * Math.cos(startAngle);
-    const y1 = 50 + 50 * Math.sin(startAngle);
-    const x2 = 50 + 50 * Math.cos(endAngle);
-    const y2 = 50 + 50 * Math.sin(endAngle);
-    const midAngle = (i * WEDGE_ANGLE + WEDGE_ANGLE / 2 - 90 - 3) * (Math.PI / 180);
-    const tx1 = 50 + 44 * Math.cos(midAngle);
-    const ty1 = 50 + 44 * Math.sin(midAngle);
-    const tx2 = 50 + 16 * Math.cos(midAngle);
-    const ty2 = 50 + 16 * Math.sin(midAngle);
+    const x1 = 50 + 47 * Math.cos(startAngle);
+    const y1 = 50 + 47 * Math.sin(startAngle);
+    const x2 = 50 + 47 * Math.cos(endAngle);
+    const y2 = 50 + 47 * Math.sin(endAngle);
+    const midAngle =
+      (i * WEDGE_ANGLE + WEDGE_ANGLE / 2 - 90 - 5) * (Math.PI / 180);
+    const tx1 = 50 + 45.5 * Math.cos(midAngle);
+    const ty1 = 50 + 45.5 * Math.sin(midAngle);
+    const tx2 = 50 + 11.5 * Math.cos(midAngle);
+    const ty2 = 50 + 11.5 * Math.sin(midAngle);
     const isSpecial =
       wedge.type === 'BANKRUPT' ||
       wedge.type === 'LOSE_TURN';
     const textColor = wedge.type === 'BANKRUPT' ? '#fff' : '#000';
+    const textOffset =
+      wedge.type === 'LOSE_TURN'
+        ? '50%'
+        : wedge.type === 'BANKRUPT'
+          ? '42%'
+          : '35%';
     return {
       id: wedge.id,
       label: wedge.label,
       color: wedge.color,
       isSpecial,
       textColor,
+      textOffset,
       wedgePath: `M50,50 L${x1},${y1} A50,50 0 0,1 ${x2},${y2} Z`,
       textPath: `M${tx1},${ty1} L${tx2},${ty2}`,
     };
@@ -304,13 +318,11 @@ export const StandardWheel: React.FC<StandardWheelProps> = ({
             fontWeight="900"
             fill={w.textColor}
             style={{ pointerEvents: 'none' }}
-            lengthAdjust="spacingAndGlyphs"
           >
             <textPath
               href={`#sw-path-${w.id}`}
-              startOffset="50%"
+              startOffset={w.textOffset}
               textAnchor="middle"
-              lengthAdjust="spacingAndGlyphs"
             >
               {w.label}
             </textPath>
@@ -318,7 +330,7 @@ export const StandardWheel: React.FC<StandardWheelProps> = ({
         ))}
 
         {/* Gold rim */}
-        <circle cx="50" cy="50" r="48" fill="none" stroke="#C9A84C" strokeWidth="1.5" />
+        <circle cx="50" cy="50" r="48" fill="none" stroke="#C9A84C" strokeWidth="3" />
         {/* Center hub */}
         <circle cx="50" cy="50" r="10" fill="#888" stroke="#555" strokeWidth="0.5" />
         {/* SPIN label on center hub */}
