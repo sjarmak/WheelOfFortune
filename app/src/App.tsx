@@ -9,10 +9,12 @@ import { KidModeApp } from './components/KidModeApp';
 import { ModeSelector, ModeIndicator } from './components/ModeSelector';
 import { ALL_PACKS, PuzzlePack, getPuzzlesForMode } from './engine/packs';
 import { DEFAULT_PUZZLES } from './engine/defaultPack';
-import { VOWELS, WheelWedge, GameMode } from './engine/types';
+import { VOWELS, WheelWedge, GameMode, RoundType } from './engine/types';
 import { Settings as SettingsIcon, RotateCcw, X, Eye, EyeOff, Library, TrendingUp } from 'lucide-react';
 import { StrategyDashboard } from './components/StrategyDashboard';
 import { analyzePuzzlePack } from './engine/strategyAnalytics';
+import { Home } from './screens/Home';
+import { PackBrowser } from './screens/PackBrowser';
 
 // Error boundary
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean; error: Error | null}> {
@@ -168,11 +170,44 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
   const [showStrategyDashboard, setShowStrategyDashboard] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [showSunsetEasterEgg, setShowSunsetEasterEgg] = useState(false);
-  
+
   // Settings State
   const [vowelCost, setVowelCost] = useState(250);
   const [customSeed, setCustomSeed] = useState<string>('');
   const [hideKeyboard, setHideKeyboard] = useState(false);
+
+  // ───── Screen flow state machine (Home -> Packs -> Game) ─────
+  // Drives the high-level navigation; the inner game UI is unchanged below.
+  type Screen = 'home' | 'packs' | 'game';
+  const [screen, setScreen] = useState<Screen>('home');
+  const [selectedRoundType, setSelectedRoundType] = useState<RoundType>('MAIN');
+
+  const handleSelectMode = useCallback((mode: RoundType) => {
+    setSelectedRoundType(mode);
+    setScreen('packs');
+  }, []);
+
+  const handleSelectPackFromBrowser = useCallback(
+    (pack: PuzzlePack) => {
+      setActivePack(pack);
+      // Prefer puzzles that match the chosen round type, fall back to all.
+      const filtered = pack.puzzles.filter(
+        (p) => p.round_type === selectedRoundType,
+      );
+      const pool = filtered.length > 0 ? filtered : pack.puzzles;
+      const seed = customSeed
+        ? parseInt(customSeed) + state.roundCount
+        : undefined;
+      const next = pool[Math.floor(Math.random() * pool.length)];
+      if (next) {
+        dispatch({ type: 'START_ROUND', puzzle: next, seed });
+      }
+      setScreen('game');
+    },
+    [selectedRoundType, customSeed, state.roundCount],
+  );
+
+  const handleBackToHome = useCallback(() => setScreen('home'), []);
 
   // Analytics - computed when pack changes
   const packAnalytics = useMemo(() => {
@@ -319,6 +354,24 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
       showToast('PUZZLE SOLVED!', 'success');
     }
   }, [state.turnState]);
+
+  // ───── Screen routing ─────
+  // Home -> PackBrowser -> Game. The Home/Packs screens have their own
+  // standalone dark-theme layout and do NOT need a currentPuzzle loaded.
+  if (screen === 'home') {
+    return <Home onSelectMode={handleSelectMode} />;
+  }
+
+  if (screen === 'packs') {
+    return (
+      <PackBrowser
+        packs={ALL_PACKS}
+        activePackId={activePack.id}
+        onSelectPack={handleSelectPackFromBrowser}
+        onBack={handleBackToHome}
+      />
+    );
+  }
 
   if (!state.currentPuzzle) return <div className="h-screen flex items-center justify-center">Loading...</div>;
 
