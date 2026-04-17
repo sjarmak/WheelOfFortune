@@ -2,7 +2,7 @@ import React, { useReducer, useEffect, useState, useMemo, useCallback } from 're
 import { gameReducer, INITIAL_STATE } from './engine/game';
 import { migrateState, withSchemaVersion } from './engine/schema';
 import { Board } from './components/Board';
-import { Wheel } from './components/Wheel';
+import { StandardWheel } from './components/StandardWheel';
 import { Keyboard } from './components/Keyboard';
 import { PackSelector } from './components/PackSelector';
 import { KidModeApp } from './components/KidModeApp';
@@ -506,7 +506,7 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
              <>
                {(state.turnState === 'IDLE' || state.turnState === 'SPINNING' || state.turnState === 'GUESSING_CONSONANT') && (
                         <div className="flex items-center justify-center flex-shrink-0 w-80 h-80 sm:w-96 sm:h-96">
-                          <Wheel 
+                          <StandardWheel
                             key={state.currentPuzzle?.id}
                             onSpinStart={handleSpinStart}
                             onSpinComplete={handleSpinComplete}

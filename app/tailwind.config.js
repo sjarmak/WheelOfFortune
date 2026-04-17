@@ -9,6 +9,14 @@ export default {
   ],
   theme: {
     extend: {
+      spacing: {
+        // Custom pixel-art sizes used by Vanna sprite.
+        // Tailwind only ships spacing in multiples of 4 (plus 0.5/1.5/2.5/3.5) —
+        // w-13 and w-18 are non-standard. The Vanna sprite was authored against
+        // these, so re-add them here (13 * 4px = 52px; 18 * 4px = 72px).
+        13: '3.25rem',
+        18: '4.5rem',
+      },
       colors: {
         // Legacy tokens used by the standard-mode StandardModeApp markup.
         game: {

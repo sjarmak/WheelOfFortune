@@ -292,19 +292,16 @@ export const StandardWheel: React.FC<StandardWheelProps> = ({
             key={`wedge-${w.id}`}
             d={w.wedgePath}
             fill={w.color}
-            stroke="#333"
-            strokeWidth="0.2"
+            stroke="#222"
+            strokeWidth="0.15"
           />
         ))}
-
-        <circle cx="50" cy="50" r="50" fill="transparent" stroke="rgba(0,0,0,0.2)" strokeWidth="2" />
-        <circle cx="50" cy="50" r="10" fill="#888" stroke="#555" strokeWidth="1" />
 
         {wedges.map((w) => (
           <text
             key={`label-${w.id}`}
-            fontSize={w.isSpecial ? '3' : '4'}
-            fontWeight="bold"
+            fontSize={w.isSpecial ? '4' : '7'}
+            fontWeight="900"
             fill={w.textColor}
             style={{ pointerEvents: 'none' }}
             lengthAdjust="spacingAndGlyphs"
@@ -319,6 +316,24 @@ export const StandardWheel: React.FC<StandardWheelProps> = ({
             </textPath>
           </text>
         ))}
+
+        {/* Gold rim */}
+        <circle cx="50" cy="50" r="48" fill="none" stroke="#C9A84C" strokeWidth="1.5" />
+        {/* Center hub */}
+        <circle cx="50" cy="50" r="10" fill="#888" stroke="#555" strokeWidth="0.5" />
+        {/* SPIN label on center hub */}
+        <text
+          x="50"
+          y="50"
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize="3.2"
+          fontWeight="900"
+          fill="#fff"
+          style={{ pointerEvents: 'none', letterSpacing: '0.05em' }}
+        >
+          SPIN
+        </text>
       </svg>
     </div>
   );

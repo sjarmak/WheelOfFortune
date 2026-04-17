@@ -124,7 +124,7 @@ const VannaHand: React.FC<VannaHandProps> = ({
       <div className="absolute inset-0 flex items-center justify-center">
         {isSideView ? (
           /* SIDE VIEW SPRITE (enlarged 30% for better visibility) */
-          <div className="relative w-13 h-20" style={{ imageRendering: 'pixelated' }}>
+          <div className="relative h-20" style={{ width: '52px', imageRendering: 'pixelated' }}>
             {/* Hair - side view (ponytail effect) */}
             <div className="absolute top-0 left-1 w-6 h-3" style={{ backgroundColor: hairColor }} />
             <div className="absolute top-1 right-0 w-2 h-4" style={{ backgroundColor: hairColor }} /> {/* Hair flowing back */}
@@ -174,7 +174,7 @@ const VannaHand: React.FC<VannaHandProps> = ({
           </div>
         ) : (
           /* FRONT VIEW SPRITE (enlarged 30% for better visibility) */
-          <div className="relative w-18 h-20" style={{ imageRendering: 'pixelated' }}>
+          <div className="relative h-20" style={{ width: '72px', imageRendering: 'pixelated' }}>
             {/* Hair - wavy top */}
             <div className="absolute top-0 left-0 w-full h-3">
               <div className="flex gap-0.5 h-full">
