@@ -15,6 +15,7 @@ import { StrategyDashboard } from './components/StrategyDashboard';
 import { analyzePuzzlePack } from './engine/strategyAnalytics';
 import { Home } from './screens/Home';
 import { PackBrowser } from './screens/PackBrowser';
+import { BonusRoundScreen } from './screens/BonusRoundScreen';
 
 // Error boundary
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean; error: Error | null}> {
@@ -374,6 +375,24 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
   }
 
   if (!state.currentPuzzle) return <div className="h-screen flex items-center justify-center">Loading...</div>;
+
+  // Bonus-round screens take over when the engine is in a BONUS turn state,
+  // or when a BONUS puzzle has just ended (ROUND_OVER) so the bonus result
+  // screen stays on-screen until the player advances to the next round.
+  if (
+    state.turnState === 'BONUS_PICKING' ||
+    state.turnState === 'BONUS_SOLVE_TIMER' ||
+    (state.turnState === 'ROUND_OVER' &&
+      state.currentPuzzle?.round_type === 'BONUS')
+  ) {
+    return (
+      <BonusRoundScreen
+        gameState={state}
+        dispatch={dispatch}
+        onNextRound={nextRound}
+      />
+    );
+  }
 
   return (
     <div className="h-screen bg-game-bg flex flex-col text-white pb-safe overflow-hidden">
