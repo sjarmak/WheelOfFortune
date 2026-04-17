@@ -1,5 +1,6 @@
 import React, { useReducer, useEffect, useState, useMemo, useCallback } from 'react';
 import { gameReducer, INITIAL_STATE } from './engine/game';
+import { migrateState, withSchemaVersion } from './engine/schema';
 import { Board } from './components/Board';
 import { Wheel } from './components/Wheel';
 import { Keyboard } from './components/Keyboard';
@@ -107,39 +108,39 @@ interface StandardModeAppProps {
 
 function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
   const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE, (initial) => {
-    const saved = localStorage.getItem('wof_state');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Ensure spinCount exists (missing in old saved states)
-        const restored = { ...initial, ...parsed, spinCount: parsed.spinCount ?? 0 };
+    try {
+      const saved = localStorage.getItem('wof_state');
+      if (!saved) return initial;
 
-        // Validate state consistency: guessedLetters should match revealedPositions
-        // If a letter is revealed but not in guessedLetters, the state is corrupt
-        if (restored.currentPuzzle && restored.revealedPositions && restored.guessedLetters) {
-          const phrase = restored.currentPuzzle.phrase.toUpperCase();
-          const revealedLetters = new Set(
-            restored.revealedPositions
-              .filter((i: number) => /[A-Z]/.test(phrase[i]))
-              .map((i: number) => phrase[i])
-          );
-          const guessedSet = new Set(restored.guessedLetters);
-
-          // Check if revealed letters are missing from guessedLetters
-          const missingFromGuessed = [...revealedLetters].filter(l => !guessedSet.has(l));
-          if (missingFromGuessed.length > 0) {
-            // State is corrupt, reset the game
-            console.warn('Corrupt state detected: revealed letters not in guessedLetters', missingFromGuessed);
-            return initial;
-          }
-        }
-
-        return restored;
-      } catch {
+      const parsed = JSON.parse(saved);
+      const migrated = migrateState(parsed);
+      if (!migrated) {
+        // Legacy / pre-migration / invalid blob — fall back to INITIAL_STATE.
+        console.warn('wof_state failed schema validation; resetting to INITIAL_STATE');
         return initial;
       }
+
+      // Additional consistency check: guessedLetters should match revealedPositions.
+      // If a letter is revealed but not in guessedLetters, the state is corrupt.
+      if (migrated.currentPuzzle && migrated.revealedPositions && migrated.guessedLetters) {
+        const phrase = migrated.currentPuzzle.phrase.toUpperCase();
+        const revealedLetters = new Set(
+          migrated.revealedPositions
+            .filter((i: number) => /[A-Z]/.test(phrase[i]))
+            .map((i: number) => phrase[i])
+        );
+        const guessedSet = new Set(migrated.guessedLetters);
+        const missingFromGuessed = [...revealedLetters].filter(l => !guessedSet.has(l));
+        if (missingFromGuessed.length > 0) {
+          console.warn('Corrupt state detected: revealed letters not in guessedLetters', missingFromGuessed);
+          return initial;
+        }
+      }
+
+      return migrated;
+    } catch {
+      return initial;
     }
-    return initial;
   });
 
   const [activePack, setActivePack] = useState<PuzzlePack>(() => {
@@ -178,9 +179,13 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
     return analyzePuzzlePack(activePack.puzzles);
   }, [activePack]);
 
-  // Persistence
+  // Persistence — always write with current SCHEMA_VERSION so next hydrate recognizes the format.
   useEffect(() => {
-    localStorage.setItem('wof_state', JSON.stringify(state));
+    try {
+      localStorage.setItem('wof_state', JSON.stringify(withSchemaVersion(state)));
+    } catch (error) {
+      console.error('Failed to persist wof_state:', error);
+    }
   }, [state]);
 
   const nextRound = useCallback(() => {
