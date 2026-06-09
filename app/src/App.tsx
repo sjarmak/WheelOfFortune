@@ -192,17 +192,24 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
   const handleSelectPackFromBrowser = useCallback(
     (pack: PuzzlePack) => {
       setActivePack(pack);
-      // Prefer puzzles that match the chosen round type, fall back to all.
-      const filtered = pack.puzzles.filter(
-        (p) => p.round_type === selectedRoundType,
-      );
-      const pool = filtered.length > 0 ? filtered : pack.puzzles;
+      // Honor the round type chosen on Home. Prefer the pack's own puzzles for
+      // that mode; if it has none, draw from every pack so Toss-Up and Bonus
+      // always start a real round of that type (parity with the iOS app, which
+      // coerces the puzzle's round_type to the selected mode).
+      let pool = getPuzzlesForMode(pack.puzzles, selectedRoundType);
+      if (pool.length === 0) {
+        pool = ALL_PACKS.flatMap((p) => getPuzzlesForMode(p.puzzles, selectedRoundType));
+      }
       const seed = customSeed
         ? parseInt(customSeed) + state.roundCount
         : undefined;
       const next = pool[Math.floor(Math.random() * pool.length)];
       if (next) {
-        dispatch({ type: 'START_ROUND', puzzle: next, seed });
+        dispatch({
+          type: 'START_ROUND',
+          puzzle: { ...next, round_type: selectedRoundType },
+          seed,
+        });
       }
       setScreen('game');
     },
@@ -227,41 +234,40 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
 
   const nextRound = useCallback(() => {
     const seed = customSeed ? parseInt(customSeed) + state.roundCount : undefined;
-    // Filter to MAIN round puzzles only — TOSSUP/BONUS puzzles must not appear
-    // in the Main Game flow. Fall back to the full pack if a pack has no MAIN
-    // puzzles tagged (some older packs lack round_type metadata — treated as MAIN by the filter).
-    const mainPuzzles = getPuzzlesForMode(activePack.puzzles, 'MAIN');
-    let puzzles = mainPuzzles.length > 0 ? mainPuzzles : activePack.puzzles;
-    // Test hook: `?tossup=1` forces the next puzzle to be a TOSSUP round so
-    // Playwright e2e tests can reliably drive the toss-up flow.
+    // Stay in the round type the player chose on Home. The Toss-Up and Bonus
+    // screens advance through this same callback, so each new round must remain
+    // that type instead of snapping back to MAIN.
+    let target = selectedRoundType;
+    // Test hook: `?tossup=1` forces TOSSUP rounds so Playwright e2e can drive
+    // the toss-up flow without going through Home.
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      if (params.get('tossup') === '1') {
-        const ownTossups = activePack.puzzles.filter(p => p.round_type === 'TOSSUP');
-        if (ownTossups.length > 0) {
-          puzzles = ownTossups;
-        } else {
-          const anyTossup = ALL_PACKS
-            .flatMap(p => p.puzzles)
-            .filter(p => p.round_type === 'TOSSUP');
-          if (anyTossup.length > 0) puzzles = anyTossup;
-        }
-      }
+      if (params.get('tossup') === '1') target = 'TOSSUP';
     }
+    // Prefer the active pack's puzzles for the target mode; fall back to every
+    // pack so a pack without that round type still yields a real round.
+    let puzzles = getPuzzlesForMode(activePack.puzzles, target);
+    if (puzzles.length === 0) {
+      puzzles = ALL_PACKS.flatMap((p) => getPuzzlesForMode(p.puzzles, target));
+    }
+    if (puzzles.length === 0) puzzles = activePack.puzzles;
     const next = puzzles[Math.floor(Math.random() * puzzles.length)];
-    dispatch({ type: 'START_ROUND', puzzle: next, seed });
-  }, [activePack, customSeed, state.roundCount]);
+    dispatch({ type: 'START_ROUND', puzzle: { ...next, round_type: target }, seed });
+  }, [activePack, customSeed, state.roundCount, selectedRoundType]);
 
   const selectPack = useCallback((pack: PuzzlePack) => {
     setActivePack(pack);
     setShowPackSelector(false);
-    // Start a new round from the new pack (MAIN puzzles only, same rationale as nextRound)
+    // Switching packs mid-session keeps the current round type.
     const seed = customSeed ? parseInt(customSeed) + state.roundCount : undefined;
-    const mainPuzzles = getPuzzlesForMode(pack.puzzles, 'MAIN');
-    const puzzles = mainPuzzles.length > 0 ? mainPuzzles : pack.puzzles;
+    let puzzles = getPuzzlesForMode(pack.puzzles, selectedRoundType);
+    if (puzzles.length === 0) {
+      puzzles = ALL_PACKS.flatMap((p) => getPuzzlesForMode(p.puzzles, selectedRoundType));
+    }
+    if (puzzles.length === 0) puzzles = pack.puzzles;
     const next = puzzles[Math.floor(Math.random() * puzzles.length)];
-    dispatch({ type: 'START_ROUND', puzzle: next, seed });
-  }, [customSeed, state.roundCount]);
+    dispatch({ type: 'START_ROUND', puzzle: { ...next, round_type: selectedRoundType }, seed });
+  }, [customSeed, state.roundCount, selectedRoundType]);
   
   // Load puzzle if none
   useEffect(() => {
@@ -444,7 +450,7 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
       {/* Header */}
       <header className="py-2 px-3 sm:py-3 sm:px-4 flex justify-between items-center bg-game-accent shadow-md z-10 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <h1 className="text-xl sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-orange-500">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-wide text-wof-gold">
             WHEEL PRACTICE
           </h1>
           <ModeIndicator mode={gameMode} onClick={onModeChange} />
@@ -534,7 +540,7 @@ function StandardModeApp({ onModeChange, gameMode }: StandardModeAppProps) {
                         dispatch({ type: 'BUY_VOWEL' });
                       }}
                       disabled={!vowelsLeft || state.player.currentRoundScore < vowelCost}
-                      className="px-3 py-1.5 sm:px-4 sm:py-2 bg-purple-600 rounded-lg font-bold text-sm sm:text-base shadow-md hover:bg-purple-500 disabled:bg-slate-600 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 sm:px-4 sm:py-2 bg-wof-gold text-wof-tile-ink rounded-lg font-bold text-sm sm:text-base shadow-md hover:bg-wof-gold-hi disabled:bg-slate-600 disabled:text-white disabled:cursor-not-allowed"
                     >
                       {vowelsLeft && state.player.currentRoundScore >= vowelCost ? `VOWEL $${vowelCost}` : vowelsLeft ? 'NEED $$$' : 'NO VOWELS'}
                     </button>

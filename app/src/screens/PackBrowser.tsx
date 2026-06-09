@@ -34,7 +34,7 @@ export function PackBrowser({
   return (
     <div
       data-testid="pack-browser-screen"
-      className="min-h-screen w-full bg-ios-dark text-text-primary px-4 py-6"
+      className="min-h-screen w-full bg-wof-ink text-text-primary px-4 py-6"
     >
       <div className="max-w-2xl mx-auto">
         <header className="flex items-center gap-3 mb-6">

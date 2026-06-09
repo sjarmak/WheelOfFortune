@@ -116,7 +116,7 @@ export function BonusRoundScreen({
     return (
       <div
         data-testid="bonus-screen-loading"
-        className="min-h-screen w-full flex items-center justify-center bg-ios-dark text-text-primary"
+        className="min-h-screen w-full flex items-center justify-center bg-wof-ink text-text-primary"
       >
         Loading bonus round…
       </div>
@@ -128,7 +128,7 @@ export function BonusRoundScreen({
       data-testid="bonus-round-screen"
       data-puzzle-phrase={puzzle.phrase}
       data-puzzle-id={puzzle.id}
-      className="min-h-screen w-full bg-ios-dark text-text-primary flex flex-col"
+      className="min-h-screen w-full bg-wof-ink text-text-primary flex flex-col"
     >
       <header className="px-4 py-3 bg-black/40 flex items-center justify-between">
         <h1 className="text-xl sm:text-2xl font-bold text-accent-yellow">

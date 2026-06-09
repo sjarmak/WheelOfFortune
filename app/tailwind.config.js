@@ -18,12 +18,13 @@ export default {
         18: '4.5rem',
       },
       colors: {
-        // Legacy tokens used by the standard-mode StandardModeApp markup.
+        // Standard-mode chrome, retinted to the puzzle-board palette so the
+        // Main Game and Toss-Up screens sit on the same board as Home.
         game: {
-          bg: '#1a1a2e',
-          board: '#0f3460',
-          tile: '#e94560',
-          accent: '#16213e',
+          bg: 'oklch(0.20 0.032 225)',     // screen background
+          board: '#0f3460',                 // the literal puzzle board (unchanged)
+          tile: '#e94560',                  // wheel-red tile accent (unchanged)
+          accent: 'oklch(0.28 0.042 218)',  // header / raised chrome
         },
 
         // iOS-parity dark theme tokens. Keys here mirror
@@ -57,12 +58,26 @@ export default {
           secondary: '#94a3b8', // slate-400
           muted: '#64748b',     // slate-500
         },
+
+        // Wheel of Fortune puzzle-board palette. The show's own identity:
+        // a deep blue-green board, warm letter tiles, and gold. OKLCH so
+        // neutrals stay tinted toward the board hue instead of going to navy.
+        wof: {
+          ink: 'oklch(0.19 0.03 228)',        // deepest base background
+          board: 'oklch(0.30 0.045 216)',     // panel / card surface
+          'board-hi': 'oklch(0.36 0.052 212)',// raised edge, hover
+          tile: 'oklch(0.95 0.013 95)',       // warm letter-tile white
+          'tile-ink': 'oklch(0.27 0.024 245)',// text on a tile
+          gold: 'oklch(0.81 0.128 86)',       // the show's gold (committed accent)
+          'gold-hi': 'oklch(0.88 0.115 90)',
+          blue: 'oklch(0.64 0.13 240)',       // wheel blue (mode accent)
+          red: 'oklch(0.60 0.17 25)',         // wheel red (mode accent)
+        },
       },
       backgroundImage: {
         // Matches colors.gradient from ios/src/styles/theme.ts
         'ios-gradient':
           'linear-gradient(135deg, #581c87 0%, #9d174d 50%, #c2410c 100%)',
-        // Standard-mode dark background used on the Home screen.
         'ios-dark':
           'linear-gradient(180deg, #0f172a 0%, #1a1a2e 50%, #1e293b 100%)',
       },
