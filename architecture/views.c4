@@ -1,0 +1,166 @@
+// Views over the Wheel Practice App model. Planned (#planned) and research
+// (#research) elements/relationships are dimmed + dashed so the "what ships
+// vs what is proposed" split is readable at a glance.
+
+views {
+
+  // Landscape — the whole system in context.
+  view index {
+    title 'Wheel Practice App — system landscape'
+    include *
+
+    style * {
+      opacity 25%
+    }
+    style element.tag == #built, element.tag == #evolving {
+      opacity 100%
+    }
+    style element.tag == #planned {
+      color muted
+      border dashed
+    }
+    style element.tag == #research {
+      color indigo
+      border dashed
+    }
+  }
+
+  // The system, decomposed into its containers.
+  view wofSystem of wof {
+    title 'Wheel Practice App — containers (shipped vs planned)'
+    include *
+
+    style element.tag == #planned {
+      color muted
+      border dashed
+    }
+    style element.tag == #research {
+      color indigo
+      border dashed
+    }
+  }
+
+  // The puzzle pipeline internals.
+  view pipelineContainer of wof.pipeline {
+    title 'Puzzle pipeline (pipeline/) — components'
+    include *
+
+    style element.tag == #evolving {
+      color amber
+    }
+  }
+
+  // The duplicated game engine internals.
+  view engineContainer of wof.engine {
+    title 'Game engine (duplicated) — components'
+    include *
+  }
+
+  // The web app — the active migration target.
+  view webContainer of wof.webApp {
+    title 'Web app (app/) — components'
+    include *
+  }
+
+  // The iOS app — the source being ported from.
+  view iosContainer of wof.iosApp {
+    title 'iOS app (ios/) — components'
+    include *
+
+    style element.tag == #evolving {
+      color amber
+    }
+  }
+
+  // Risks & open questions — the elements that carry a #risk flag, with the
+  // open question stated in each box's description. The things a reviewer
+  // should probe, surfaced rather than discovered mid-meeting.
+  view risks {
+    title 'Risks & open questions'
+    include
+      wof,
+      element.tag == #risk,
+      wof.webApp,
+      wof.iosApp
+
+    style * {
+      opacity 30%
+    }
+    style element.tag == #risk {
+      opacity 100%
+      color red
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Walkthrough flows (dynamic views) — the narrative spine of the review.
+  // ───────────────────────────────────────────────────────────────────────
+
+  // Flow 1 — building a puzzle pack from raw sources.
+  dynamic view buildPack {
+    title 'Walkthrough — building a puzzle pack'
+    description 'Deterministic by design: the same inputs + --seed always produce byte-identical pack JSON, so dedupe ids and pack stats are reproducible. Hand-editing data/packs breaks the content-hash ids.'
+
+    wof.pipeline.acquire -> puzzleSources 'fetch Kaggle / scrape Buy-A-Vowel → data/raw'
+    wof.pipeline.cli -> wof.pipeline.adapters 'ingest -i <files> -p <pack> --round-types ...'
+    wof.pipeline.adapters -> wof.pipeline.normalize 'parsed rows'
+    wof.pipeline.normalize -> wof.pipeline.dedupe 'phrase + category normalized'
+    wof.pipeline.dedupe -> wof.pipeline.difficulty 'unique puzzles + content-hash ids'
+    wof.pipeline.difficulty -> wof.pipeline.packBuilder 'difficulty-scored puzzles'
+    wof.pipeline.packBuilder -> wof.packs 'PackSchema.parse → data/packs + data/reports'
+  }
+
+  // Flow 2 — playing a Standard-mode round on the web.
+  dynamic view standardRound {
+    title 'Walkthrough — a Standard-mode round (web)'
+    description 'The whole round runs through the seeded reducer: spin, guess consonants, buy vowels (gated by mustSpin), then solve. Determinism means the same seed replays the same wheel and reveal order.'
+
+    player -> wof.webApp.webShell 'pick pack + Main Game'
+    wof.webApp.webShell -> wof.engine.packsApi 'getPuzzlesForMode(MAIN) → START_ROUND'
+    wof.webApp.webStandard -> wof.engine.gameReducer 'SPIN_WHEEL'
+    wof.engine.gameReducer -> wof.engine.rng 'seeded final rotation'
+    wof.engine.rng -> wof.webApp.webStandard 'wedge result → animate StandardWheel'
+    player -> wof.webApp.webStandard 'guess consonant / buy vowel / solve'
+    wof.webApp.webStandard -> wof.engine.gameReducer 'GUESS_LETTER / BUY_VOWEL / SOLVE_ATTEMPT'
+    wof.engine.gameReducer -> wof.webApp.webStandard 'reveal positions + turnState'
+    wof.webApp.webShell -> browserApis 'persist GameState (schemaVersion 2) to localStorage'
+  }
+
+  // Flow 3 — a Kid-mode session: penalty-free, with helpers.
+  dynamic view kidSession {
+    title 'Walkthrough — a Kid-mode session'
+    description 'Kid mode never penalizes: every wheel outcome is positive (stars, hints, money, free letters). Phonics and letter-suggestion helpers plus TTS scaffold early readers; progress and treasure persist across sessions.'
+
+    player -> wof.webApp.webKid 'enter Kid Mode'
+    wof.webApp.webKid -> wof.engine.kidGame 'KID_START_ROUND'
+    wof.engine.kidGame -> wof.engine.rng 'seeded positive-only wheel'
+    player -> wof.webApp.webKid 'spin / guess / use hint'
+    wof.engine.kidGame -> wof.engine.learning 'phonics chunks + suggested letters'
+    wof.engine.tts -> browserApis 'read puzzle aloud'
+    wof.webApp.webKid -> browserApis 'persist kid state + treasure to localStorage'
+  }
+
+  // Planned-only lens: the shared-engine extraction in context.
+  view planned {
+    title 'Planned work — shared engine extraction'
+    include
+      wof,
+      wof.sharedEngine,
+      wof.engine,
+      wof.webApp,
+      wof.iosApp
+
+    style * {
+      opacity 30%
+    }
+    style element.tag == #planned {
+      opacity 100%
+      color muted
+      border dashed
+    }
+    style element.tag == #evolving {
+      opacity 100%
+      color amber
+    }
+  }
+}

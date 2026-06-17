@@ -1,0 +1,44 @@
+// Deployment model — where each piece runs at review time.
+//
+// Everything is offline and per-device. The pipeline is a developer/CI build
+// step that emits pack JSON; the packs are then bundled into two independently
+// deployed clients (a static web bundle and an Expo iOS app), each persisting
+// state only on the local device. There is no server and no network at play
+// time — "privacy first, local storage only".
+
+deployment {
+
+  devHost = host 'Developer / CI host' {
+    description 'Build-time only — runs the pipeline and produces puzzle packs'
+
+    pipelineProc = proc 'Node — puzzle pipeline CLI' {
+      instanceOf wof.pipeline
+    }
+    packArtifact = proc 'Pack JSON artifact — data/packs/*.json' {
+      instanceOf wof.packs
+    }
+  }
+
+  webHost = host 'Player browser (incl. iPad Safari)' {
+    description 'Static Vite bundle served to the browser; primary target is iPad Safari (WebKit). Persists GameState + kid state in localStorage'
+    instanceOf wof.webApp
+  }
+
+  iosHost = host 'iOS device / Expo Go' {
+    description 'React Native + Expo runtime on an iPhone/iPad or the Simulator. Persists kid state + settings via AsyncStorage'
+    instanceOf wof.iosApp
+  }
+
+  // Build-time + runtime data flow.
+  pipelineProc -> packArtifact 'writes validated packs'
+  packArtifact -> webHost 'bundled into the web build'
+  packArtifact -> iosHost 'bundled into the iOS build'
+}
+
+views {
+
+  deployment view deployment {
+    title 'Deployment — where each piece runs'
+    include *
+  }
+}

@@ -1,0 +1,263 @@
+// The Wheel Practice App — a Wheel of Fortune practice game.
+//
+// Three halves: a Node/Zod puzzle-pack pipeline (pipeline/) that turns raw
+// puzzle sources into validated packs, and two player-facing apps that consume
+// those packs — a React Native / Expo iOS build (ios/) and a React + Vite web
+// build (app/). A pure-functional, seeded game engine is shared BY DUPLICATION
+// between the two apps; a drift guard keeps the copies byte-identical until it
+// is extracted to /shared/engine/ (planned).
+//
+// Migration state is tagged so what already ships renders distinctly from what
+// is still being ported or only designed (see spec.c4 for the tag legend).
+//
+// Elements carry `link`s to their source so a reviewer can jump from any box to
+// the code behind it.
+
+model {
+
+  player = actor 'Player' {
+    description 'Practices Wheel of Fortune — Standard (adult) or Kid mode, fully offline'
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // External systems — raw puzzle sources and per-device browser APIs.
+  // ───────────────────────────────────────────────────────────────────────
+
+  puzzleSources = externalSystem 'Raw puzzle sources' {
+    description 'Kaggle CSVs, Buy-A-Vowel compendium pages, text/JSON files — the un-normalized inputs the pipeline ingests'
+  }
+
+  browserApis = externalSystem 'Device platform APIs' {
+    description 'localStorage / AsyncStorage, Web Speech / expo-speech, Web Audio, haptics — per-device, no network'
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // The Wheel Practice App system.
+  // ───────────────────────────────────────────────────────────────────────
+
+  wof = system 'Wheel Practice App' {
+    description 'Seeded, offline Wheel of Fortune trainer: ingest puzzle packs, then play them on iOS or web'
+    link ../README.md 'README'
+    link ../AGENTS.md 'Agent operating notes & invariants'
+
+    // ── Pipeline: builds validated puzzle packs ────────────────────────────
+    pipeline = container 'Puzzle pipeline' {
+      description 'pipeline/ — ingest raw sources → normalize → dedupe → score → validated pack JSON'
+      technology 'Node / TypeScript / Zod'
+      link ../pipeline 'pipeline/'
+      link ../pipeline/README.md 'pipeline README'
+
+      cli = component 'ingest CLI' {
+        #built
+        description 'commander CLI: `ingest` with category/round-type/length/difficulty filters and a deterministic --seed'
+        link ../pipeline/src/cli.ts 'cli.ts'
+      }
+      acquire = component 'fetch + scrape' {
+        #evolving
+        description 'Downloads Kaggle/HTTP sources and scrapes the Buy-A-Vowel compendium into data/raw + data/scraped'
+        link ../pipeline/src/fetch.ts 'fetch.ts'
+        link ../pipeline/src/scrapers/buyavowel.ts 'scrapers/buyavowel.ts'
+      }
+      adapters = component 'format adapters' {
+        #built
+        description 'Extension-dispatched parsers: csv / json / jsonl / txt / kaggle — flexible column detection → raw rows'
+        link ../pipeline/src/adapters 'adapters/'
+      }
+      normalize = component 'normalize' {
+        #built
+        description 'Phrase normalization (uppercase, quote/dash folding) + mapping ~100 category variants to 16 canonical categories'
+        link ../pipeline/src/normalize 'normalize/'
+      }
+      dedupe = component 'dedupe + content-hash id' {
+        #built
+        description 'Dedup by letters-only key; SHA1(dedupe_key|category|round_type) is the content-addressable puzzle id'
+        link ../pipeline/src/dedupe.ts 'dedupe.ts'
+      }
+      difficulty = component 'difficulty scorer' {
+        #built
+        description 'Composite 0–1 score (length, vowel ratio, rare letters, unique letters, word count) with reason tags'
+        link ../pipeline/src/difficulty.ts 'difficulty.ts'
+      }
+      packBuilder = component 'pack assembly + Zod validate + report' {
+        #built
+        description 'ingestPuzzles(): filter → dedupe → sort → seeded sample → PackSchema.parse → writes data/packs + data/reports'
+        link ../pipeline/src/pack.ts 'pack.ts'
+        link ../pipeline/src/schema.ts 'schema.ts (PackSchema)'
+      }
+    }
+
+    packs = datastore 'Puzzle packs (JSON)' {
+      #built
+      description 'data/packs/*.json — snake_case (pack_id, round_type, normalized, source, content-hash id). Bundled into each app under src/assets/'
+      link ../data/packs 'data/packs/'
+    }
+
+    // ── Shared game engine — duplicated across both apps ───────────────────
+    engine = container 'Game engine (duplicated)' {
+      #evolving
+      #risk
+      description 'Pure-functional seeded logic. RISK: lives twice (ios/src/engine + app/src/engine), kept byte-identical only by an interim sha256 drift guard; extraction to /shared/engine/ is still planned'
+      technology 'TypeScript'
+      link ../app/src/engine 'app/src/engine/ (canonical web copy)'
+      link ../scripts/check-engine-drift.sh 'check-engine-drift.sh'
+
+      gameReducer = component 'game reducer + types' {
+        #built
+        description 'gameReducer: 11 actions, 11 turnStates, mustSpin rule; the byte-identical drift-guarded pair (game.ts + types.ts)'
+        link ../app/src/engine/game.ts 'game.ts'
+        link ../app/src/engine/types.ts 'types.ts'
+      }
+      kidGame = component 'kid game reducer' {
+        #built
+        description 'kidGameReducer — penalty-free positive-only outcomes (stars, hints, money), hint meter, treasure/achievement state'
+        link ../app/src/engine/kidGame.ts 'kidGame.ts'
+        link ../app/src/engine/kidTypes.ts 'kidTypes.ts'
+      }
+      rng = component 'seeded RNG + wheel math' {
+        #built
+        description 'Mulberry32 SeededRNG (no Math.random) for repeatable games + calculateFinalRotation for cumulative-drift-correct spins'
+        link ../app/src/engine/rng.ts 'rng.ts'
+        link ../app/src/engine/wheelSpin.ts 'wheelSpin.ts'
+      }
+      packsApi = component 'pack loading + mode filter' {
+        #built
+        description 'ALL_PACKS (derives ~40 sub-packs) and getPuzzlesForMode — filters puzzles to the playable round_type'
+        link ../app/src/engine/packs.ts 'packs.ts'
+        link ../app/src/engine/defaultPack.ts 'defaultPack.ts'
+      }
+      persistence = component 'schema + migration' {
+        #built
+        description 'Zod-validated persisted state; SCHEMA_VERSION=2, migrateState() rejects legacy/corrupt blobs → INITIAL_STATE'
+        link ../app/src/engine/schema.ts 'schema.ts'
+      }
+      learning = component 'analytics + phonics + suggestions' {
+        #built
+        description 'Strategy analytics (letter frequency, optimal guesses), phonics chunks, picture clues, letter suggestions, shop types'
+        link ../app/src/engine/strategyAnalytics.ts 'strategyAnalytics.ts'
+        link ../app/src/engine/phonics.ts 'phonics.ts'
+        link ../app/src/engine/letterSuggestions.ts 'letterSuggestions.ts'
+      }
+      tts = component 'tts (platform-specific)' {
+        #built
+        description 'Same signatures, different backend per app: Web Speech API (web) vs expo-speech (iOS) — the one platform seam in the engine'
+        link ../app/src/engine/tts.ts 'tts.ts (web)'
+        link ../ios/src/engine/tts.ts 'tts.ts (iOS)'
+      }
+    }
+
+    // ── Web app: the active migration target ───────────────────────────────
+    webApp = container 'Web app' {
+      #built
+      description 'app/ — React + Vite + Tailwind. The migration target: iOS Standard-mode improvements ported here, kid-mode extras preserved'
+      technology 'React 18 / Vite / TypeScript'
+      link ../app/src 'app/src/'
+
+      webShell = component 'App shell + screens' {
+        #built
+        description 'App.tsx drives useReducer + mode switch; Home / PackBrowser / TossUpScreen / BonusRoundScreen flow, wrapped in an ErrorBoundary'
+        link ../app/src/App.tsx 'App.tsx'
+        link ../app/src/screens 'screens/'
+      }
+      webStandard = component 'Standard-mode UI' {
+        #built
+        description 'StandardWheel (24-wedge SVG, Web Animations API spin), Board, Keyboard, Vanna, StrategyDashboard, WheelLegend'
+        link ../app/src/components/StandardWheel.tsx 'StandardWheel.tsx'
+        link ../app/src/components/Board.tsx 'Board.tsx'
+      }
+      webKid = component 'Kid-mode UI' {
+        #built
+        description 'KidModeApp + KidWheel/HUD, PhonicsHelper, HearWords, MusicRoom, PictureClue, WordBuilder, Treasure shop/box, achievements'
+        link ../app/src/components/KidModeApp.tsx 'KidModeApp.tsx'
+      }
+      webTests = component 'unit + e2e tests' {
+        #built
+        description 'Vitest engine/component suites + Playwright WebKit e2e (smoke / tossup / bonus / wheel-spin), iPad Safari as primary target'
+        link ../app/src/engine/__tests__ 'engine/__tests__/'
+        link ../app/tests/e2e 'tests/e2e/'
+      }
+    }
+
+    // ── iOS app: the source being ported FROM ──────────────────────────────
+    iosApp = container 'iOS app' {
+      #evolving
+      description 'ios/ — React Native + Expo. The improvement source-of-truth being ported to web; still the originally-shipped target'
+      technology 'React Native / Expo / TypeScript'
+      link ../ios/src 'ios/src/'
+
+      iosShell = component 'StandardModeApp shell' {
+        #built
+        description 'App.tsx → StandardModeApp: game state, mode/round selection, celebration lifecycle, AsyncStorage persistence'
+        link ../ios/src/components/StandardModeApp.tsx 'StandardModeApp.tsx'
+      }
+      iosComponents = component 'native UI components' {
+        #built
+        description 'StandardWheel (react-native-svg + Reanimated), InteractiveBoard, Keyboard, Vanna sprite, PackBrowser, kid-mode screens'
+        link ../ios/src/components/StandardWheel.tsx 'StandardWheel.tsx'
+        link ../ios/src/components/Vanna.tsx 'Vanna.tsx'
+      }
+      iosStorage = component 'AsyncStorage service' {
+        #built
+        description 'localStorage-shaped wrapper over @react-native-async-storage for kid state + settings'
+        link ../ios/src/services/storage.ts 'storage.ts'
+      }
+      iosTests = component 'engine/UI tests' {
+        #built
+        description 'Vitest suites for reducer, toss-up/bonus/wheel-spin engine, Vanna animation, celebration lifecycle'
+        link ../ios/src/__tests__ '__tests__/'
+      }
+    }
+
+    // ── Planned: extract the duplicated engine ─────────────────────────────
+    sharedEngine = container 'Shared engine /shared/engine/' {
+      #planned
+      #risk
+      description 'PLANNED (PRD R1). Single engine both apps import, retiring the duplicate-and-drift-guard scheme. RISK: not yet created — every engine edit must still land in both copies'
+      link ../history/prd_ios_to_web_migration.md 'migration PRD R1'
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Relationships.
+  // ───────────────────────────────────────────────────────────────────────
+
+  // Pipeline: raw sources → validated packs
+  wof.pipeline.acquire -> puzzleSources 'fetches / scrapes raw puzzle data'
+  wof.pipeline.cli -> wof.pipeline.adapters 'parses input files'
+  wof.pipeline.adapters -> wof.pipeline.normalize 'raw rows'
+  wof.pipeline.normalize -> wof.pipeline.dedupe 'normalized phrases'
+  wof.pipeline.dedupe -> wof.pipeline.difficulty 'unique puzzles'
+  wof.pipeline.difficulty -> wof.pipeline.packBuilder 'scored puzzles'
+  wof.pipeline.packBuilder -> packs 'writes validated pack JSON'
+
+  // Both apps bundle the packs
+  wof.webApp -> packs 'bundles packs under src/assets'
+  wof.iosApp -> packs 'bundles packs under src/assets'
+
+  // Player drives the apps
+  player -> wof.webApp 'plays in a browser'
+  player -> wof.iosApp 'plays on iOS / Expo Go'
+
+  // Apps consume the engine
+  wof.webApp -> wof.engine 'imports app/src/engine'
+  wof.iosApp -> wof.engine 'imports ios/src/engine'
+
+  // Engine internals
+  wof.engine.gameReducer -> wof.engine.rng 'seeded spins + reveal order'
+  wof.engine.gameReducer -> wof.engine.packsApi 'pulls mode-filtered puzzles'
+  wof.engine.persistence -> wof.engine.gameReducer 'validates / migrates GameState'
+  wof.engine.kidGame -> wof.engine.learning 'phonics + suggestions for kid mode'
+  wof.engine.packsApi -> packs 'reads bundled packs'
+
+  // Apps reach platform APIs
+  wof.engine.tts -> browserApis 'speak() via Web Speech / expo-speech'
+  wof.webApp -> browserApis 'localStorage + Web Audio'
+  wof.iosApp -> browserApis 'AsyncStorage + haptics'
+
+  // Planned engine extraction
+  wof.webApp -> wof.sharedEngine 'imports /shared/engine' {
+    #planned
+  }
+  wof.iosApp -> wof.sharedEngine 'imports /shared/engine' {
+    #planned
+  }
+}
